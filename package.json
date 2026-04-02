@@ -24,6 +24,7 @@
     "dev": "nuxi dev playground",
     "dev:prepare": "nuxi prepare playground",
     "build": "vite build && vue-tsc --emitDeclarationOnly",
+    "build:playground": "nuxi generate playground",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "lint": "eslint .",
