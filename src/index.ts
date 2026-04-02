@@ -10,6 +10,7 @@ import CatDownloadJson from './controls/download-json.vue'
 import CatDropdown from './controls/dropdown.vue'
 import CatDropdownItem from './controls/dropdown-item.vue'
 import CatField from './controls/field.vue'
+import CatLink from './controls/link.vue'
 import CatIcon from './controls/icon.vue'
 import CatInput from './controls/input.vue'
 import CatLoading from './controls/loading.vue'
@@ -48,6 +49,7 @@ export {
   CatDropdownItem,
   CatField,
   CatIcon,
+  CatLink,
   CatInput,
   CatLoading,
   CatModal,
@@ -86,7 +88,7 @@ export const CatenaryPlugin: Plugin = {
     const components: Record<string, any> = {
       CatButton, CatCard, CatCheckbox, CatCheckboxGroup, CatDatepicker,
       CatDownloadCsv, CatDownloadJson,
-      CatDropdown, CatDropdownItem, CatField, CatIcon, CatInput,
+      CatDropdown, CatDropdownItem, CatField, CatIcon, CatInput, CatLink,
       CatLoading, CatModal, CatMsg, CatNotification, CatPagination,
       CatRadio, CatSafelink, CatSearchBar, CatSelect, CatSlider, CatSliderTick,
       CatSwitch, CatTabItem, CatTable, CatTableColumn, CatTabs,

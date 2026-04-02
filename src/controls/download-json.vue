@@ -12,6 +12,7 @@ interface Props {
   label?: string
   disabled?: boolean
   filename?: string
+  extension?: string
   data?: string
   iconLeft?: string
   iconRight?: string
@@ -21,6 +22,7 @@ const props = withDefaults(defineProps<Props>(), {
   label: 'Download',
   disabled: false,
   filename: 'export',
+  extension: '.json',
   data: '',
   iconLeft: 'download',
   iconRight: undefined
@@ -30,7 +32,7 @@ const { download } = useDownload()
 
 function saveFile (): void {
   download({
-    filename: props.filename + '.json',
+    filename: props.filename + props.extension,
     data: props.data,
     mimeType: 'application/json'
   })

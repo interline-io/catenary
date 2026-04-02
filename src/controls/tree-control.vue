@@ -1,11 +1,11 @@
 <template>
   <div>
-    <div v-if="!hideRoot && node" class="cat-tree-row">
-      <span v-if="!hasChildren" class="cat-tree-indent" />
+    <div v-if="!hideRoot && node" class="tree-row">
+      <span v-if="!hasChildren" class="indent-spacer">&nbsp;</span>
       <span
         v-else
-        class="cat-tree-expand"
-        :class="expanded ? 'cat-tree-expand-down' : 'cat-tree-expand-right'"
+        class="expand-button"
+        :class="expanded ? 'expand-button-down' : 'expand-button-right'"
         :title="expanded ? 'Collapse' : 'Expand'"
         @click="toggleExpand"
       />
@@ -19,7 +19,6 @@
           {{ node.name }}
         </span>
       </cat-checkbox>
-      <slot name="node-extra" :node="node" />
     </div>
     <div v-if="expanded">
       <div
@@ -27,17 +26,13 @@
         :key="g.key"
       >
         <div
-          :class="hideRoot ? '' : 'cat-tree-indented'"
+          :class="hideRoot ? '' : 'indented'"
         >
           <cat-tree-control
             :node="g"
             :max-deep="maxDeep - 1"
             @select="select"
-          >
-            <template #node-extra="slotProps">
-              <slot name="node-extra" :node="slotProps.node" />
-            </template>
-          </cat-tree-control>
+          />
         </div>
       </div>
     </div>
@@ -55,15 +50,18 @@ interface Props {
   hideRoot?: boolean
 }
 
+interface Emits {
+  (e: 'unselect', value: boolean, key: string): void
+  (e: 'select', value: boolean, key: string): void
+}
+
 const props = withDefaults(defineProps<Props>(), {
   node: () => ({} as TreeNode),
   maxDeep: 10,
   hideRoot: false
 })
 
-const emit = defineEmits<{
-  select: [value: boolean, key: string]
-}>()
+const emit = defineEmits<Emits>()
 
 const expanded = ref(props.maxDeep > 0)
 const hasChildren = computed(() => Object.keys(props.node?.children || {}).length > 0)
@@ -80,19 +78,23 @@ function toggleExpand (): void {
 </script>
 
 <style scoped>
-.cat-tree-row {
+.bold {
+  font-weight: bold;
+}
+
+.tree-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
 }
 
-.cat-tree-indent {
+.indent-spacer {
   width: 1.125rem;
   display: inline-block;
   flex-shrink: 0;
 }
 
-.cat-tree-expand {
+.expand-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -107,7 +109,7 @@ function toggleExpand (): void {
   flex-shrink: 0;
 }
 
-.cat-tree-expand-right::before {
+.expand-button-right::before {
   content: '';
   position: absolute;
   left: 0;
@@ -120,7 +122,7 @@ function toggleExpand (): void {
   border-bottom: 0.25rem solid transparent;
 }
 
-.cat-tree-expand-down::before {
+.expand-button-down::before {
   content: '';
   position: absolute;
   left: 0;
@@ -133,11 +135,15 @@ function toggleExpand (): void {
   border-right: 0.25rem solid transparent;
 }
 
-.cat-tree-expand:hover {
+.expand-button:hover {
   opacity: 0.7;
 }
-
-.cat-tree-indented {
-  margin-left: 30px;
+.indented {
+  margin-left:30px;
+}
+.checkbox {
+  padding:0px;
+  margin:0px;
+  height:inherit;
 }
 </style>
