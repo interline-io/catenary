@@ -36,6 +36,11 @@
     "vue": "^3.5.0",
     "vue-router": "^4.0.0"
   },
+  "peerDependenciesMeta": {
+    "vue-router": {
+      "optional": true
+    }
+  },
   "dependencies": {
     "csv-stringify": "^6.7.0",
     "date-fns": "4.1.0"

@@ -89,6 +89,7 @@ const clipboard = async (): Promise<void> => {
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
 }
 
 @media only screen and (max-width: 600px) {

@@ -8,8 +8,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject } from 'vue'
-import { useRouter, type RouteLocationRaw, type RouteLocationNamedRaw } from 'vue-router'
+import { computed, getCurrentInstance, inject } from 'vue'
+import { type Router, type RouteLocationRaw, type RouteLocationNamedRaw } from 'vue-router'
 import { LinkRoutesKey } from './types'
 
 defineOptions({
@@ -24,12 +24,9 @@ const props = defineProps<{
 
 const routes = inject(LinkRoutesKey, {})
 
-let router: ReturnType<typeof useRouter> | null = null
-try {
-  router = useRouter()
-} catch {
-  // No router installed — all links will fall back to <span>
-}
+// Check for router via app instance to avoid swallowing unrelated errors
+const instance = getCurrentInstance()
+const router: Router | null = instance?.appContext.config.globalProperties.$router ?? null
 
 const resolvedTo = computed((): RouteLocationRaw | null => {
   if (!router) return null
