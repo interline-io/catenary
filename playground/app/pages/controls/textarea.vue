@@ -9,31 +9,31 @@
       </p>
 
       <!-- Basic Textarea -->
-      <t-demo-box label="Basic Textarea">
+      <demo-box label="Basic Textarea">
         <cat-field label="Enter your message:">
           <cat-textarea v-model="basic" placeholder="Type something..." />
         </cat-field>
         <p class="has-text-grey">
           Length: {{ basic.length }} characters
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Variants -->
-      <t-demo-box label="Variants">
+      <demo-box label="Variants">
         <cat-field v-for="variant in variants" :key="variant" :label="capitalize(variant) + ':'">
           <cat-textarea v-model="variantValues[variant]" :variant="variant" :placeholder="capitalize(variant) + ' textarea'" />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Sizes -->
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <cat-field v-for="textareaSize in sizes" :key="textareaSize" :label="capitalize(textareaSize) + ':'">
           <cat-textarea v-model="sizeValues[textareaSize]" :size="textareaSize" :placeholder="capitalize(textareaSize) + ' textarea'" />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Rows -->
-      <t-demo-box label="Custom Row Height">
+      <demo-box label="Custom Row Height">
         <cat-field label="3 rows:">
           <cat-textarea v-model="rows3" :rows="3" placeholder="3 rows" />
         </cat-field>
@@ -43,10 +43,10 @@
         <cat-field label="10 rows:">
           <cat-textarea v-model="rows10" :rows="10" placeholder="10 rows" />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- States -->
-      <t-demo-box label="States">
+      <demo-box label="States">
         <cat-field label="Disabled:">
           <cat-textarea v-model="stateDisabled" disabled placeholder="This is disabled" />
         </cat-field>
@@ -56,20 +56,20 @@
         <cat-field label="Loading:">
           <cat-textarea v-model="stateLoading" loading placeholder="Loading..." />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Maxlength -->
-      <t-demo-box label="With Maxlength Counter">
+      <demo-box label="With Maxlength Counter">
         <cat-field label="Tweet (280 characters max):">
           <cat-textarea v-model="tweet" :maxlength="280" placeholder="What's happening?" />
         </cat-field>
         <p class="has-text-grey">
           {{ tweet.length }} / 280 characters
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Fixed Size -->
-      <t-demo-box label="Fixed Size (No Resize)">
+      <demo-box label="Fixed Size (No Resize)">
         <cat-field label="Fixed size textarea:">
           <cat-textarea
             v-model="fixed"
@@ -77,10 +77,10 @@
             placeholder="This textarea cannot be resized"
           />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Practical Examples -->
-      <t-demo-box label="Example: Feedback Form" example>
+      <demo-box label="Example: Feedback Form" example>
         <cat-field label="Your Feedback:" message="Help us improve our service">
           <cat-textarea
             v-model="feedback"
@@ -95,10 +95,10 @@
         <cat-button variant="primary" class="mt-3" @click="submitFeedback">
           Submit Feedback
         </cat-button>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Code Editor -->
-      <t-demo-box label="Example: Code Snippet" example>
+      <demo-box label="Example: Code Snippet" example>
         <cat-field label="Enter your code:">
           <cat-textarea
             v-model="code"
@@ -107,10 +107,10 @@
             class="is-family-monospace"
           />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Comment Section -->
-      <t-demo-box label="Example: Comment Section" example>
+      <demo-box label="Example: Comment Section" example>
         <cat-field label="Add a comment:">
           <cat-textarea
             v-model="comment"
@@ -131,10 +131,10 @@
             Post Comment
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Description with Help -->
-      <t-demo-box label="Example: With Help Text" example>
+      <demo-box label="Example: With Help Text" example>
         <cat-field
           label="Product Description:"
           message="Provide a detailed description of your product"
@@ -145,7 +145,7 @@
             placeholder="Describe features, specifications, and benefits..."
           />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -153,7 +153,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { TextareaVariants, TextareaSizes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const variants = TextareaVariants
 const sizes = TextareaSizes

@@ -8,7 +8,7 @@
         Radio button input for single selection
       </p>
 
-      <t-demo-box label="Basic Radio Group">
+      <demo-box label="Basic Radio Group">
         <cat-field>
           <cat-radio v-model="basic" native-value="option1">
             Option 1
@@ -23,25 +23,25 @@
         <p class="has-text-grey">
           Selected: {{ basic }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Variants">
+      <demo-box label="Variants">
         <cat-field>
           <cat-radio v-for="variant in variants" :key="variant" :model-value="true" :native-value="true" :variant="variant">
             {{ capitalize(variant) }}
           </cat-radio>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <cat-field>
           <cat-radio v-for="size in sizes" :key="size" :model-value="true" :native-value="true" :size="size">
             {{ capitalize(size) }} radio
           </cat-radio>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Disabled State">
+      <demo-box label="Disabled State">
         <cat-field>
           <cat-radio v-model="disabledDemo" native-value="enabled">
             Enabled option
@@ -53,9 +53,9 @@
             Another enabled option
           </cat-radio>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="With Additional Content">
+      <demo-box label="With Additional Content">
         <cat-field>
           <cat-radio v-model="contentDemo" native-value="option1">
             <div>
@@ -82,9 +82,9 @@
             </div>
           </cat-radio>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Payment Method Selection" example>
+      <demo-box label="Example: Payment Method Selection" example>
         <cat-field label="Choose payment method:">
           <cat-radio v-model="payment" native-value="credit">
             <div>
@@ -114,9 +114,9 @@
         <p class="has-text-grey mt-3">
           Selected method: {{ payment }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Shipping Options" example>
+      <demo-box label="Example: Shipping Options" example>
         <cat-field label="Select shipping speed:">
           <cat-radio v-model="shipping" native-value="standard">
             <span><strong>Standard Shipping</strong> - FREE (5-7 days)</span>
@@ -128,9 +128,9 @@
             <span><strong>Overnight Shipping</strong> - $24.99 (next day)</span>
           </cat-radio>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Survey Question" example>
+      <demo-box label="Example: Survey Question" example>
         <p class="mb-3">
           <strong>How satisfied are you with our service?</strong>
         </p>
@@ -151,9 +151,9 @@
             Very Dissatisfied
           </cat-radio>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Numeric Values (Rating)" example>
+      <demo-box label="Example: Numeric Values (Rating)" example>
         <p class="mb-3">
           <strong>Rate this product (1-5 stars):</strong>
         </p>
@@ -177,7 +177,7 @@
         <p class="has-text-grey mt-3">
           Rating: {{ rating }} (type: {{ typeof rating }})
         </p>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -185,7 +185,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RadioVariants, RadioSizes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const variants = RadioVariants
 const sizes = RadioSizes

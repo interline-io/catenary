@@ -9,7 +9,7 @@
       </p>
 
       <!-- Basic Icons -->
-      <t-demo-box label="Basic Icons">
+      <demo-box label="Basic Icons">
         <div class="is-flex is-align-items-center" style="gap: 1rem;">
           <cat-icon icon="home" />
           <cat-icon icon="account" />
@@ -20,10 +20,10 @@
           <cat-icon icon="star" />
           <cat-icon icon="check" />
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Sizes -->
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <div class="is-flex is-align-items-center" style="gap: 1rem;">
           <cat-icon icon="home" size="small" />
           <cat-icon icon="home" />
@@ -33,10 +33,10 @@
         <p class="has-text-grey mt-3">
           Sizes: small, normal (default), medium, large
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Colors -->
-      <t-demo-box label="Colors">
+      <demo-box label="Colors">
         <div class="is-flex is-align-items-center" style="gap: 1rem;">
           <cat-icon icon="heart" variant="primary" />
           <cat-icon icon="heart" variant="info" />
@@ -48,10 +48,10 @@
         <p class="has-text-grey mt-3">
           Use the <code>variant</code> prop to change icon colors
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Common Icons -->
-      <t-demo-box label="Common Icons">
+      <demo-box label="Common Icons">
         <div class="columns is-multiline">
           <div class="column is-one-quarter">
             <div class="is-flex is-align-items-center">
@@ -150,10 +150,10 @@
             </div>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- With Buttons -->
-      <t-demo-box label="Icons in Buttons">
+      <demo-box label="Icons in Buttons">
         <div class="buttons">
           <cat-button variant="primary">
             <cat-icon icon="plus" size="small" />
@@ -183,10 +183,10 @@
             <cat-icon icon="dots-vertical" size="small" />
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Navigation Icons -->
-      <t-demo-box label="Navigation Icons">
+      <demo-box label="Navigation Icons">
         <div class="columns is-multiline">
           <div class="column is-one-quarter">
             <div class="is-flex is-align-items-center">
@@ -237,10 +237,10 @@
             </div>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Status Icons -->
-      <t-demo-box label="Status Icons">
+      <demo-box label="Status Icons">
         <div class="columns is-multiline">
           <div class="column is-one-quarter">
             <div class="is-flex is-align-items-center">
@@ -267,10 +267,10 @@
             </div>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- File Type Icons -->
-      <t-demo-box label="File Type Icons">
+      <demo-box label="File Type Icons">
         <div class="columns is-multiline">
           <div class="column is-one-quarter">
             <div class="is-flex is-align-items-center">
@@ -321,10 +321,10 @@
             </div>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Social Media Icons -->
-      <t-demo-box label="Social Media Icons">
+      <demo-box label="Social Media Icons">
         <div class="buttons">
           <cat-button>
             <cat-icon icon="facebook" size="small" />
@@ -345,10 +345,10 @@
             <cat-icon icon="youtube" size="small" />
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Icon Reference -->
-      <t-demo-box label="Icon Reference">
+      <demo-box label="Icon Reference">
         <div class="notification is-info is-light">
           <p>
             <strong>Material Design Icons</strong>
@@ -363,11 +363,11 @@
             </a>
           </p>
         </div>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 </script>

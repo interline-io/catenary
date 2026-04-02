@@ -8,20 +8,20 @@
         Loading indicators and spinners
       </p>
 
-      <t-demo-box label="Basic Loading Spinner">
+      <demo-box label="Basic Loading Spinner">
         <div class="has-text-centered">
           <cat-loading :active="true" />
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Inline Loading">
+      <demo-box label="Inline Loading">
         <p class="is-flex is-align-items-center">
           <cat-loading :active="true" />
           <span class="ml-3">Loading data...</span>
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Loading Overlay">
+      <demo-box label="Loading Overlay">
         <div style="position: relative; min-height: 200px;">
           <div v-if="overlayLoading" class="loading-overlay">
             <cat-loading :active="true" />
@@ -41,9 +41,9 @@
             {{ overlayLoading ? 'Stop Loading' : 'Start Loading' }}
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Loading in Buttons">
+      <demo-box label="Loading in Buttons">
         <div class="buttons">
           <cat-button variant="primary" :loading="buttonLoading" @click="simulateAction">
             {{ buttonLoading ? '' : 'Submit' }}
@@ -55,18 +55,18 @@
             {{ buttonLoading3 ? '' : 'Download' }}
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Full Page Loading">
+      <demo-box label="Full Page Loading">
         <p class="mb-3">
           Click the button to show a full-page loading overlay
         </p>
         <cat-button variant="primary" @click="showFullPageLoading">
           Show Full Page Loading
         </cat-button>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Loading States">
+      <demo-box label="Loading States">
         <cat-button variant="primary" @click="loadData">
           Load Data
         </cat-button>
@@ -82,7 +82,7 @@
             Data loaded successfully!
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Full Page Loading Overlay -->
       <div v-if="fullPageLoading" class="full-page-overlay">
@@ -99,7 +99,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const overlayLoading = ref(false)
 const buttonLoading = ref(false)

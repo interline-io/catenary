@@ -8,7 +8,7 @@
         Checkbox input control with various styles
       </p>
 
-      <t-demo-box label="Basic Checkbox">
+      <demo-box label="Basic Checkbox">
         <cat-field>
           <cat-checkbox v-model="basic">
             Checkbox label
@@ -17,9 +17,9 @@
         <p class="has-text-grey">
           Checked: {{ basic }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Multiple Checkboxes">
+      <demo-box label="Multiple Checkboxes">
         <cat-field>
           <cat-checkbox v-model="option1">
             Option 1
@@ -38,25 +38,25 @@
         <p class="has-text-grey">
           Selected: {{ [option1 && 'Option 1', option2 && 'Option 2', option3 && 'Option 3'].filter(Boolean).join(', ') || 'None' }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Variants">
+      <demo-box label="Variants">
         <cat-field v-for="variant in variants" :key="variant">
           <cat-checkbox v-model="variantValues[variant]" :variant="variant">
             {{ capitalize(variant) }}
           </cat-checkbox>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <cat-field v-for="size in sizes" :key="size">
           <cat-checkbox v-model="sizeValues[size]" :size="size">
             {{ capitalize(size) }} checkbox
           </cat-checkbox>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="States">
+      <demo-box label="States">
         <cat-field>
           <cat-checkbox v-model="stateDisabled" disabled>
             Disabled checkbox
@@ -67,9 +67,9 @@
             Disabled checked
           </cat-checkbox>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Indeterminate State">
+      <demo-box label="Indeterminate State">
         <p class="mb-3">
           The indeterminate state is useful for "Select All" checkboxes when some but not all items are selected.
         </p>
@@ -107,9 +107,9 @@
         <p class="has-text-grey mt-3">
           Selected: {{ selectedItemsCount }} of {{ totalItems }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Array Binding">
+      <demo-box label="Array Binding">
         <p class="mb-3">
           Select your favorite fruits:
         </p>
@@ -136,9 +136,9 @@
         <p class="has-text-grey mt-3">
           Selected: {{ Array.isArray(fruits) && fruits.length > 0 ? fruits.join(', ') : 'None' }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="With Additional Content">
+      <demo-box label="With Additional Content">
         <cat-field>
           <cat-checkbox v-model="option1Content">
             <div>
@@ -159,7 +159,7 @@
             </div>
           </cat-checkbox>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -167,7 +167,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive } from 'vue'
 import { CoreVariants, CheckboxSizes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const variants = CoreVariants
 const sizes = CheckboxSizes

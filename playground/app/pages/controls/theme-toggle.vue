@@ -8,14 +8,14 @@
         Switch between light and dark themes
       </p>
 
-      <t-demo-box label="Basic Usage">
+      <demo-box label="Basic Usage">
         <p class="mb-3">
           Click the button below to toggle between light and dark themes. The preference is saved to localStorage.
         </p>
         <cat-theme-toggle />
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Theme Preview" example>
+      <demo-box label="Example: Theme Preview" example>
         <h3 class="subtitle is-5">
           Sample Content
         </h3>
@@ -79,9 +79,9 @@
             Danger Button
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Cards" example>
+      <demo-box label="Example: Cards" example>
         <div class="columns">
           <div class="column">
             <cat-card>
@@ -108,9 +108,9 @@
             </cat-card>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Notifications" example>
+      <demo-box label="Example: Notifications" example>
         <cat-notification variant="info" class="mb-3">
           <strong>Info:</strong> This is an info notification.
         </cat-notification>
@@ -123,9 +123,9 @@
         <cat-notification variant="danger">
           <strong>Error:</strong> This is an error notification.
         </cat-notification>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Table" example>
+      <demo-box label="Example: Table" example>
         <cat-table>
           <thead>
             <tr>
@@ -152,9 +152,9 @@
             </tr>
           </tbody>
         </cat-table>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Implementation">
+      <demo-box label="Implementation">
         <h3 class="subtitle is-5">
           How It Works
         </h3>
@@ -176,14 +176,14 @@
         <p class="help">
           Place this component anywhere in your layout, typically in the header or navigation bar.
         </p>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const sampleText = ref('')
 const sampleTextarea = ref('')

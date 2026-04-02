@@ -9,34 +9,34 @@
       </p>
 
       <!-- Basic Slider -->
-      <t-demo-box label="Basic Slider">
+      <demo-box label="Basic Slider">
         <cat-field label="Volume">
           <cat-slider v-model="volume" :min="0" :max="100" />
         </cat-field>
         <p class="has-text-grey">
           Value: {{ volume }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Variants -->
-      <t-demo-box label="Variants">
+      <demo-box label="Variants">
         <cat-field v-for="variant in variants" :key="variant" :label="capitalize(variant)">
           <cat-slider v-model="variantValues[variant]" :min="0" :max="100" :variant="variant" />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Slider with Step -->
-      <t-demo-box label="Slider with Step">
+      <demo-box label="Slider with Step">
         <cat-field label="Rating (step of 0.5)">
           <cat-slider v-model="rating" :min="0" :max="5" :step="0.5" />
         </cat-field>
         <p class="has-text-grey">
           Value: {{ rating }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Slider with Ticks -->
-      <t-demo-box label="Slider with Clickable Ticks">
+      <demo-box label="Slider with Clickable Ticks">
         <cat-field label="Time (minutes)">
           <cat-slider v-model="time" :min="0" :max="60" :step="10">
             <cat-slider-tick :value="0">
@@ -65,37 +65,37 @@
         <p class="has-text-grey">
           Value: {{ time }} minutes
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Slider Sizes -->
-      <t-demo-box label="Slider Sizes">
+      <demo-box label="Slider Sizes">
         <cat-field v-for="sliderSize in sizes" :key="sliderSize" :label="capitalize(sliderSize)">
           <cat-slider v-model="sizeValues[sliderSize]" :min="0" :max="100" :size="sliderSize" />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Disabled Slider -->
-      <t-demo-box label="Disabled Slider">
+      <demo-box label="Disabled Slider">
         <cat-field label="Locked Setting">
           <cat-slider v-model="disabled" :min="0" :max="100" disabled />
         </cat-field>
         <p class="has-text-grey">
           Value: {{ disabled }} (cannot be changed)
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Slider with Tooltip -->
-      <t-demo-box label="Slider with Tooltip">
+      <demo-box label="Slider with Tooltip">
         <cat-field label="Brightness">
           <cat-slider v-model="brightness" :min="0" :max="100" tooltip />
         </cat-field>
         <p class="has-text-grey">
           Value: {{ brightness }}%
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Multiple Sliders -->
-      <t-demo-box label="Example: Color Mixer" example>
+      <demo-box label="Example: Color Mixer" example>
         <cat-field label="Red">
           <cat-slider v-model="red" :min="0" :max="255" />
         </cat-field>
@@ -111,7 +111,7 @@
         >
           <strong>RGB({{ red }}, {{ green }}, {{ blue }})</strong>
         </div>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -119,7 +119,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { SliderSizes, SliderVariants } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const sizes = SliderSizes
 const variants = SliderVariants

@@ -8,7 +8,7 @@
         Sortable table component with column configuration
       </p>
 
-      <t-demo-box label="Basic Table">
+      <demo-box label="Basic Table">
         <cat-table :data="basicData">
           <template #columns>
             <cat-table-column field="name" label="Name" />
@@ -21,9 +21,9 @@
             <td>{{ row.city }}</td>
           </template>
         </cat-table>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Sortable Columns">
+      <demo-box label="Sortable Columns">
         <cat-table :data="sortableData" hoverable>
           <template #columns>
             <cat-table-column field="product" label="Product" sortable />
@@ -42,9 +42,9 @@
             <td>{{ row.category }}</td>
           </template>
         </cat-table>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Striped">
+      <demo-box label="Striped">
         <cat-table :data="basicData" striped>
           <template #columns>
             <cat-table-column field="name" label="Name" />
@@ -57,9 +57,9 @@
             <td>{{ row.city }}</td>
           </template>
         </cat-table>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Bordered">
+      <demo-box label="Bordered">
         <cat-table :data="basicData" bordered>
           <template #columns>
             <cat-table-column field="name" label="Name" />
@@ -72,9 +72,9 @@
             <td>{{ row.city }}</td>
           </template>
         </cat-table>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Narrowed">
+      <demo-box label="Narrowed">
         <cat-table :data="basicData" narrowed>
           <template #columns>
             <cat-table-column field="name" label="Name" />
@@ -87,9 +87,9 @@
             <td>{{ row.city }}</td>
           </template>
         </cat-table>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Combined Modifiers">
+      <demo-box label="Combined Modifiers">
         <cat-table :data="basicData" hoverable striped bordered>
           <template #columns>
             <cat-table-column field="name" label="Name" />
@@ -102,9 +102,9 @@
             <td>{{ row.city }}</td>
           </template>
         </cat-table>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Nested Field Sorting">
+      <demo-box label="Nested Field Sorting">
         <cat-table :data="nestedData" hoverable striped>
           <template #columns>
             <cat-table-column field="name" label="Name" sortable />
@@ -119,9 +119,9 @@
             <td>{{ row.contact.email }}</td>
           </template>
         </cat-table>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Empty State">
+      <demo-box label="Empty State">
         <cat-table :data="[]" hoverable>
           <template #columns>
             <cat-table-column field="name" label="Name" />
@@ -140,13 +140,13 @@
             </div>
           </template>
         </cat-table>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const basicData = [
   { name: 'Alice Johnson', age: 28, city: 'New York' },

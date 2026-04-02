@@ -9,27 +9,27 @@
       </p>
 
       <!-- Basic Field with Label -->
-      <t-demo-box label="Basic Field with Label">
+      <demo-box label="Basic Field with Label">
         <cat-field label="Username:">
           <cat-input v-model="username" placeholder="Enter username" />
         </cat-field>
         <cat-field label="Email:">
           <cat-input v-model="email" type="email" placeholder="you@example.com" />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- With Help Message -->
-      <t-demo-box label="With Help Message">
+      <demo-box label="With Help Message">
         <cat-field label="Password:" message="Must be at least 8 characters">
           <cat-input v-model="password" type="password" placeholder="Enter password" />
         </cat-field>
         <cat-field label="Website:" message="Include http:// or https://">
           <cat-input v-model="website" type="url" placeholder="https://example.com" />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Validation States -->
-      <t-demo-box label="Validation States">
+      <demo-box label="Validation States">
         <cat-field label="Valid Email:" variant="success" message="Email format is correct">
           <cat-input v-model="validEmail" type="email" variant="success" />
         </cat-field>
@@ -42,20 +42,20 @@
         <cat-field label="Info:" variant="info" message="This field is optional">
           <cat-input v-model="infoField" variant="info" />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Required Field -->
-      <t-demo-box label="Required Field">
+      <demo-box label="Required Field">
         <cat-field label="Full Name:">
           <cat-input v-model="fullName" placeholder="John Doe" />
         </cat-field>
         <cat-field label="Company:" message="This information is required">
           <cat-input v-model="company" placeholder="Acme Corp" />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Horizontal Field -->
-      <t-demo-box label="Horizontal Layout">
+      <demo-box label="Horizontal Layout">
         <cat-field label="Name:" horizontal>
           <cat-input v-model="horizontalName" placeholder="First and last name" />
         </cat-field>
@@ -65,10 +65,10 @@
         <cat-field label="Phone:" horizontal message="Include country code">
           <cat-input v-model="horizontalPhone" type="tel" placeholder="+1 (555) 123-4567" />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Addons (Attached Controls) -->
-      <t-demo-box label="Addons (Attached Controls)">
+      <demo-box label="Addons (Attached Controls)">
         <cat-field label="URL:" addons horizontal>
           <cat-input v-model="urlPath" expanded placeholder="username" />
           <cat-button variant="primary">
@@ -92,10 +92,10 @@
             <cat-icon icon="magnify" />
           </cat-button>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Grouped Fields (Side by Side) -->
-      <t-demo-box label="Grouped Fields (Side by Side)">
+      <demo-box label="Grouped Fields (Side by Side)">
         <cat-field label="Actions:" grouped>
           <cat-button variant="primary">
             Save
@@ -114,10 +114,10 @@
             Search
           </cat-button>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Multiple Inputs with Addons -->
-      <t-demo-box label="Multiple Inputs with Addons">
+      <demo-box label="Multiple Inputs with Addons">
         <cat-field label="Full Name:" addons>
           <cat-input v-model="firstName" placeholder="First name" expanded />
           <cat-input v-model="lastName" placeholder="Last name" expanded />
@@ -130,10 +130,10 @@
           </div>
           <cat-input v-model="endDate" type="date" expanded />
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Practical Form Example -->
-      <t-demo-box label="Example: Registration Form" example>
+      <demo-box label="Example: Registration Form" example>
         <cat-field label="Username:" message="Choose a unique username">
           <cat-input v-model="regUsername" placeholder="username" />
         </cat-field>
@@ -198,10 +198,10 @@
             Reset
           </cat-button>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Stacked Fields -->
-      <t-demo-box label="Example: Address Form" example>
+      <demo-box label="Example: Address Form" example>
         <cat-field label="Street Address:">
           <cat-input v-model="address.street" placeholder="123 Main St" />
         </cat-field>
@@ -227,14 +227,14 @@
             </cat-field>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const username = ref('')
 const email = ref('')

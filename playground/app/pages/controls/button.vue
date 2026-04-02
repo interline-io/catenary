@@ -8,7 +8,7 @@
         Interactive button control with various styles and states
       </p>
 
-      <t-demo-box label="Variants">
+      <demo-box label="Variants">
         <div class="buttons">
           <cat-button>
             Default
@@ -22,17 +22,17 @@
             {{ capitalize(variant) }}
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <div class="buttons">
           <cat-button v-for="size in sizes" :key="size" :size="size">
             {{ capitalize(size) }}
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Outlined">
+      <demo-box label="Outlined">
         <div class="buttons">
           <cat-button v-for="variant in coreVariants" :key="variant" :variant="variant" outlined>
             {{ capitalize(variant) }}
@@ -43,9 +43,9 @@
             {{ capitalize(variant) }}
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Rounded">
+      <demo-box label="Rounded">
         <div class="buttons">
           <cat-button variant="primary" rounded>
             Rounded
@@ -54,9 +54,9 @@
             Rounded Outlined
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Icon Only">
+      <demo-box label="Icon Only">
         <div class="buttons">
           <cat-button variant="primary">
             <cat-icon icon="heart" />
@@ -74,9 +74,9 @@
             <cat-icon icon="close" />
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Icon Props (icon-left / icon-right)">
+      <demo-box label="Icon Props (icon-left / icon-right)">
         <div class="buttons">
           <cat-button variant="primary" icon-left="check">
             Save
@@ -91,9 +91,9 @@
             Upload & Verify
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="States">
+      <demo-box label="States">
         <div class="buttons">
           <cat-button variant="primary" loading>
             Loading
@@ -105,15 +105,15 @@
             Click Me ({{ clickCount }})
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Full Width">
+      <demo-box label="Full Width">
         <cat-button variant="primary" fullwidth>
           Full Width Button
         </cat-button>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Button Groups">
+      <demo-box label="Button Groups">
         <cat-field addons>
           <cat-button variant="primary">
             Left
@@ -137,7 +137,7 @@
             No
           </cat-button>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -145,7 +145,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { CoreVariants, ButtonVariants, ButtonSizes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const coreVariants = CoreVariants
 const additionalVariants = ButtonVariants.filter(v => !CoreVariants.includes(v as any))

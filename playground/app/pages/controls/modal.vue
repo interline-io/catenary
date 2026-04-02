@@ -8,7 +8,7 @@
         Modal dialog with various configurations
       </p>
 
-      <t-demo-box label="Basic Modal">
+      <demo-box label="Basic Modal">
         <cat-button variant="primary" @click="showBasic = true">
           Open Basic Modal
         </cat-button>
@@ -16,9 +16,9 @@
           <p>This is a basic modal with a title and content.</p>
           <p>You can close it by clicking the X button or outside the modal.</p>
         </cat-modal>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Modal Sizes">
+      <demo-box label="Modal Sizes">
         <div class="buttons">
           <cat-button variant="info" @click="showSmall = true">
             Small Modal
@@ -42,9 +42,9 @@
           <p>Perfect for forms or detailed information.</p>
           <p>You can add as much content as needed here.</p>
         </cat-modal>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Fullscreen Modal">
+      <demo-box label="Fullscreen Modal">
         <cat-button variant="success" @click="showFullscreen = true">
           Open Fullscreen Modal
         </cat-button>
@@ -63,9 +63,9 @@
             </ul>
           </div>
         </cat-modal>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Modal with Footer">
+      <demo-box label="Modal with Footer">
         <cat-button variant="warning" @click="showFooter = true">
           Open Modal with Footer
         </cat-button>
@@ -83,9 +83,9 @@
             </div>
           </template>
         </cat-modal>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Modal without Close Button">
+      <demo-box label="Modal without Close Button">
         <cat-button variant="danger" @click="showNoClose = true">
           Open Modal (No Close Button)
         </cat-button>
@@ -96,9 +96,9 @@
             I Understand
           </cat-button>
         </cat-modal>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Form in Modal" example>
+      <demo-box label="Example: Form in Modal" example>
         <cat-button variant="primary" @click="showForm = true">
           Open Form Modal
         </cat-button>
@@ -129,14 +129,14 @@
         <cat-notification v-if="resultMessage" variant="success" class="mt-4">
           {{ resultMessage }}
         </cat-notification>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const showBasic = ref(false)
 const showSmall = ref(false)

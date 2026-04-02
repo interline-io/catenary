@@ -8,31 +8,31 @@
         Alert messages with variants and actions
       </p>
 
-      <t-demo-box label="Basic Notification">
+      <demo-box label="Basic Notification">
         <cat-notification>
           This is a basic notification message.
         </cat-notification>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Variants">
+      <demo-box label="Variants">
         <cat-notification v-for="variant in variants" :key="variant" :variant="variant">
           <strong>{{ capitalize(variant) }}</strong> notification message.
         </cat-notification>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Light Variants">
+      <demo-box label="Light Variants">
         <cat-notification v-for="variant in variants" :key="variant" :variant="variant" light>
           <strong>{{ capitalize(variant) }}</strong> light notification.
         </cat-notification>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Closable">
+      <demo-box label="Closable">
         <cat-notification variant="info" closeable>
           <strong>Closable notification.</strong> Click the X to dismiss.
         </cat-notification>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Closable Notifications" example>
+      <demo-box label="Example: Closable Notifications" example>
         <cat-notification v-if="notifications.welcome" variant="info" closeable @close="notifications.welcome = false">
           <strong>Welcome!</strong> Thanks for joining our platform.
         </cat-notification>
@@ -45,9 +45,9 @@
         <cat-button v-if="!allNotificationsVisible" @click="resetNotifications">
           Show Notifications Again
         </cat-button>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: With Icons" example>
+      <demo-box label="Example: With Icons" example>
         <cat-notification variant="success">
           <div class="is-flex is-align-items-center">
             <cat-icon icon="check-circle" class="mr-2" />
@@ -72,9 +72,9 @@
             <span><strong>Error:</strong> Failed to connect to server.</span>
           </div>
         </cat-notification>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: With Action Buttons" example>
+      <demo-box label="Example: With Action Buttons" example>
         <cat-notification variant="primary">
           <div class="is-flex is-justify-content-space-between is-align-items-center">
             <div>
@@ -108,9 +108,9 @@
             </div>
           </div>
         </cat-notification>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Form Submission Status" example>
+      <demo-box label="Example: Form Submission Status" example>
         <cat-field label="Email:">
           <cat-input v-model="email" type="email" placeholder="your@email.com" />
         </cat-field>
@@ -125,18 +125,18 @@
           <cat-icon icon="alert-circle" />
           Failed to submit form. Please try again.
         </cat-notification>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Loading State" example>
+      <demo-box label="Example: Loading State" example>
         <cat-notification variant="info">
           <div class="is-flex is-align-items-center">
             <cat-loading />
             <span class="ml-3">Processing your request...</span>
           </div>
         </cat-notification>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Multi-line Content" example>
+      <demo-box label="Example: Multi-line Content" example>
         <cat-notification variant="info" light>
           <p class="has-text-weight-bold">
             <cat-icon icon="lightbulb" />
@@ -151,7 +151,7 @@
             <li><kbd>Ctrl</kbd> + <kbd>F</kbd> to search</li>
           </ul>
         </cat-notification>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -159,7 +159,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { NotificationVariants } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const variants = NotificationVariants
 

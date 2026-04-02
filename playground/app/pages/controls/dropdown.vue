@@ -8,7 +8,7 @@
         Contextual dropdown menu with custom triggers
       </p>
 
-      <t-demo-box label="Basic Dropdown">
+      <demo-box label="Basic Dropdown">
         <cat-dropdown label="Actions">
           <cat-dropdown-item value="edit">
             <cat-icon icon="pencil" size="small" />
@@ -23,9 +23,9 @@
             <span>Delete</span>
           </cat-dropdown-item>
         </cat-dropdown>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Trigger Variants">
+      <demo-box label="Trigger Variants">
         <div class="buttons">
           <cat-dropdown v-for="variant in triggerVariants" :key="variant" :button-variant="variant" :label="capitalize(variant)">
             <cat-dropdown-item value="1">
@@ -39,9 +39,9 @@
             </cat-dropdown-item>
           </cat-dropdown>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Hoverable Dropdown">
+      <demo-box label="Hoverable Dropdown">
         <p class="mb-3">
           Hover over the button to open the dropdown
         </p>
@@ -56,9 +56,9 @@
             Option 3
           </cat-dropdown-item>
         </cat-dropdown>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="With Icons">
+      <demo-box label="With Icons">
         <cat-dropdown label="My Account" icon-left="account-circle">
           <cat-dropdown-item value="profile">
             <cat-icon icon="account" size="small" />
@@ -78,9 +78,9 @@
             <span>Logout</span>
           </cat-dropdown-item>
         </cat-dropdown>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Dropdown Positions">
+      <demo-box label="Dropdown Positions">
         <div class="buttons">
           <cat-dropdown label="Bottom Left (Default)">
             <cat-dropdown-item value="1">
@@ -118,9 +118,9 @@
             </cat-dropdown-item>
           </cat-dropdown>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="With Disabled Items">
+      <demo-box label="With Disabled Items">
         <cat-dropdown label="File">
           <cat-dropdown-item value="new">
             <cat-icon icon="file-plus" size="small" />
@@ -140,9 +140,9 @@
             <span>Export</span>
           </cat-dropdown-item>
         </cat-dropdown>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Custom Trigger">
+      <demo-box label="Custom Trigger">
         <cat-dropdown>
           <template #trigger>
             <a class="navbar-item">
@@ -160,9 +160,9 @@
             API Reference
           </cat-dropdown-item>
         </cat-dropdown>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Multiple Selection (Array Model)">
+      <demo-box label="Multiple Selection (Array Model)">
         <p class="mb-3">
           Selected items: <strong>{{ multipleSelection.length > 0 ? multipleSelection.join(', ') : 'None' }}</strong>
         </p>
@@ -180,9 +180,9 @@
             🐭 Mouse
           </cat-dropdown-item>
         </cat-dropdown>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Interactive Actions" example>
+      <demo-box label="Example: Interactive Actions" example>
         <p class="mb-3">
           Selected action: <strong>{{ selectedAction || 'None' }}</strong>
         </p>
@@ -211,9 +211,9 @@
             <span>Share</span>
           </cat-dropdown-item>
         </cat-dropdown>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Notification Menu" example>
+      <demo-box label="Example: Notification Menu" example>
         <cat-dropdown>
           <template #trigger>
             <cat-button variant="info">
@@ -262,9 +262,9 @@
             </p>
           </cat-dropdown-item>
         </cat-dropdown>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Language Selector" example>
+      <demo-box label="Example: Language Selector" example>
         <p class="mb-3">
           Current language: <strong>{{ currentLanguage }}</strong>
         </p>
@@ -292,9 +292,9 @@
             🇯🇵 日本語
           </cat-dropdown-item>
         </cat-dropdown>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Single Selection with v-model">
+      <demo-box label="Single Selection with v-model">
         <p class="mb-3">
           Selected option: <strong>{{ singleSelection || 'None' }}</strong>
         </p>
@@ -309,9 +309,9 @@
             Option 3
           </cat-dropdown-item>
         </cat-dropdown>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Numeric Values" example>
+      <demo-box label="Example: Numeric Values" example>
         <p class="mb-3">
           Selected user ID: <strong>{{ selectedUserId || 'None' }}</strong>
         </p>
@@ -326,7 +326,7 @@
             👤 Bob Johnson (ID: 3)
           </cat-dropdown-item>
         </cat-dropdown>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -334,7 +334,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { DropdownTriggerVariants } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const triggerVariants = DropdownTriggerVariants
 

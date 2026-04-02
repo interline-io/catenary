@@ -16,7 +16,7 @@
         </p>
       </cat-msg>
 
-      <t-demo-box label="Basic Usage (undefined means all by default)">
+      <demo-box label="Basic Usage (undefined means all by default)">
         <p class="mb-3">
           This demonstrates the key feature: <code>undefined</code> means "all selected" until the user interacts.
           An empty array <code>[]</code> means "none selected".
@@ -46,9 +46,9 @@
             Set to ['apple']
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Simulated Async Loading + Custom Option Rendering">
+      <demo-box label="Simulated Async Loading + Custom Option Rendering">
         <p class="mb-3">
           This simulates the common pattern: options load after a delay, but selection state
           is preserved correctly. <code>undefined</code> means "all agencies selected" before AND after load.
@@ -93,9 +93,9 @@
             </span>
           </p>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Simple String Options">
+      <demo-box label="Simple String Options">
         <p class="mb-3">
           Works with simple string arrays too.
         </p>
@@ -106,9 +106,9 @@
         <div class="mt-4 p-3 has-background-light">
           <p><strong>selectedRouteTypes:</strong> <code>{{ JSON.stringify(selectedRouteTypes) }}</code></p>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Traditional mode: undefined-means-none">
+      <demo-box label="Traditional mode: undefined-means-none">
         <p class="mb-3">
           When <code>undefined-means-none</code> is set, the component behaves traditionally:
           <code>undefined</code> is treated as empty selection.
@@ -121,9 +121,9 @@
         <div class="mt-4 p-3 has-background-light">
           <p><strong>traditionalSelection:</strong> <code>{{ JSON.stringify(traditionalSelection) }}</code></p>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Customization Options">
+      <demo-box label="Customization Options">
         <p class="mb-3">
           Various customization options: variants, sizes, hiding select-all, etc.
         </p>
@@ -159,9 +159,9 @@
             />
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Edge Case: Deselect All One-by-One">
+      <demo-box label="Edge Case: Deselect All One-by-One">
         <p class="mb-3">
           This demonstrates the fix for the bug where deselecting the last item would reset to "all selected".
           Try deselecting all items one by one - it should result in <code>[]</code>, not <code>undefined</code>.
@@ -179,16 +179,14 @@
         <cat-button class="mt-2" size="small" @click="edgeCaseSelection = undefined">
           Reset to undefined
         </cat-button>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
-import TCheckboxGroup from '../../../../src/controls/checkbox-group.vue'
-import TButton from '../../../../src/controls/button.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 // Basic demo
 const fruitOptions = [

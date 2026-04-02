@@ -8,7 +8,7 @@
         Dropdown selection control
       </p>
 
-      <t-demo-box label="Basic Select">
+      <demo-box label="Basic Select">
         <cat-field label="Choose a country:">
           <cat-select v-model="basic">
             <option value="us">
@@ -31,9 +31,9 @@
         <p class="has-text-grey">
           Selected: {{ basic || 'None' }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Multiple Selection">
+      <demo-box label="Multiple Selection">
         <cat-field label="Select multiple languages:">
           <cat-select v-model="multiple" multiple>
             <option value="js">
@@ -59,9 +59,9 @@
         <p class="has-text-grey">
           Selected: {{ Array.isArray(multiple) && multiple.length > 0 ? multiple.join(', ') : 'None' }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Variants">
+      <demo-box label="Variants">
         <cat-field v-for="variant in variants" :key="variant" :label="capitalize(variant) + ':'">
           <cat-select v-model="variantValues[variant]" :variant="variant">
             <option value="1">
@@ -75,9 +75,9 @@
             </option>
           </cat-select>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <cat-field v-for="size in sizes" :key="size" :label="capitalize(size) + ':'">
           <cat-select v-model="sizeValues[size]" :size="size">
             <option value="1">
@@ -85,9 +85,9 @@
             </option>
           </cat-select>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="States">
+      <demo-box label="States">
         <cat-field label="Disabled:">
           <cat-select v-model="stateDisabled" disabled>
             <option value="1">
@@ -112,9 +112,9 @@
             </option>
           </cat-select>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Rounded Style">
+      <demo-box label="Rounded Style">
         <cat-field label="Choose an option:">
           <cat-select v-model="rounded" rounded>
             <option value="1">
@@ -128,9 +128,9 @@
             </option>
           </cat-select>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="With Icon">
+      <demo-box label="With Icon">
         <cat-field label="Choose a theme:">
           <cat-select v-model="theme" icon="palette" fullwidth>
             <option value="light">
@@ -144,9 +144,9 @@
             </option>
           </cat-select>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Product Filter" example>
+      <demo-box label="Example: Product Filter" example>
         <div class="columns">
           <div class="column">
             <cat-field label="Category">
@@ -212,9 +212,9 @@
         <p class="has-text-grey">
           Filters: Category={{ filter.category || 'All' }}, Sort={{ filter.sort }}, Price={{ filter.price }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Time Zone Selector" example>
+      <demo-box label="Example: Time Zone Selector" example>
         <cat-field label="Select your time zone:">
           <cat-select v-model="timezone" fullwidth>
             <optgroup label="North America">
@@ -255,7 +255,7 @@
             </optgroup>
           </cat-select>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -263,7 +263,7 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { SelectVariants, SelectSizes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const variants = SelectVariants
 const sizes = SelectSizes

@@ -8,7 +8,7 @@
         Toggle switch for boolean settings
       </p>
 
-      <t-demo-box label="Basic Switch">
+      <demo-box label="Basic Switch">
         <cat-field>
           <cat-switch v-model="basic">
             Enable notifications
@@ -17,25 +17,25 @@
         <p class="has-text-grey">
           Value: {{ basic }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Variants">
+      <demo-box label="Variants">
         <cat-field v-for="variant in variants" :key="variant">
           <cat-switch v-model="variantValues[variant]" :variant="variant">
             {{ capitalize(variant) }}
           </cat-switch>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <cat-field v-for="size in sizes" :key="size">
           <cat-switch v-model="sizeValues[size]" :size="size">
             {{ capitalize(size) }} switch
           </cat-switch>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Disabled State">
+      <demo-box label="Disabled State">
         <cat-field>
           <cat-switch v-model="disabledOff" disabled>
             Disabled (off)
@@ -46,9 +46,9 @@
             Disabled (on)
           </cat-switch>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="With Additional Content">
+      <demo-box label="With Additional Content">
         <cat-field>
           <cat-switch v-model="content1" variant="primary">
             <div>
@@ -69,17 +69,17 @@
             </div>
           </cat-switch>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Rounded Style">
+      <demo-box label="Rounded Style">
         <cat-field>
           <cat-switch v-model="rounded" rounded variant="success">
             Rounded switch
           </cat-switch>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Settings Panel" example>
+      <demo-box label="Example: Settings Panel" example>
         <h3 class="subtitle is-5">
           Notification Settings
         </h3>
@@ -137,9 +137,9 @@
             </p>
           </cat-switch>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Feature Toggles" example>
+      <demo-box label="Example: Feature Toggles" example>
         <cat-field>
           <cat-switch v-model="features.darkMode" variant="dark">
             <cat-icon icon="weather-night" />
@@ -158,9 +158,9 @@
             <span>Experimental Features</span>
           </cat-switch>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Interactive Demo" example>
+      <demo-box label="Example: Interactive Demo" example>
         <cat-field>
           <cat-switch v-model="demo.enabled" variant="success" size="large">
             <strong>Feature Enabled</strong>
@@ -187,9 +187,9 @@
             Feature is disabled. Enable it to see more options.
           </p>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Custom Values (Numeric)" example>
+      <demo-box label="Example: Custom Values (Numeric)" example>
         <cat-field>
           <cat-switch v-model="statusCode" :true-value="1" :false-value="0" variant="success">
             API Status (1 = active, 0 = inactive)
@@ -198,9 +198,9 @@
         <p class="has-text-grey">
           Status Code: {{ statusCode }} (type: {{ typeof statusCode }})
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Custom Values (String)" example>
+      <demo-box label="Example: Custom Values (String)" example>
         <cat-field>
           <cat-switch v-model="theme" true-value="dark" false-value="light" variant="dark">
             Dark Mode
@@ -209,7 +209,7 @@
         <p class="has-text-grey">
           Theme: {{ theme }} (type: {{ typeof theme }})
         </p>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -217,7 +217,7 @@
 <script setup lang="ts">
 import { ref, reactive, type Ref } from 'vue'
 import { SwitchVariants, SwitchSizes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const variants = SwitchVariants
 const sizes = SwitchSizes

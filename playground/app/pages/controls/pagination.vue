@@ -9,15 +9,15 @@
       </p>
 
       <!-- Basic Pagination -->
-      <t-demo-box label="Basic Pagination">
+      <demo-box label="Basic Pagination">
         <cat-pagination v-model:current="basicPage" :total="100" :per-page="10" />
         <p class="has-text-grey mt-3">
           Current page: {{ basicPage }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Positions -->
-      <t-demo-box label="Positions">
+      <demo-box label="Positions">
         <div class="mb-4">
           <p class="has-text-weight-semibold mb-2">
             Left
@@ -36,25 +36,25 @@
           </p>
           <cat-pagination v-model:current="positionPage" :total="100" :per-page="10" position="right" />
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Sizes -->
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <div v-for="paginationSize in sizes" :key="paginationSize" class="mb-4">
           <p class="has-text-weight-semibold mb-2">
             {{ capitalize(paginationSize) }}
           </p>
           <cat-pagination v-model:current="sizePage" :total="100" :per-page="10" :size="paginationSize" />
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Rounded -->
-      <t-demo-box label="Rounded">
+      <demo-box label="Rounded">
         <cat-pagination v-model:current="roundedPage" :total="100" :per-page="10" rounded />
-      </t-demo-box>
+      </demo-box>
 
       <!-- Custom Range -->
-      <t-demo-box label="Custom Range">
+      <demo-box label="Custom Range">
         <div class="mb-4">
           <p class="has-text-weight-semibold mb-2">
             Range Before: 2, Range After: 2
@@ -70,18 +70,18 @@
         <p class="has-text-grey mt-3">
           Current page: {{ rangePage }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Large Dataset -->
-      <t-demo-box label="Large Dataset">
+      <demo-box label="Large Dataset">
         <cat-pagination v-model:current="largePage" :total="1000" :per-page="25" />
         <p class="has-text-grey mt-3">
           Page {{ largePage }} of {{ Math.ceil(1000 / 25) }} ({{ 1000 }} total items)
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Custom Per Page -->
-      <t-demo-box label="Custom Items Per Page">
+      <demo-box label="Custom Items Per Page">
         <div class="mb-4">
           <div class="buttons">
             <cat-button
@@ -99,10 +99,10 @@
         <p class="has-text-grey mt-3">
           Showing page {{ customPage }} with {{ customPerPage }} items per page ({{ Math.ceil(100 / customPerPage) }} total pages)
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Example: Data Table -->
-      <t-demo-box label="Example: Data Table with Pagination" example>
+      <demo-box label="Example: Data Table with Pagination" example>
         <cat-table :data="paginatedData">
           <template #columns>
             <cat-table-column field="id" label="ID" />
@@ -121,7 +121,7 @@
         <p class="has-text-grey has-text-centered mt-2">
           Showing {{ (tablePage - 1) * tablePerPage + 1 }} - {{ Math.min(tablePage * tablePerPage, tableData.length) }} of {{ tableData.length }} items
         </p>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -129,7 +129,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { PaginationSizes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const sizes = PaginationSizes
 

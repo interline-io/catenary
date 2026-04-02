@@ -9,7 +9,7 @@
       </p>
 
       <!-- Basic Tabs -->
-      <t-demo-box label="Basic Tabs">
+      <demo-box label="Basic Tabs">
         <cat-tabs v-model="basicTab">
           <cat-tab-item label="Home" value="home">
             <div class="content">
@@ -33,10 +33,10 @@
         <p class="has-text-grey">
           Active tab: {{ basicTab }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Types -->
-      <t-demo-box label="Types">
+      <demo-box label="Types">
         <div v-for="tabsType in tabsTypes" :key="tabsType" class="mb-4">
           <h3 class="subtitle is-5">
             {{ formatType(tabsType) }}
@@ -47,20 +47,20 @@
             <cat-tab-item label="Settings" value="3" />
           </cat-tabs>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- With Icons -->
-      <t-demo-box label="With Icons">
+      <demo-box label="With Icons">
         <cat-tabs v-model="iconTab">
           <cat-tab-item label="Dashboard" value="dashboard" icon="view-dashboard" />
           <cat-tab-item label="Messages" value="messages" icon="email" />
           <cat-tab-item label="Notifications" value="notifications" icon="bell" />
           <cat-tab-item label="Settings" value="settings" icon="cog" />
         </cat-tabs>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Sizes -->
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <div v-for="tabsSize in sizes" :key="tabsSize" class="mb-4">
           <h3 class="subtitle is-5">
             {{ capitalize(tabsSize) }}
@@ -70,10 +70,10 @@
             <cat-tab-item label="Tab 2" value="2" />
           </cat-tabs>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Alignment -->
-      <t-demo-box label="Alignment">
+      <demo-box label="Alignment">
         <div v-for="position in positions" :key="position" class="mb-4">
           <h3 class="subtitle is-5">
             {{ capitalize(position) }}{{ position === 'left' ? '-aligned' : position === 'right' ? '-aligned' : '' }}
@@ -84,20 +84,20 @@
             <cat-tab-item label="Three" value="3" />
           </cat-tabs>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Full Width -->
-      <t-demo-box label="Full Width">
+      <demo-box label="Full Width">
         <cat-tabs v-model="fullWidth" expanded>
           <cat-tab-item label="First" value="1" />
           <cat-tab-item label="Second" value="2" />
           <cat-tab-item label="Third" value="3" />
           <cat-tab-item label="Fourth" value="4" />
         </cat-tabs>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Practical Example: Settings Panel -->
-      <t-demo-box label="Example: Settings Panel" example>
+      <demo-box label="Example: Settings Panel" example>
         <cat-tabs v-model="settingsTab" type="boxed">
           <cat-tab-item label="Account" value="account" icon="account">
             <div class="content">
@@ -171,10 +171,10 @@
             </div>
           </cat-tab-item>
         </cat-tabs>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Interactive Example -->
-      <t-demo-box label="Example: Product Details" example>
+      <demo-box label="Example: Product Details" example>
         <cat-tabs v-model="productTab">
           <cat-tab-item label="Description" value="description">
             <div class="content">
@@ -236,7 +236,7 @@
             </div>
           </cat-tab-item>
         </cat-tabs>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -244,7 +244,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { TabsSizes, TabsPositions, TabsTypes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const sizes = TabsSizes
 const positions = TabsPositions

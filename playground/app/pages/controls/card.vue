@@ -8,7 +8,7 @@
         Flexible content container with multiple sections
       </p>
 
-      <t-demo-box label="Basic Card">
+      <demo-box label="Basic Card">
         <cat-card>
           <div class="content">
             <p>
@@ -17,9 +17,9 @@
             </p>
           </div>
         </cat-card>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Card with Header">
+      <demo-box label="Card with Header">
         <cat-card>
           <template #header>
             <p class="card-header-title">
@@ -36,9 +36,9 @@
             </p>
           </div>
         </cat-card>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Card with Footer">
+      <demo-box label="Card with Footer">
         <cat-card>
           <div class="content">
             <p>
@@ -51,9 +51,9 @@
             <a href="#" class="card-footer-item">Delete</a>
           </template>
         </cat-card>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Panel Variant">
+      <demo-box label="Panel Variant">
         <div class="columns">
           <div class="column">
             <cat-card label="With Label Prop" variant="panel">
@@ -109,9 +109,9 @@
             </cat-card>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Expandable Card">
+      <demo-box label="Expandable Card">
         <div class="columns">
           <div class="column">
             <cat-card label="Click to Expand" expandable>
@@ -133,9 +133,9 @@
             </cat-card>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Controlled Expandable Card">
+      <demo-box label="Controlled Expandable Card">
         <div class="buttons mb-4">
           <cat-button @click="cardOpen = !cardOpen">
             {{ cardOpen ? 'Close Card' : 'Open Card' }}
@@ -149,9 +149,9 @@
             </p>
           </div>
         </cat-card>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Expandable with Footer">
+      <demo-box label="Expandable with Footer">
         <cat-card label="Settings" expandable>
           <div class="content">
             <p>
@@ -169,9 +169,9 @@
             <a href="#" class="card-footer-item">Cancel</a>
           </template>
         </cat-card>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Complete Card">
+      <demo-box label="Complete Card">
         <cat-card>
           <template #header>
             <p class="card-header-title">
@@ -193,9 +193,9 @@
             <a href="#" class="card-footer-item">Action 3</a>
           </template>
         </cat-card>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Card with Image" example>
+      <demo-box label="Example: Card with Image" example>
         <div class="columns">
           <div class="column is-one-third">
             <cat-card>
@@ -269,9 +269,9 @@
             </cat-card>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Statistics Cards" example>
+      <demo-box label="Example: Statistics Cards" example>
         <div class="columns">
           <div class="column">
             <cat-card>
@@ -338,14 +338,14 @@
             </cat-card>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const cardOpen = ref(true)
 </script>

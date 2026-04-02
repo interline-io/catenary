@@ -8,19 +8,19 @@
         Message box for displaying important information
       </p>
 
-      <t-demo-box label="Basic Message">
+      <demo-box label="Basic Message">
         <cat-msg>
           This is a basic message box.
         </cat-msg>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Variants">
+      <demo-box label="Variants">
         <cat-msg v-for="variant in variants" :key="variant" :variant="variant">
           <strong>{{ capitalize(variant) }}:</strong> This is a {{ variant }} message variant.
         </cat-msg>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="With Title">
+      <demo-box label="With Title">
         <cat-msg variant="info" title="Did you know?">
           You can use keyboard shortcuts to navigate the application faster.
           Press <kbd>?</kbd> to see all available shortcuts.
@@ -31,9 +31,9 @@
         <cat-msg variant="warning" title="Action Required">
           Your subscription expires in 7 days. Please update your payment method to continue using our services.
         </cat-msg>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="With Icons">
+      <demo-box label="With Icons">
         <cat-msg variant="info" show-icon>
           <template #header>
             <div class="is-flex is-align-items-center">
@@ -56,9 +56,9 @@
             Your changes have been saved successfully.
           </p>
         </cat-msg>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Icon Sizes">
+      <demo-box label="Icon Sizes">
         <cat-msg variant="info" show-icon icon-size="small">
           Small icon size.
         </cat-msg>
@@ -68,9 +68,9 @@
         <cat-msg variant="warning" show-icon icon-size="large">
           Large icon size (default).
         </cat-msg>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Closable Messages">
+      <demo-box label="Closable Messages">
         <cat-msg v-if="messages.tips" variant="info" closable @close="messages.tips = false">
           <template #header>
             <span class="has-text-weight-bold">
@@ -94,9 +94,9 @@
         <cat-button v-if="!allMessagesVisible" @click="resetMessages">
           Show Messages Again
         </cat-button>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Expandable Messages">
+      <demo-box label="Expandable Messages">
         <cat-msg expandable title="Click to expand">
           This content is hidden by default. Click the header to reveal it.
           You can use this for FAQ sections, additional details, or collapsible information.
@@ -115,9 +115,9 @@
             Toggle Controlled Message
           </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: System Messages" example>
+      <demo-box label="Example: System Messages" example>
         <cat-msg variant="warning">
           <template #header>
             <div class="is-flex is-align-items-center">
@@ -149,9 +149,9 @@
             <strong>Affected services:</strong> Authentication, API access, File uploads
           </p>
         </cat-msg>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Feature Announcements" example>
+      <demo-box label="Example: Feature Announcements" example>
         <cat-msg variant="success">
           <template #header>
             <div class="is-flex is-align-items-center">
@@ -172,9 +172,9 @@
             </cat-button>
           </div>
         </cat-msg>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Help & Documentation" example>
+      <demo-box label="Example: Help & Documentation" example>
         <cat-msg variant="info">
           <template #header>
             <div class="is-flex is-align-items-center">
@@ -202,9 +202,9 @@
             </ul>
           </div>
         </cat-msg>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Form Validation" example>
+      <demo-box label="Example: Form Validation" example>
         <cat-field label="Email:">
           <cat-input v-model="validationEmail" type="email" />
         </cat-field>
@@ -232,9 +232,9 @@
             <li>Please enter a valid email format</li>
           </ul>
         </cat-msg>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Promotional Message" example>
+      <demo-box label="Example: Promotional Message" example>
         <cat-msg variant="primary">
           <template #header>
             <span class="has-text-weight-bold">
@@ -254,7 +254,7 @@
             </cat-button>
           </div>
         </cat-msg>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -262,7 +262,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { MsgVariants } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const variants = MsgVariants
 

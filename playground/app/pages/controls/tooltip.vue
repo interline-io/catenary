@@ -8,7 +8,7 @@
         Contextual information on hover
       </p>
 
-      <t-demo-box label="Basic Tooltip">
+      <demo-box label="Basic Tooltip">
         <div class="has-text-centered">
           <cat-tooltip text="This is a tooltip">
             <cat-button>
@@ -16,9 +16,9 @@
             </cat-button>
           </cat-tooltip>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Positions">
+      <demo-box label="Positions">
         <div class="has-text-centered mb-4">
           <cat-tooltip text="Top tooltip" position="top">
             <cat-button>
@@ -45,9 +45,9 @@
             </cat-button>
           </cat-tooltip>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="With Icons">
+      <demo-box label="With Icons">
         <div class="buttons">
           <cat-tooltip text="Save changes">
             <cat-button>
@@ -75,9 +75,9 @@
             </cat-button>
           </cat-tooltip>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Form Field Help" example>
+      <demo-box label="Example: Form Field Help" example>
         <cat-field label="Username:">
           <div class="is-flex">
             <cat-input v-model="username" expanded />
@@ -99,9 +99,9 @@
             </cat-tooltip>
           </div>
         </cat-field>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Text with Tooltip" example>
+      <demo-box label="Example: Text with Tooltip" example>
         <p>
           Hover over
           <cat-tooltip text="This is an abbreviation for 'example'" position="top">
@@ -120,9 +120,9 @@
           </cat-tooltip>
           is commonly used in software development.
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Status Indicators" example>
+      <demo-box label="Example: Status Indicators" example>
         <table class="table is-fullwidth">
           <thead>
             <tr>
@@ -165,9 +165,9 @@
             </tr>
           </tbody>
         </table>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Navigation Menu" example>
+      <demo-box label="Example: Navigation Menu" example>
         <div class="buttons">
           <cat-tooltip text="Dashboard" position="bottom">
             <cat-button>
@@ -195,9 +195,9 @@
             </cat-button>
           </cat-tooltip>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Interactive Toolbar" example>
+      <demo-box label="Example: Interactive Toolbar" example>
         <div class="buttons">
           <cat-tooltip text="Bold (Ctrl+B)" position="bottom">
             <cat-button>
@@ -240,9 +240,9 @@
             </cat-button>
           </cat-tooltip>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Tags with Info" example>
+      <demo-box label="Example: Tags with Info" example>
         <div class="tags">
           <cat-tooltip text="Primary programming language" position="top">
             <cat-tag>
@@ -265,14 +265,14 @@
             </cat-tag>
           </cat-tooltip>
         </div>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const username = ref('')
 const password = ref('')

@@ -8,13 +8,13 @@
         Small label components for categorization
       </p>
 
-      <t-demo-box label="Basic Tag">
+      <demo-box label="Basic Tag">
         <cat-tag>
           Tag label
         </cat-tag>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Variants">
+      <demo-box label="Variants">
         <div class="tags">
           <cat-tag>
             Default
@@ -23,17 +23,17 @@
             {{ capitalize(variant) }}
           </cat-tag>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <div class="tags">
           <cat-tag v-for="size in sizes" :key="size" :size="size">
             {{ capitalize(size) }}
           </cat-tag>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Rounded">
+      <demo-box label="Rounded">
         <div class="tags">
           <cat-tag rounded>
             Rounded
@@ -42,9 +42,9 @@
             {{ capitalize(variant) }}
           </cat-tag>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Closable Tags">
+      <demo-box label="Closable Tags">
         <p class="mb-3">
           Selected tags: {{ selectedTags.join(', ') || 'None' }}
         </p>
@@ -65,9 +65,9 @@
         <cat-button size="small" @click="resetTags">
           Reset Tags
         </cat-button>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Light Variants">
+      <demo-box label="Light Variants">
         <div class="tags">
           <cat-tag variant="primary" light>
             Primary
@@ -85,9 +85,9 @@
             Danger
           </cat-tag>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Tag Combinations">
+      <demo-box label="Tag Combinations">
         <div class="field is-grouped is-grouped-multiline">
           <div class="control">
             <div class="tags has-addons">
@@ -120,9 +120,9 @@
             </div>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Delete Tag Combinations" example>
+      <demo-box label="Example: Delete Tag Combinations" example>
         <p class="mb-3">
           Selected items (click X to remove):
         </p>
@@ -139,9 +139,9 @@
         <cat-button v-if="selectedItems.length === 0" size="small" @click="resetItems">
           Reset Items
         </cat-button>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Status Indicators" example>
+      <demo-box label="Example: Status Indicators" example>
         <table class="table is-fullwidth">
           <thead>
             <tr>
@@ -205,9 +205,9 @@
             </tr>
           </tbody>
         </table>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Category Tags" example>
+      <demo-box label="Example: Category Tags" example>
         <article class="media">
           <div class="media-content">
             <div class="content">
@@ -256,9 +256,9 @@
             </div>
           </div>
         </article>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Interactive Filter" example>
+      <demo-box label="Example: Interactive Filter" example>
         <p class="mb-3">
           <strong>Filter by category:</strong>
         </p>
@@ -287,7 +287,7 @@
         <p v-else class="has-text-grey">
           Select a category to filter
         </p>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -295,7 +295,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { TagVariants, TagSizes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const variants = TagVariants
 const sizes = TagSizes

@@ -8,14 +8,14 @@
         Search input with suggestions and filtering
       </p>
 
-      <t-demo-box label="Basic Search Bar">
+      <demo-box label="Basic Search Bar">
         <cat-search-bar v-model="basicSearch" placeholder="Search..." />
         <p class="has-text-grey mt-3">
           Search query: {{ basicSearch || 'None' }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Interactive Search with Results" example>
+      <demo-box label="Example: Interactive Search with Results" example>
         <cat-search-bar
           v-model="interactiveSearch as string | null"
           placeholder="Search products..."
@@ -45,9 +45,9 @@
         <p v-else-if="interactiveSearch" class="has-text-grey mt-3">
           No results found
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Search with Filters" example>
+      <demo-box label="Example: Search with Filters" example>
         <div class="field has-addons">
           <div class="control is-expanded">
             <cat-search-bar v-model="filterSearch" placeholder="Search..." />
@@ -74,9 +74,9 @@
             </cat-button>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Navbar Search" example>
+      <demo-box label="Example: Navbar Search" example>
         <nav class="navbar is-light">
           <div class="navbar-brand">
             <a class="navbar-item" href="#">
@@ -96,9 +96,9 @@
             </div>
           </div>
         </nav>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: With Suggestions" example>
+      <demo-box label="Example: With Suggestions" example>
         <cat-search-bar
           v-model="suggestionSearch"
           placeholder="Type to see suggestions..."
@@ -119,9 +119,9 @@
             </div>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Advanced Search Form" example>
+      <demo-box label="Example: Advanced Search Form" example>
         <cat-search-bar v-model="advancedSearch" placeholder="Search..." class="mb-4" />
         <div v-if="showAdvancedOptions" class="content">
           <p class="has-text-weight-bold">
@@ -174,9 +174,9 @@
         <cat-button size="small" @click="showAdvancedOptions = !showAdvancedOptions">
           {{ showAdvancedOptions ? 'Hide' : 'Show' }} Advanced Options
         </cat-button>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Real-time Search" example>
+      <demo-box label="Example: Real-time Search" example>
         <p class="mb-3">
           Search updates as you type
         </p>
@@ -212,14 +212,14 @@
             </tbody>
           </table>
         </div>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const basicSearch = ref<string | null>('')
 const navbarSearch = ref<string | null>('')
