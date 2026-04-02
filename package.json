@@ -30,16 +30,18 @@
     "check": "vue-tsc --noEmit"
   },
   "peerDependencies": {
+    "@mdi/font": "^7.4.0",
+    "bulma": "^1.0.0",
     "vue": "^3.5.0"
   },
   "dependencies": {
-    "@mdi/font": "7.4.47",
-    "bulma": "1.0.4",
     "date-fns": "4.1.0"
   },
   "devDependencies": {
+    "@mdi/font": "7.4.47",
     "@vitejs/plugin-vue": "6.0.1",
     "@vue/test-utils": "2.4.6",
+    "bulma": "1.0.4",
     "h3": "1.15.1",
     "jsdom": "26.1.0",
     "nuxi": "3.30.0",
