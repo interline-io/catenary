@@ -1,15 +1,15 @@
 <template>
-  <router-link v-if="resolvedTo" :to="resolvedTo" :title="title" v-bind="$attrs">
+  <component :is="linkComponent" v-if="resolvedTo" :to="resolvedTo" :title="title" v-bind="$attrs">
     <slot />
-  </router-link>
+  </component>
   <span v-else :title="title" v-bind="$attrs">
     <slot />
   </span>
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, inject } from 'vue'
-import { type Router, type RouteLocationRaw, type RouteLocationNamedRaw } from 'vue-router'
+import { computed, getCurrentInstance, inject, defineAsyncComponent } from 'vue'
+import type { Router, RouteLocationRaw, RouteLocationNamedRaw } from 'vue-router'
 import { LinkRoutesKey } from './types'
 
 defineOptions({
@@ -27,6 +27,11 @@ const routes = inject(LinkRoutesKey, {})
 // Check for router via app instance to avoid swallowing unrelated errors
 const instance = getCurrentInstance()
 const router: Router | null = instance?.appContext.config.globalProperties.$router ?? null
+
+// Only resolve RouterLink when a router is actually installed
+const linkComponent = router
+  ? defineAsyncComponent(() => import('vue-router').then(m => m.RouterLink))
+  : 'span'
 
 const resolvedTo = computed((): RouteLocationRaw | null => {
   if (!router) return null
