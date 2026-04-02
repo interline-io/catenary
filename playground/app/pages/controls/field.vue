@@ -10,144 +10,144 @@
 
       <!-- Basic Field with Label -->
       <t-demo-box label="Basic Field with Label">
-        <t-field label="Username:">
-          <t-input v-model="username" placeholder="Enter username" />
-        </t-field>
-        <t-field label="Email:">
-          <t-input v-model="email" type="email" placeholder="you@example.com" />
-        </t-field>
+        <cat-field label="Username:">
+          <cat-input v-model="username" placeholder="Enter username" />
+        </cat-field>
+        <cat-field label="Email:">
+          <cat-input v-model="email" type="email" placeholder="you@example.com" />
+        </cat-field>
       </t-demo-box>
 
       <!-- With Help Message -->
       <t-demo-box label="With Help Message">
-        <t-field label="Password:" message="Must be at least 8 characters">
-          <t-input v-model="password" type="password" placeholder="Enter password" />
-        </t-field>
-        <t-field label="Website:" message="Include http:// or https://">
-          <t-input v-model="website" type="url" placeholder="https://example.com" />
-        </t-field>
+        <cat-field label="Password:" message="Must be at least 8 characters">
+          <cat-input v-model="password" type="password" placeholder="Enter password" />
+        </cat-field>
+        <cat-field label="Website:" message="Include http:// or https://">
+          <cat-input v-model="website" type="url" placeholder="https://example.com" />
+        </cat-field>
       </t-demo-box>
 
       <!-- Validation States -->
       <t-demo-box label="Validation States">
-        <t-field label="Valid Email:" variant="success" message="Email format is correct">
-          <t-input v-model="validEmail" type="email" variant="success" />
-        </t-field>
-        <t-field label="Invalid Email:" variant="danger" message="Please enter a valid email address">
-          <t-input v-model="invalidEmail" type="email" variant="danger" />
-        </t-field>
-        <t-field label="Warning:" variant="warning" message="This username might be taken">
-          <t-input v-model="warningUsername" variant="warning" />
-        </t-field>
-        <t-field label="Info:" variant="info" message="This field is optional">
-          <t-input v-model="infoField" variant="info" />
-        </t-field>
+        <cat-field label="Valid Email:" variant="success" message="Email format is correct">
+          <cat-input v-model="validEmail" type="email" variant="success" />
+        </cat-field>
+        <cat-field label="Invalid Email:" variant="danger" message="Please enter a valid email address">
+          <cat-input v-model="invalidEmail" type="email" variant="danger" />
+        </cat-field>
+        <cat-field label="Warning:" variant="warning" message="This username might be taken">
+          <cat-input v-model="warningUsername" variant="warning" />
+        </cat-field>
+        <cat-field label="Info:" variant="info" message="This field is optional">
+          <cat-input v-model="infoField" variant="info" />
+        </cat-field>
       </t-demo-box>
 
       <!-- Required Field -->
       <t-demo-box label="Required Field">
-        <t-field label="Full Name:">
-          <t-input v-model="fullName" placeholder="John Doe" />
-        </t-field>
-        <t-field label="Company:" message="This information is required">
-          <t-input v-model="company" placeholder="Acme Corp" />
-        </t-field>
+        <cat-field label="Full Name:">
+          <cat-input v-model="fullName" placeholder="John Doe" />
+        </cat-field>
+        <cat-field label="Company:" message="This information is required">
+          <cat-input v-model="company" placeholder="Acme Corp" />
+        </cat-field>
       </t-demo-box>
 
       <!-- Horizontal Field -->
       <t-demo-box label="Horizontal Layout">
-        <t-field label="Name:" horizontal>
-          <t-input v-model="horizontalName" placeholder="First and last name" />
-        </t-field>
-        <t-field label="Email:" horizontal>
-          <t-input v-model="horizontalEmail" type="email" placeholder="Email address" />
-        </t-field>
-        <t-field label="Phone:" horizontal message="Include country code">
-          <t-input v-model="horizontalPhone" type="tel" placeholder="+1 (555) 123-4567" />
-        </t-field>
+        <cat-field label="Name:" horizontal>
+          <cat-input v-model="horizontalName" placeholder="First and last name" />
+        </cat-field>
+        <cat-field label="Email:" horizontal>
+          <cat-input v-model="horizontalEmail" type="email" placeholder="Email address" />
+        </cat-field>
+        <cat-field label="Phone:" horizontal message="Include country code">
+          <cat-input v-model="horizontalPhone" type="tel" placeholder="+1 (555) 123-4567" />
+        </cat-field>
       </t-demo-box>
 
       <!-- Addons (Attached Controls) -->
       <t-demo-box label="Addons (Attached Controls)">
-        <t-field label="URL:" addons horizontal>
-          <t-input v-model="urlPath" expanded placeholder="username" />
-          <t-button variant="primary">
+        <cat-field label="URL:" addons horizontal>
+          <cat-input v-model="urlPath" expanded placeholder="username" />
+          <cat-button variant="primary">
             Check
-          </t-button>
-        </t-field>
+          </cat-button>
+        </cat-field>
 
-        <t-field label="Amount:" addons horizontal>
-          <t-button>
+        <cat-field label="Amount:" addons horizontal>
+          <cat-button>
             $
-          </t-button>
-          <t-input v-model="amount" type="number" expanded placeholder="0.00" />
-          <t-button variant="success">
+          </cat-button>
+          <cat-input v-model="amount" type="number" expanded placeholder="0.00" />
+          <cat-button variant="success">
             Submit
-          </t-button>
-        </t-field>
+          </cat-button>
+        </cat-field>
 
-        <t-field label="Search:" addons>
-          <t-input v-model="searchQuery" expanded placeholder="Search products..." />
-          <t-button variant="info">
-            <t-icon icon="magnify" />
-          </t-button>
-        </t-field>
+        <cat-field label="Search:" addons>
+          <cat-input v-model="searchQuery" expanded placeholder="Search products..." />
+          <cat-button variant="info">
+            <cat-icon icon="magnify" />
+          </cat-button>
+        </cat-field>
       </t-demo-box>
 
       <!-- Grouped Fields (Side by Side) -->
       <t-demo-box label="Grouped Fields (Side by Side)">
-        <t-field label="Actions:" grouped>
-          <t-button variant="primary">
+        <cat-field label="Actions:" grouped>
+          <cat-button variant="primary">
             Save
-          </t-button>
-          <t-button variant="light">
+          </cat-button>
+          <cat-button variant="light">
             Cancel
-          </t-button>
-          <t-button variant="danger">
+          </cat-button>
+          <cat-button variant="danger">
             Delete
-          </t-button>
-        </t-field>
+          </cat-button>
+        </cat-field>
 
-        <t-field label="Search with button:" grouped>
-          <t-input v-model="searchQuery" expanded placeholder="Find a repository..." />
-          <t-button variant="info">
+        <cat-field label="Search with button:" grouped>
+          <cat-input v-model="searchQuery" expanded placeholder="Find a repository..." />
+          <cat-button variant="info">
             Search
-          </t-button>
-        </t-field>
+          </cat-button>
+        </cat-field>
       </t-demo-box>
 
       <!-- Multiple Inputs with Addons -->
       <t-demo-box label="Multiple Inputs with Addons">
-        <t-field label="Full Name:" addons>
-          <t-input v-model="firstName" placeholder="First name" expanded />
-          <t-input v-model="lastName" placeholder="Last name" expanded />
-        </t-field>
+        <cat-field label="Full Name:" addons>
+          <cat-input v-model="firstName" placeholder="First name" expanded />
+          <cat-input v-model="lastName" placeholder="Last name" expanded />
+        </cat-field>
 
-        <t-field label="Date Range:" addons>
-          <t-input v-model="startDate" type="date" expanded />
+        <cat-field label="Date Range:" addons>
+          <cat-input v-model="startDate" type="date" expanded />
           <div class="control">
             <span class="button is-static">to</span>
           </div>
-          <t-input v-model="endDate" type="date" expanded />
-        </t-field>
+          <cat-input v-model="endDate" type="date" expanded />
+        </cat-field>
       </t-demo-box>
 
       <!-- Practical Form Example -->
       <t-demo-box label="Example: Registration Form" example>
-        <t-field label="Username:" message="Choose a unique username">
-          <t-input v-model="regUsername" placeholder="username" />
-        </t-field>
+        <cat-field label="Username:" message="Choose a unique username">
+          <cat-input v-model="regUsername" placeholder="username" />
+        </cat-field>
 
-        <t-field label="Email Address:">
-          <t-input v-model="regEmail" type="email" placeholder="you@example.com" />
-        </t-field>
+        <cat-field label="Email Address:">
+          <cat-input v-model="regEmail" type="email" placeholder="you@example.com" />
+        </cat-field>
 
-        <t-field label="Password:" message="Minimum 8 characters">
-          <t-input v-model="regPassword" type="password" placeholder="••••••••" />
-        </t-field>
+        <cat-field label="Password:" message="Minimum 8 characters">
+          <cat-input v-model="regPassword" type="password" placeholder="••••••••" />
+        </cat-field>
 
-        <t-field label="Confirm Password:">
-          <t-input
+        <cat-field label="Confirm Password:">
+          <cat-input
             v-model="regPasswordConfirm"
             type="password"
             placeholder="••••••••"
@@ -158,10 +158,10 @@
               Passwords do not match
             </p>
           </template>
-        </t-field>
+        </cat-field>
 
-        <t-field label="Country:">
-          <t-select v-model="regCountry" fullwidth>
+        <cat-field label="Country:">
+          <cat-select v-model="regCountry" fullwidth>
             <option value="">
               Select a country
             </option>
@@ -177,54 +177,54 @@
             <option value="au">
               Australia
             </option>
-          </t-select>
-        </t-field>
+          </cat-select>
+        </cat-field>
 
-        <t-field>
-          <t-checkbox v-model="regTerms">
+        <cat-field>
+          <cat-checkbox v-model="regTerms">
             I agree to the terms and conditions
-          </t-checkbox>
-        </t-field>
+          </cat-checkbox>
+        </cat-field>
 
-        <t-field grouped>
-          <t-button
+        <cat-field grouped>
+          <cat-button
             variant="primary"
             :disabled="!canRegister"
             @click="handleRegister"
           >
             Register
-          </t-button>
-          <t-button @click="resetForm">
+          </cat-button>
+          <cat-button @click="resetForm">
             Reset
-          </t-button>
-        </t-field>
+          </cat-button>
+        </cat-field>
       </t-demo-box>
 
       <!-- Stacked Fields -->
       <t-demo-box label="Example: Address Form" example>
-        <t-field label="Street Address:">
-          <t-input v-model="address.street" placeholder="123 Main St" />
-        </t-field>
+        <cat-field label="Street Address:">
+          <cat-input v-model="address.street" placeholder="123 Main St" />
+        </cat-field>
 
-        <t-field label="Apartment, suite, etc.">
-          <t-input v-model="address.apt" placeholder="Apt 4B" />
-        </t-field>
+        <cat-field label="Apartment, suite, etc.">
+          <cat-input v-model="address.apt" placeholder="Apt 4B" />
+        </cat-field>
 
         <div class="columns">
           <div class="column">
-            <t-field label="City:">
-              <t-input v-model="address.city" placeholder="New York" />
-            </t-field>
+            <cat-field label="City:">
+              <cat-input v-model="address.city" placeholder="New York" />
+            </cat-field>
           </div>
           <div class="column">
-            <t-field label="State:">
-              <t-input v-model="address.state" placeholder="NY" />
-            </t-field>
+            <cat-field label="State:">
+              <cat-input v-model="address.state" placeholder="NY" />
+            </cat-field>
           </div>
           <div class="column">
-            <t-field label="ZIP Code:">
-              <t-input v-model="address.zip" placeholder="10001" />
-            </t-field>
+            <cat-field label="ZIP Code:">
+              <cat-input v-model="address.zip" placeholder="10001" />
+            </cat-field>
           </div>
         </div>
       </t-demo-box>

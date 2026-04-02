@@ -10,114 +10,114 @@
 
       <t-demo-box label="Basic Tooltip">
         <div class="has-text-centered">
-          <t-tooltip text="This is a tooltip">
-            <t-button>
+          <cat-tooltip text="This is a tooltip">
+            <cat-button>
               Hover me
-            </t-button>
-          </t-tooltip>
+            </cat-button>
+          </cat-tooltip>
         </div>
       </t-demo-box>
 
       <t-demo-box label="Positions">
         <div class="has-text-centered mb-4">
-          <t-tooltip text="Top tooltip" position="top">
-            <t-button>
+          <cat-tooltip text="Top tooltip" position="top">
+            <cat-button>
               Top
-            </t-button>
-          </t-tooltip>
+            </cat-button>
+          </cat-tooltip>
         </div>
         <div class="is-flex is-justify-content-space-between mb-4">
-          <t-tooltip text="Left tooltip" position="left">
-            <t-button>
+          <cat-tooltip text="Left tooltip" position="left">
+            <cat-button>
               Left
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Right tooltip" position="right">
-            <t-button>
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Right tooltip" position="right">
+            <cat-button>
               Right
-            </t-button>
-          </t-tooltip>
+            </cat-button>
+          </cat-tooltip>
         </div>
         <div class="has-text-centered">
-          <t-tooltip text="Bottom tooltip" position="bottom">
-            <t-button>
+          <cat-tooltip text="Bottom tooltip" position="bottom">
+            <cat-button>
               Bottom
-            </t-button>
-          </t-tooltip>
+            </cat-button>
+          </cat-tooltip>
         </div>
       </t-demo-box>
 
       <t-demo-box label="With Icons">
         <div class="buttons">
-          <t-tooltip text="Save changes">
-            <t-button>
-              <t-icon icon="content-save" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Edit item">
-            <t-button>
-              <t-icon icon="pencil" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Delete item">
-            <t-button>
-              <t-icon icon="delete" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Download file">
-            <t-button>
-              <t-icon icon="download" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Share content">
-            <t-button>
-              <t-icon icon="share-variant" />
-            </t-button>
-          </t-tooltip>
+          <cat-tooltip text="Save changes">
+            <cat-button>
+              <cat-icon icon="content-save" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Edit item">
+            <cat-button>
+              <cat-icon icon="pencil" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Delete item">
+            <cat-button>
+              <cat-icon icon="delete" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Download file">
+            <cat-button>
+              <cat-icon icon="download" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Share content">
+            <cat-button>
+              <cat-icon icon="share-variant" />
+            </cat-button>
+          </cat-tooltip>
         </div>
       </t-demo-box>
 
       <t-demo-box label="Example: Form Field Help" example>
-        <t-field label="Username:">
+        <cat-field label="Username:">
           <div class="is-flex">
-            <t-input v-model="username" expanded />
-            <t-tooltip text="Username must be 3-20 characters, alphanumeric only" position="right">
-              <t-button class="ml-2">
-                <t-icon icon="help-circle" />
-              </t-button>
-            </t-tooltip>
+            <cat-input v-model="username" expanded />
+            <cat-tooltip text="Username must be 3-20 characters, alphanumeric only" position="right">
+              <cat-button class="ml-2">
+                <cat-icon icon="help-circle" />
+              </cat-button>
+            </cat-tooltip>
           </div>
-        </t-field>
+        </cat-field>
 
-        <t-field label="Password:">
+        <cat-field label="Password:">
           <div class="is-flex">
-            <t-input v-model="password" type="password" expanded />
-            <t-tooltip text="Password must be at least 8 characters with uppercase, lowercase, and numbers" position="right">
-              <t-button class="ml-2">
-                <t-icon icon="help-circle" />
-              </t-button>
-            </t-tooltip>
+            <cat-input v-model="password" type="password" expanded />
+            <cat-tooltip text="Password must be at least 8 characters with uppercase, lowercase, and numbers" position="right">
+              <cat-button class="ml-2">
+                <cat-icon icon="help-circle" />
+              </cat-button>
+            </cat-tooltip>
           </div>
-        </t-field>
+        </cat-field>
       </t-demo-box>
 
       <t-demo-box label="Example: Text with Tooltip" example>
         <p>
           Hover over
-          <t-tooltip text="This is an abbreviation for 'example'" position="top">
+          <cat-tooltip text="This is an abbreviation for 'example'" position="top">
             <span class="has-text-primary" style="cursor: help; text-decoration: underline dotted;">
               e.g.
             </span>
-          </t-tooltip>
+          </cat-tooltip>
           to see its meaning.
         </p>
         <p class="mt-3">
           The term
-          <t-tooltip text="Application Programming Interface" position="top">
+          <cat-tooltip text="Application Programming Interface" position="top">
             <span class="has-text-info" style="cursor: help; border-bottom: 1px dotted;">
               API
             </span>
-          </t-tooltip>
+          </cat-tooltip>
           is commonly used in software development.
         </p>
       </t-demo-box>
@@ -134,33 +134,33 @@
             <tr>
               <td>Web Server</td>
               <td>
-                <t-tooltip text="All systems operational">
-                  <t-icon icon="check-circle" class="has-text-success" />
-                </t-tooltip>
+                <cat-tooltip text="All systems operational">
+                  <cat-icon icon="check-circle" class="has-text-success" />
+                </cat-tooltip>
               </td>
             </tr>
             <tr>
               <td>Database</td>
               <td>
-                <t-tooltip text="All systems operational">
-                  <t-icon icon="check-circle" class="has-text-success" />
-                </t-tooltip>
+                <cat-tooltip text="All systems operational">
+                  <cat-icon icon="check-circle" class="has-text-success" />
+                </cat-tooltip>
               </td>
             </tr>
             <tr>
               <td>Email Service</td>
               <td>
-                <t-tooltip text="Experiencing minor delays">
-                  <t-icon icon="alert" class="has-text-warning" />
-                </t-tooltip>
+                <cat-tooltip text="Experiencing minor delays">
+                  <cat-icon icon="alert" class="has-text-warning" />
+                </cat-tooltip>
               </td>
             </tr>
             <tr>
               <td>API Gateway</td>
               <td>
-                <t-tooltip text="Service unavailable - maintenance in progress">
-                  <t-icon icon="alert-circle" class="has-text-danger" />
-                </t-tooltip>
+                <cat-tooltip text="Service unavailable - maintenance in progress">
+                  <cat-icon icon="alert-circle" class="has-text-danger" />
+                </cat-tooltip>
               </td>
             </tr>
           </tbody>
@@ -169,101 +169,101 @@
 
       <t-demo-box label="Example: Navigation Menu" example>
         <div class="buttons">
-          <t-tooltip text="Dashboard" position="bottom">
-            <t-button>
-              <t-icon icon="view-dashboard" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Messages" position="bottom">
-            <t-button>
-              <t-icon icon="email" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Notifications" position="bottom">
-            <t-button>
-              <t-icon icon="bell" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Settings" position="bottom">
-            <t-button>
-              <t-icon icon="cog" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="User Profile" position="bottom">
-            <t-button>
-              <t-icon icon="account-circle" />
-            </t-button>
-          </t-tooltip>
+          <cat-tooltip text="Dashboard" position="bottom">
+            <cat-button>
+              <cat-icon icon="view-dashboard" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Messages" position="bottom">
+            <cat-button>
+              <cat-icon icon="email" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Notifications" position="bottom">
+            <cat-button>
+              <cat-icon icon="bell" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Settings" position="bottom">
+            <cat-button>
+              <cat-icon icon="cog" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="User Profile" position="bottom">
+            <cat-button>
+              <cat-icon icon="account-circle" />
+            </cat-button>
+          </cat-tooltip>
         </div>
       </t-demo-box>
 
       <t-demo-box label="Example: Interactive Toolbar" example>
         <div class="buttons">
-          <t-tooltip text="Bold (Ctrl+B)" position="bottom">
-            <t-button>
-              <t-icon icon="format-bold" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Italic (Ctrl+I)" position="bottom">
-            <t-button>
-              <t-icon icon="format-italic" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Underline (Ctrl+U)" position="bottom">
-            <t-button>
-              <t-icon icon="format-underline" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Align Left" position="bottom">
-            <t-button>
-              <t-icon icon="format-align-left" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Align Center" position="bottom">
-            <t-button>
-              <t-icon icon="format-align-center" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Align Right" position="bottom">
-            <t-button>
-              <t-icon icon="format-align-right" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Insert Link" position="bottom">
-            <t-button>
-              <t-icon icon="link" />
-            </t-button>
-          </t-tooltip>
-          <t-tooltip text="Insert Image" position="bottom">
-            <t-button>
-              <t-icon icon="image" />
-            </t-button>
-          </t-tooltip>
+          <cat-tooltip text="Bold (Ctrl+B)" position="bottom">
+            <cat-button>
+              <cat-icon icon="format-bold" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Italic (Ctrl+I)" position="bottom">
+            <cat-button>
+              <cat-icon icon="format-italic" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Underline (Ctrl+U)" position="bottom">
+            <cat-button>
+              <cat-icon icon="format-underline" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Align Left" position="bottom">
+            <cat-button>
+              <cat-icon icon="format-align-left" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Align Center" position="bottom">
+            <cat-button>
+              <cat-icon icon="format-align-center" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Align Right" position="bottom">
+            <cat-button>
+              <cat-icon icon="format-align-right" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Insert Link" position="bottom">
+            <cat-button>
+              <cat-icon icon="link" />
+            </cat-button>
+          </cat-tooltip>
+          <cat-tooltip text="Insert Image" position="bottom">
+            <cat-button>
+              <cat-icon icon="image" />
+            </cat-button>
+          </cat-tooltip>
         </div>
       </t-demo-box>
 
       <t-demo-box label="Example: Tags with Info" example>
         <div class="tags">
-          <t-tooltip text="Primary programming language" position="top">
-            <t-tag>
+          <cat-tooltip text="Primary programming language" position="top">
+            <cat-tag>
               TypeScript
-            </t-tag>
-          </t-tooltip>
-          <t-tooltip text="UI framework" position="top">
-            <t-tag>
+            </cat-tag>
+          </cat-tooltip>
+          <cat-tooltip text="UI framework" position="top">
+            <cat-tag>
               Vue.js
-            </t-tag>
-          </t-tooltip>
-          <t-tooltip text="Meta framework for Vue" position="top">
-            <t-tag>
+            </cat-tag>
+          </cat-tooltip>
+          <cat-tooltip text="Meta framework for Vue" position="top">
+            <cat-tag>
               Nuxt
-            </t-tag>
-          </t-tooltip>
-          <t-tooltip text="CSS framework" position="top">
-            <t-tag>
+            </cat-tag>
+          </cat-tooltip>
+          <cat-tooltip text="CSS framework" position="top">
+            <cat-tag>
               Bulma
-            </t-tag>
-          </t-tooltip>
+            </cat-tag>
+          </cat-tooltip>
         </div>
       </t-demo-box>
     </section>

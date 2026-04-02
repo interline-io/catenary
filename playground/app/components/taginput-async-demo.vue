@@ -4,9 +4,9 @@
       Search for users from a mock API. Selections trigger server actions with loading states.
     </p>
 
-    <t-field label="Team Members">
+    <cat-field label="Team Members">
       <div class="async-taginput-wrapper" :class="{ 'is-processing': actionPending }">
-        <t-taginput
+        <cat-taginput
           v-model="selected"
           v-model:input="searchText"
           :options="options"
@@ -36,13 +36,13 @@
             <span v-if="searchText">No users found for "{{ searchText }}"</span>
             <span v-else>Type to search...</span>
           </template>
-        </t-taginput>
+        </cat-taginput>
         <div v-if="actionPending" class="processing-indicator">
           <span class="icon"><i class="mdi mdi-loading mdi-spin" /></span>
           <span>Saving...</span>
         </div>
       </div>
-    </t-field>
+    </cat-field>
 
     <!-- Activity Log -->
     <div class="box mt-4">

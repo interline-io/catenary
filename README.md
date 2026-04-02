@@ -32,7 +32,7 @@ Your project must provide:
 
 ### Vue plugin (recommended)
 
-Register all components globally with the `t-` prefix:
+Register all components globally with the `cat-` prefix:
 
 ```ts
 import { createApp } from 'vue'
@@ -44,14 +44,14 @@ app.use(CatenaryPlugin)
 app.mount('#app')
 ```
 
-Components are then available everywhere as `<t-button>`, `<t-input>`, `<t-modal>`, etc.
+Components are then available everywhere as `<cat-button>`, `<cat-input>`, `<cat-modal>`, etc.
 
 ### Individual imports
 
 For tree-shaking, import only the components you need:
 
 ```ts
-import { TButton, TInput, TField } from '@interline-io/catenary'
+import { CatButton, CatInput, CatField } from '@interline-io/catenary'
 import '@interline-io/catenary/style.css'
 ```
 
@@ -69,7 +69,7 @@ export default defineNuxtPlugin((nuxtApp) => {
 })
 ```
 
-No Nuxt module configuration is needed. The plugin handles global registration of all `t-*` components.
+No Nuxt module configuration is needed. The plugin handles global registration of all `cat-*` components.
 
 ### Bulma and icon CSS
 
@@ -92,51 +92,51 @@ Or via CDN/link tags if you prefer.
 
 | Component | Tag | Description |
 |-----------|-----|-------------|
-| TButton | `<t-button>` | Button with variants, sizes, loading state, icons |
-| TCheckbox | `<t-checkbox>` | Checkbox with v-model support |
-| TCheckboxGroup | `<t-checkbox-group>` | Multiple checkboxes from an options array |
-| TRadio | `<t-radio>` | Radio button |
-| TSwitch | `<t-switch>` | Toggle switch |
-| TInput | `<t-input>` | Text input with icons, types, variants |
-| TTextarea | `<t-textarea>` | Multi-line text input |
-| TSelect | `<t-select>` | Select dropdown |
-| TTaginput | `<t-taginput>` | Tag-based input with autocomplete and custom options |
-| TDatepicker | `<t-datepicker>` | Calendar date picker with single/multiple selection |
-| TField | `<t-field>` | Form field wrapper (labels, horizontal layout, addons, grouping) |
-| TSlider | `<t-slider>` | Range slider |
-| TSliderTick | `<t-slider-tick>` | Tick mark for slider |
+| CatButton | `<cat-button>` | Button with variants, sizes, loading state, icons |
+| CatCheckbox | `<cat-checkbox>` | Checkbox with v-model support |
+| CatCheckboxGroup | `<cat-checkbox-group>` | Multiple checkboxes from an options array |
+| CatRadio | `<cat-radio>` | Radio button |
+| CatSwitch | `<cat-switch>` | Toggle switch |
+| CatInput | `<cat-input>` | Text input with icons, types, variants |
+| CatTextarea | `<cat-textarea>` | Multi-line text input |
+| CatSelect | `<cat-select>` | Select dropdown |
+| CatTaginput | `<cat-taginput>` | Tag-based input with autocomplete and custom options |
+| CatDatepicker | `<cat-datepicker>` | Calendar date picker with single/multiple selection |
+| CatField | `<cat-field>` | Form field wrapper (labels, horizontal layout, addons, grouping) |
+| CatSlider | `<cat-slider>` | Range slider |
+| CatSliderTick | `<cat-slider-tick>` | Tick mark for slider |
 
 ### Layout and navigation
 
 | Component | Tag | Description |
 |-----------|-----|-------------|
-| TTabs | `<t-tabs>` | Tab navigation |
-| TTabItem | `<t-tab-item>` | Individual tab panel |
-| TDropdown | `<t-dropdown>` | Dropdown menu |
-| TDropdownItem | `<t-dropdown-item>` | Item within a dropdown |
-| TModal | `<t-modal>` | Modal dialog with sizes, fullscreen, footer slots |
-| TCard | `<t-card>` | Card container with optional expand/collapse |
+| CatTabs | `<cat-tabs>` | Tab navigation |
+| CatTabItem | `<cat-tab-item>` | Individual tab panel |
+| CatDropdown | `<cat-dropdown>` | Dropdown menu |
+| CatDropdownItem | `<cat-dropdown-item>` | Item within a dropdown |
+| CatModal | `<cat-modal>` | Modal dialog with sizes, fullscreen, footer slots |
+| CatCard | `<cat-card>` | Card container with optional expand/collapse |
 
 ### Data display
 
 | Component | Tag | Description |
 |-----------|-----|-------------|
-| TTable | `<t-table>` | Data table with sortable columns |
-| TTableColumn | `<t-table-column>` | Column definition for table |
-| TPagination | `<t-pagination>` | Page navigation |
-| TTag | `<t-tag>` | Badge/label tag |
-| TNotification | `<t-notification>` | Notification banner |
-| TMsg | `<t-msg>` | Message box with icon, expand/collapse, close |
+| CatTable | `<cat-table>` | Data table with sortable columns |
+| CatTableColumn | `<cat-table-column>` | Column definition for table |
+| CatPagination | `<cat-pagination>` | Page navigation |
+| CatTag | `<cat-tag>` | Badge/label tag |
+| CatNotification | `<cat-notification>` | Notification banner |
+| CatMsg | `<cat-msg>` | Message box with icon, expand/collapse, close |
 
 ### Utilities
 
 | Component | Tag | Description |
 |-----------|-----|-------------|
-| TIcon | `<t-icon>` | Material Design Icon wrapper |
-| TLoading | `<t-loading>` | Loading spinner overlay |
-| TTooltip | `<t-tooltip>` | Tooltip overlay |
-| TSearchBar | `<t-search-bar>` | Search input with clear button |
-| TThemeToggle | `<t-theme-toggle>` | Light/dark theme switcher |
+| CatIcon | `<cat-icon>` | Material Design Icon wrapper |
+| CatLoading | `<cat-loading>` | Loading spinner overlay |
+| CatTooltip | `<cat-tooltip>` | Tooltip overlay |
+| CatSearchBar | `<cat-search-bar>` | Search input with clear button |
+| CatThemeToggle | `<cat-theme-toggle>` | Light/dark theme switcher |
 
 ## Variants and sizes
 
@@ -157,9 +157,9 @@ import { CoreVariants, ButtonVariants, type ButtonVariant } from '@interline-io/
 
 Components follow a consistent class naming pattern:
 
-- Root element gets both the Bulma class and a `t-` prefixed class: `class="card t-card"`
+- Root element gets both the Bulma class and a `cat-` prefixed class: `class="card cat-card"`
 - Bulma helper classes are used directly for spacing, typography, and flexbox
-- Custom classes invented by the library always use the `t-` prefix
+- Custom classes invented by the library always use the `cat-` prefix
 - Variant styles use SCSS `@each` loops over Bulma CSS variables
 
 ## Development

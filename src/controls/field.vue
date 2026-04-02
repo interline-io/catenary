@@ -53,24 +53,24 @@ provide(FieldIdKey, fieldId)
  * Form field wrapper component following Bulma field structure.
  * Supports labels, horizontal layout, addons, grouping, and validation messages.
  *
- * @component t-field
+ * @component cat-field
  * @example
- * <t-field label="Name">
+ * <cat-field label="Name">
  *   <input class="input" type="text">
- * </t-field>
+ * </cat-field>
  *
- * <t-field label="Email" horizontal>
+ * <cat-field label="Email" horizontal>
  *   <input class="input" type="email">
- * </t-field>
+ * </cat-field>
  *
- * <t-field addons>
+ * <cat-field addons>
  *   <div class="control">
  *     <input class="input" type="text">
  *   </div>
  *   <div class="control">
  *     <button class="button">Search</button>
  *   </div>
- * </t-field>
+ * </cat-field>
  */
 
 interface Props {

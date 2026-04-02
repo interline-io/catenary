@@ -7,10 +7,10 @@
       @click="expandable && toggle()"
     >
       <span>{{ title || defaultTitle }}</span>
-      <t-icon
+      <cat-icon
         v-if="expandable"
         :icon="isOpen ? 'chevron-up' : 'chevron-down'"
-        class="t-expand-icon"
+        class="cat-expand-icon"
       />
       <button
         v-if="closable"
@@ -21,11 +21,11 @@
     </div>
     <div
       v-if="!expandable || isOpen"
-      :class="expandable ? 't-expandable-content' : ''"
+      :class="expandable ? 'cat-expandable-content' : ''"
     >
       <template v-if="hasIcon">
         <div class="media message-body">
-          <t-icon :icon="getIcon" :size="iconSize" class="media-left" />
+          <cat-icon :icon="getIcon" :size="iconSize" class="media-left" />
           <div class="media-content">
             <slot />
           </div>
@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import type { MsgVariant } from './types'
-import TIcon from './icon.vue'
+import CatIcon from './icon.vue'
 
 // TypeScript types and interfaces
 type MessageVariant = MsgVariant | 'error'
@@ -97,9 +97,9 @@ const hasIcon = computed<boolean>(() => props.showIcon)
 
 const msgClass = computed<string>(() => {
   if (props.variant) {
-    return `message t-message mb-4 is-${props.variant}`
+    return `message cat-message mb-4 is-${props.variant}`
   }
-  return 'message t-message mb-4'
+  return 'message cat-message mb-4'
 })
 
 // Watchers
@@ -122,7 +122,7 @@ const handleClose = (): void => {
 @use "bulma/sass/utilities/initial-variables" as *;
 @use "bulma/sass/utilities/derived-variables" as *;
 
-.t-message {
+.cat-message {
   .message-header.is-clickable {
     cursor: pointer;
     display: flex;
@@ -135,11 +135,11 @@ const handleClose = (): void => {
     }
   }
 
-  .t-expand-icon {
+  .cat-expand-icon {
     transition: transform 0.2s ease;
   }
 
-  .t-expandable-content {
+  .cat-expandable-content {
     transition: all 0.2s ease;
   }
 }

@@ -9,7 +9,7 @@
       </p>
 
       <t-demo-box label="Basic Usage">
-        <t-datepicker
+        <cat-datepicker
           v-model:model-value="singleDate"
           placeholder="Select a date"
         />
@@ -19,7 +19,7 @@
       </t-demo-box>
 
       <t-demo-box label="String Model (v-model:date-string)">
-        <t-datepicker
+        <cat-datepicker
           v-model:date-string="stringDate"
           placeholder="Select a date (string model)"
         />
@@ -29,7 +29,7 @@
       </t-demo-box>
 
       <t-demo-box label="String Model Multiple (v-model:date-string)">
-        <t-datepicker
+        <cat-datepicker
           v-model:date-string="stringDates"
           placeholder="Select dates (string[] model)"
           multiple
@@ -46,7 +46,7 @@
       </t-demo-box>
 
       <t-demo-box label="Multiple Date Selection">
-        <t-datepicker
+        <cat-datepicker
           v-model:model-value="multipleDates as any"
           placeholder="Select dates"
           multiple
@@ -63,7 +63,7 @@
       </t-demo-box>
 
       <t-demo-box label="Date Range Constraints">
-        <t-datepicker
+        <cat-datepicker
           v-model:model-value="constrainedDate"
           placeholder="Select date (next 30 days)"
           :min-date="minDate"
@@ -78,7 +78,7 @@
       </t-demo-box>
 
       <t-demo-box label="Unselectable Days of Week">
-        <t-datepicker
+        <cat-datepicker
           v-model:model-value="weekdayDate"
           placeholder="Weekdays only"
           :unselectable-days-of-week="[0, 6]"
@@ -92,7 +92,7 @@
       </t-demo-box>
 
       <t-demo-box label="Custom Date Restrictions">
-        <t-datepicker
+        <cat-datepicker
           v-model:model-value="customDate"
           placeholder="Select date"
           :unselectable-dates="blackoutDates"
@@ -108,20 +108,20 @@
       <t-demo-box label="Sizes">
         <div class="columns">
           <div class="column">
-            <t-datepicker
+            <cat-datepicker
               v-model:model-value="sizeDate1"
               placeholder="Small"
               size="small"
             />
           </div>
           <div class="column">
-            <t-datepicker
+            <cat-datepicker
               v-model:model-value="sizeDate2"
               placeholder="Normal"
             />
           </div>
           <div class="column">
-            <t-datepicker
+            <cat-datepicker
               v-model:model-value="sizeDate3"
               placeholder="Large"
               size="large"
@@ -133,21 +133,21 @@
       <t-demo-box label="Variants">
         <div class="columns">
           <div class="column">
-            <t-datepicker
+            <cat-datepicker
               v-model:model-value="variantDate1"
               placeholder="Primary"
               variant="primary"
             />
           </div>
           <div class="column">
-            <t-datepicker
+            <cat-datepicker
               v-model:model-value="variantDate2"
               placeholder="Success"
               variant="success"
             />
           </div>
           <div class="column">
-            <t-datepicker
+            <cat-datepicker
               v-model:model-value="variantDate3"
               placeholder="Danger"
               variant="danger"
@@ -157,7 +157,7 @@
       </t-demo-box>
 
       <t-demo-box label="Rounded">
-        <t-datepicker
+        <cat-datepicker
           v-model:model-value="roundedDate"
           placeholder="Rounded input"
           rounded
@@ -167,14 +167,14 @@
       <t-demo-box label="Disabled & Readonly">
         <div class="columns">
           <div class="column">
-            <t-datepicker
+            <cat-datepicker
               v-model:model-value="disabledDate"
               placeholder="Disabled"
               disabled
             />
           </div>
           <div class="column">
-            <t-datepicker
+            <cat-datepicker
               v-model:model-value="readonlyDate"
               placeholder="Readonly"
               readonly
@@ -184,7 +184,7 @@
       </t-demo-box>
 
       <t-demo-box label="Custom Icons">
-        <t-datepicker
+        <cat-datepicker
           v-model:model-value="iconDate"
           placeholder="Custom icons"
           icon="calendar-star"
@@ -202,14 +202,14 @@
       <t-demo-box label="Dropdown Position">
         <div class="columns">
           <div class="column">
-            <t-datepicker
+            <cat-datepicker
               v-model:model-value="positionDate1"
               placeholder="Bottom Left"
               position="bottom-left"
             />
           </div>
           <div class="column">
-            <t-datepicker
+            <cat-datepicker
               v-model:model-value="positionDate2"
               placeholder="Bottom Right"
               position="bottom-right"
@@ -219,22 +219,22 @@
       </t-demo-box>
 
       <t-demo-box label="With Footer Slot">
-        <t-datepicker
+        <cat-datepicker
           v-model:model-value="footerDate"
           placeholder="Select date"
           :close-on-select="false"
         >
           <template #footer="{ close }">
             <div class="buttons">
-              <t-button size="small" @click="footerDate = new Date()">
+              <cat-button size="small" @click="footerDate = new Date()">
                 Today
-              </t-button>
-              <t-button size="small" variant="link" @click="close">
+              </cat-button>
+              <cat-button size="small" variant="link" @click="close">
                 Close
-              </t-button>
+              </cat-button>
             </div>
           </template>
-        </t-datepicker>
+        </cat-datepicker>
         <p class="mt-3">
           Selected: {{ footerDate ? formatDateDisplay(footerDate) : 'None' }}
         </p>

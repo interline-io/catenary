@@ -10,7 +10,7 @@
 
       <!-- Basic Taginput -->
       <t-demo-box label="Basic Taginput">
-        <t-taginput
+        <cat-taginput
           v-model="basicSelected"
           :options="fruitOptions"
           placeholder="Select fruits..."
@@ -22,7 +22,7 @@
 
       <!-- With Icon -->
       <t-demo-box label="With Icon">
-        <t-taginput
+        <cat-taginput
           v-model="iconSelected"
           :options="fruitOptions"
           icon="magnify"
@@ -32,7 +32,7 @@
 
       <!-- Open on Focus -->
       <t-demo-box label="Open on Focus">
-        <t-taginput
+        <cat-taginput
           v-model="focusSelected"
           :options="fruitOptions"
           placeholder="Click to see options..."
@@ -46,7 +46,7 @@
           <p class="has-text-weight-semibold mb-2">
             {{ capitalize(variant) }}
           </p>
-          <t-taginput
+          <cat-taginput
             v-model="variantValues[variant]"
             :options="colorOptions"
             :variant="variant"
@@ -61,7 +61,7 @@
           <p class="has-text-weight-semibold mb-2">
             {{ capitalize(taginputSize) }}
           </p>
-          <t-taginput
+          <cat-taginput
             v-model="sizeValues[taginputSize]"
             :options="fruitOptions"
             :size="taginputSize"
@@ -72,7 +72,7 @@
 
       <!-- Rounded -->
       <t-demo-box label="Rounded Style">
-        <t-taginput
+        <cat-taginput
           v-model="roundedSelected"
           :options="fruitOptions"
           placeholder="Rounded tags..."
@@ -82,7 +82,7 @@
 
       <!-- Fullwidth -->
       <t-demo-box label="Fullwidth">
-        <t-taginput
+        <cat-taginput
           v-model="fullwidthSelected"
           :options="fruitOptions"
           placeholder="Full width input..."
@@ -92,7 +92,7 @@
 
       <!-- Disabled -->
       <t-demo-box label="Disabled">
-        <t-taginput
+        <cat-taginput
           v-model="disabledSelected"
           :options="fruitOptions"
           placeholder="Cannot edit..."
@@ -102,7 +102,7 @@
 
       <!-- Readonly -->
       <t-demo-box label="Readonly">
-        <t-taginput
+        <cat-taginput
           v-model="readonlySelected"
           :options="fruitOptions"
           placeholder="View only..."
@@ -115,7 +115,7 @@
 
       <!-- Max Tags -->
       <t-demo-box label="Max Tags Limit">
-        <t-taginput
+        <cat-taginput
           v-model="maxTagsSelected"
           :options="fruitOptions"
           placeholder="Select up to 3 fruits..."
@@ -129,7 +129,7 @@
 
       <!-- Allow New (Free-form) -->
       <t-demo-box label="Allow New Tags">
-        <t-taginput
+        <cat-taginput
           v-model="allowNewSelected"
           :options="fruitOptions"
           placeholder="Type and press Enter or comma..."
@@ -143,7 +143,7 @@
 
       <!-- Not Closable -->
       <t-demo-box label="Non-closable Tags">
-        <t-taginput
+        <cat-taginput
           v-model="notClosableSelected"
           :options="fruitOptions"
           placeholder="Tags cannot be removed..."
@@ -153,7 +153,7 @@
 
       <!-- Custom Slots -->
       <t-demo-box label="Custom Slots">
-        <t-taginput
+        <cat-taginput
           v-model="customSelected"
           :options="userOptions"
           placeholder="Search users..."
@@ -178,7 +178,7 @@
           <template #empty>
             <span class="has-text-grey">No users found</span>
           </template>
-        </t-taginput>
+        </cat-taginput>
         <p class="has-text-grey mt-3">
           Selected user IDs: {{ customSelected }}
         </p>
@@ -186,7 +186,7 @@
 
       <!-- With Search Filtering -->
       <t-demo-box label="With Search Filtering">
-        <t-taginput
+        <cat-taginput
           v-model="searchSelected"
           v-model:input="searchText"
           :options="countryOptions"
@@ -206,20 +206,20 @@
       <!-- Example: Form Integration -->
       <t-demo-box label="Example: Form Integration" example>
         <form @submit.prevent="handleSubmit">
-          <t-field label="Project Name">
-            <t-input v-model="form.name" placeholder="Enter project name" />
-          </t-field>
-          <t-field label="Tags">
-            <t-taginput
+          <cat-field label="Project Name">
+            <cat-input v-model="form.name" placeholder="Enter project name" />
+          </cat-field>
+          <cat-field label="Tags">
+            <cat-taginput
               v-model="form.tags"
               :options="tagOptions"
               placeholder="Add tags..."
               open-on-focus
               fullwidth
             />
-          </t-field>
-          <t-field label="Collaborators">
-            <t-taginput
+          </cat-field>
+          <cat-field label="Collaborators">
+            <cat-taginput
               v-model="form.collaborators"
               :options="userOptions"
               placeholder="Add team members..."
@@ -228,14 +228,14 @@
               open-on-focus
               fullwidth
             />
-          </t-field>
+          </cat-field>
           <div class="buttons">
-            <t-button variant="primary" type="submit">
+            <cat-button variant="primary" type="submit">
               Save Project
-            </t-button>
-            <t-button @click="resetForm">
+            </cat-button>
+            <cat-button @click="resetForm">
               Reset
-            </t-button>
+            </cat-button>
           </div>
         </form>
         <div v-if="submitted" class="notification is-success is-light mt-4">

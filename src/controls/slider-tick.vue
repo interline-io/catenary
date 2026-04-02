@@ -1,5 +1,5 @@
 <template>
-  <div class="t-slider-tick" :class="{ 'is-clickable': !!setValue }" @click="handleClick">
+  <div class="cat-slider-tick" :class="{ 'is-clickable': !!setValue }" @click="handleClick">
     <slot />
   </div>
 </template>
@@ -29,7 +29,7 @@ function handleClick () {
 @use "bulma/sass/utilities/initial-variables" as *;
 @use "bulma/sass/utilities/derived-variables" as *;
 
-.t-slider-tick {
+.cat-slider-tick {
   flex: 0 0 auto;
   text-align: center;
   white-space: nowrap;

@@ -13,12 +13,12 @@ import type { NotificationVariant } from './types'
  * Notification/alert message component using Bulma styling.
  * Displays contextual messages with optional close button.
  *
- * @component t-notification
+ * @component cat-notification
  * @example
- * <t-notification>Default info message</t-notification>
- * <t-notification variant="warning" closeable @close="handleClose">
+ * <cat-notification>Default info message</cat-notification>
+ * <cat-notification variant="warning" closeable @close="handleClose">
  *   Warning message
- * </t-notification>
+ * </cat-notification>
  */
 
 interface Props {

@@ -1,5 +1,5 @@
 <template>
-  <t-button
+  <cat-button
     :variant="isDark ? 'dark' : 'light'"
     @click="toggleTheme"
   >
@@ -7,20 +7,20 @@
       <i :class="`mdi mdi-${isDark ? 'weather-night' : 'weather-sunny'}`" />
     </span>
     <span>{{ isDark ? 'Dark' : 'Light' }} Mode</span>
-  </t-button>
+  </cat-button>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import TButton from './button.vue'
+import CatButton from './button.vue'
 
 /**
  * Theme toggle component that switches between light and dark Bulma themes.
  * Uses prefers-color-scheme and persists preference to localStorage.
  *
- * @component t-theme-toggle
+ * @component cat-theme-toggle
  * @example
- * <t-theme-toggle />
+ * <cat-theme-toggle />
  */
 
 const isDark = ref(false)

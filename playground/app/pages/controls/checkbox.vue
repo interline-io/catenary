@@ -9,100 +9,100 @@
       </p>
 
       <t-demo-box label="Basic Checkbox">
-        <t-field>
-          <t-checkbox v-model="basic">
+        <cat-field>
+          <cat-checkbox v-model="basic">
             Checkbox label
-          </t-checkbox>
-        </t-field>
+          </cat-checkbox>
+        </cat-field>
         <p class="has-text-grey">
           Checked: {{ basic }}
         </p>
       </t-demo-box>
 
       <t-demo-box label="Multiple Checkboxes">
-        <t-field>
-          <t-checkbox v-model="option1">
+        <cat-field>
+          <cat-checkbox v-model="option1">
             Option 1
-          </t-checkbox>
-        </t-field>
-        <t-field>
-          <t-checkbox v-model="option2">
+          </cat-checkbox>
+        </cat-field>
+        <cat-field>
+          <cat-checkbox v-model="option2">
             Option 2
-          </t-checkbox>
-        </t-field>
-        <t-field>
-          <t-checkbox v-model="option3">
+          </cat-checkbox>
+        </cat-field>
+        <cat-field>
+          <cat-checkbox v-model="option3">
             Option 3
-          </t-checkbox>
-        </t-field>
+          </cat-checkbox>
+        </cat-field>
         <p class="has-text-grey">
           Selected: {{ [option1 && 'Option 1', option2 && 'Option 2', option3 && 'Option 3'].filter(Boolean).join(', ') || 'None' }}
         </p>
       </t-demo-box>
 
       <t-demo-box label="Variants">
-        <t-field v-for="variant in variants" :key="variant">
-          <t-checkbox v-model="variantValues[variant]" :variant="variant">
+        <cat-field v-for="variant in variants" :key="variant">
+          <cat-checkbox v-model="variantValues[variant]" :variant="variant">
             {{ capitalize(variant) }}
-          </t-checkbox>
-        </t-field>
+          </cat-checkbox>
+        </cat-field>
       </t-demo-box>
 
       <t-demo-box label="Sizes">
-        <t-field v-for="size in sizes" :key="size">
-          <t-checkbox v-model="sizeValues[size]" :size="size">
+        <cat-field v-for="size in sizes" :key="size">
+          <cat-checkbox v-model="sizeValues[size]" :size="size">
             {{ capitalize(size) }} checkbox
-          </t-checkbox>
-        </t-field>
+          </cat-checkbox>
+        </cat-field>
       </t-demo-box>
 
       <t-demo-box label="States">
-        <t-field>
-          <t-checkbox v-model="stateDisabled" disabled>
+        <cat-field>
+          <cat-checkbox v-model="stateDisabled" disabled>
             Disabled checkbox
-          </t-checkbox>
-        </t-field>
-        <t-field>
-          <t-checkbox v-model="stateDisabledChecked" disabled>
+          </cat-checkbox>
+        </cat-field>
+        <cat-field>
+          <cat-checkbox v-model="stateDisabledChecked" disabled>
             Disabled checked
-          </t-checkbox>
-        </t-field>
+          </cat-checkbox>
+        </cat-field>
       </t-demo-box>
 
       <t-demo-box label="Indeterminate State">
         <p class="mb-3">
           The indeterminate state is useful for "Select All" checkboxes when some but not all items are selected.
         </p>
-        <t-field>
-          <t-checkbox
+        <cat-field>
+          <cat-checkbox
             v-model="selectAll"
             :indeterminate="indeterminate"
             @update:model-value="handleSelectAll"
           >
             <strong>Select All</strong>
-          </t-checkbox>
-        </t-field>
+          </cat-checkbox>
+        </cat-field>
         <div class="ml-5 mt-3">
-          <t-field>
-            <t-checkbox v-model="items.item1" @update:model-value="updateSelectAll">
+          <cat-field>
+            <cat-checkbox v-model="items.item1" @update:model-value="updateSelectAll">
               Item 1
-            </t-checkbox>
-          </t-field>
-          <t-field>
-            <t-checkbox v-model="items.item2" @update:model-value="updateSelectAll">
+            </cat-checkbox>
+          </cat-field>
+          <cat-field>
+            <cat-checkbox v-model="items.item2" @update:model-value="updateSelectAll">
               Item 2
-            </t-checkbox>
-          </t-field>
-          <t-field>
-            <t-checkbox v-model="items.item3" @update:model-value="updateSelectAll">
+            </cat-checkbox>
+          </cat-field>
+          <cat-field>
+            <cat-checkbox v-model="items.item3" @update:model-value="updateSelectAll">
               Item 3
-            </t-checkbox>
-          </t-field>
-          <t-field>
-            <t-checkbox v-model="items.item4" @update:model-value="updateSelectAll">
+            </cat-checkbox>
+          </cat-field>
+          <cat-field>
+            <cat-checkbox v-model="items.item4" @update:model-value="updateSelectAll">
               Item 4
-            </t-checkbox>
-          </t-field>
+            </cat-checkbox>
+          </cat-field>
         </div>
         <p class="has-text-grey mt-3">
           Selected: {{ selectedItemsCount }} of {{ totalItems }}
@@ -113,52 +113,52 @@
         <p class="mb-3">
           Select your favorite fruits:
         </p>
-        <t-field>
-          <t-checkbox v-model="fruits" native-value="apple">
+        <cat-field>
+          <cat-checkbox v-model="fruits" native-value="apple">
             Apple
-          </t-checkbox>
-        </t-field>
-        <t-field>
-          <t-checkbox v-model="fruits" native-value="banana">
+          </cat-checkbox>
+        </cat-field>
+        <cat-field>
+          <cat-checkbox v-model="fruits" native-value="banana">
             Banana
-          </t-checkbox>
-        </t-field>
-        <t-field>
-          <t-checkbox v-model="fruits" native-value="orange">
+          </cat-checkbox>
+        </cat-field>
+        <cat-field>
+          <cat-checkbox v-model="fruits" native-value="orange">
             Orange
-          </t-checkbox>
-        </t-field>
-        <t-field>
-          <t-checkbox v-model="fruits" native-value="grape">
+          </cat-checkbox>
+        </cat-field>
+        <cat-field>
+          <cat-checkbox v-model="fruits" native-value="grape">
             Grape
-          </t-checkbox>
-        </t-field>
+          </cat-checkbox>
+        </cat-field>
         <p class="has-text-grey mt-3">
           Selected: {{ Array.isArray(fruits) && fruits.length > 0 ? fruits.join(', ') : 'None' }}
         </p>
       </t-demo-box>
 
       <t-demo-box label="With Additional Content">
-        <t-field>
-          <t-checkbox v-model="option1Content">
+        <cat-field>
+          <cat-checkbox v-model="option1Content">
             <div>
               <strong>Option 1</strong>
               <p class="help">
                 Additional content for option 1
               </p>
             </div>
-          </t-checkbox>
-        </t-field>
-        <t-field>
-          <t-checkbox v-model="option2Content">
+          </cat-checkbox>
+        </cat-field>
+        <cat-field>
+          <cat-checkbox v-model="option2Content">
             <div>
               <strong>Option 2</strong>
               <p class="help">
                 Additional content for option 2
               </p>
             </div>
-          </t-checkbox>
-        </t-field>
+          </cat-checkbox>
+        </cat-field>
       </t-demo-box>
     </section>
   </div>

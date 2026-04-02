@@ -1,7 +1,7 @@
 <template>
   <div class="control" :class="controlClasses">
     <div
-      class="select t-select"
+      class="select cat-select"
       :class="selectClasses"
     >
       <select
@@ -33,12 +33,12 @@ const fieldId = inject(FieldIdKey, undefined)
  * Select dropdown component with Bulma styling.
  * Wraps a native select element with v-model support.
  *
- * @component t-select
+ * @component cat-select
  * @example
- * <t-select v-model="selectedValue">
+ * <cat-select v-model="selectedValue">
  *   <option value="1">Option 1</option>
  *   <option value="2">Option 2</option>
- * </t-select>
+ * </cat-select>
  */
 
 const props = withDefaults(defineProps<{
@@ -175,7 +175,7 @@ function handleChange (event: Event) {
 
 <style lang="scss" scoped>
 /* Make select expand to fill container by default, like input */
-.t-select {
+.cat-select {
   width: 100%;
 
   select {

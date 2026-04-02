@@ -1,5 +1,5 @@
 <template>
-  <label class="checkbox t-checkbox" :class="checkboxClasses">
+  <label class="checkbox cat-checkbox" :class="checkboxClasses">
     <input
       ref="inputRef"
       type="checkbox"
@@ -19,11 +19,11 @@ import type { CheckboxVariant, CheckboxSize } from './types'
  * Checkbox input component with v-model support.
  * Follows Bulma checkbox styling with indeterminate state support.
  *
- * @component t-checkbox
+ * @component cat-checkbox
  * @example
- * <t-checkbox v-model="checked">Accept terms</t-checkbox>
- * <t-checkbox v-model="checked" disabled>Disabled option</t-checkbox>
- * <t-checkbox v-model="options" native-value="option1">Option 1</t-checkbox>
+ * <cat-checkbox v-model="checked">Accept terms</cat-checkbox>
+ * <cat-checkbox v-model="checked" disabled>Disabled option</cat-checkbox>
+ * <cat-checkbox v-model="options" native-value="option1">Option 1</cat-checkbox>
  */
 
 const props = withDefaults(defineProps<{
@@ -126,7 +126,7 @@ onMounted(updateIndeterminate)
 
 <style lang="scss" scoped>
 /* Uses Bulma CSS custom properties to respect theme configuration */
-.t-checkbox {
+.cat-checkbox {
   /* Add slight padding for better vertical alignment */
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;

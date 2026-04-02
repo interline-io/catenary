@@ -11,11 +11,11 @@
       <span v-if="loading" class="icon is-small">
         <i class="mdi mdi-loading mdi-spin" />
       </span>
-      <t-icon v-if="iconLeft && !loading" :icon="iconLeft" :size="iconSize" />
+      <cat-icon v-if="iconLeft && !loading" :icon="iconLeft" :size="iconSize" />
       <span v-if="$slots.default || label">
         <slot>{{ label }}</slot>
       </span>
-      <t-icon v-if="iconRight && !loading" :icon="iconRight" :size="iconSize" />
+      <cat-icon v-if="iconRight && !loading" :icon="iconRight" :size="iconSize" />
     </button>
   </div>
 </template>
@@ -23,17 +23,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { ButtonVariant, ButtonSize } from './types'
-import TIcon from './icon.vue'
+import CatIcon from './icon.vue'
 
 /**
  * Button component with Bulma styling.
  * Supports variants, sizes, loading state, and standard button features.
  *
- * @component t-button
+ * @component cat-button
  * @example
- * <t-button>Click me</t-button>
- * <t-button variant="primary" @click="handleClick">Save</t-button>
- * <t-button variant="danger" :loading="isLoading">Delete</t-button>
+ * <cat-button>Click me</cat-button>
+ * <cat-button variant="primary" @click="handleClick">Save</cat-button>
+ * <cat-button variant="danger" :loading="isLoading">Delete</cat-button>
  */
 
 // Inherit native button attributes

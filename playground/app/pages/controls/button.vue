@@ -10,133 +10,133 @@
 
       <t-demo-box label="Variants">
         <div class="buttons">
-          <t-button>
+          <cat-button>
             Default
-          </t-button>
-          <t-button v-for="variant in coreVariants" :key="variant" :variant="variant">
+          </cat-button>
+          <cat-button v-for="variant in coreVariants" :key="variant" :variant="variant">
             {{ capitalize(variant) }}
-          </t-button>
+          </cat-button>
         </div>
         <div class="buttons">
-          <t-button v-for="variant in additionalVariants" :key="variant" :variant="variant">
+          <cat-button v-for="variant in additionalVariants" :key="variant" :variant="variant">
             {{ capitalize(variant) }}
-          </t-button>
+          </cat-button>
         </div>
       </t-demo-box>
 
       <t-demo-box label="Sizes">
         <div class="buttons">
-          <t-button v-for="size in sizes" :key="size" :size="size">
+          <cat-button v-for="size in sizes" :key="size" :size="size">
             {{ capitalize(size) }}
-          </t-button>
+          </cat-button>
         </div>
       </t-demo-box>
 
       <t-demo-box label="Outlined">
         <div class="buttons">
-          <t-button v-for="variant in coreVariants" :key="variant" :variant="variant" outlined>
+          <cat-button v-for="variant in coreVariants" :key="variant" :variant="variant" outlined>
             {{ capitalize(variant) }}
-          </t-button>
+          </cat-button>
         </div>
         <div class="buttons">
-          <t-button v-for="variant in additionalVariants" :key="variant" :variant="variant" outlined>
+          <cat-button v-for="variant in additionalVariants" :key="variant" :variant="variant" outlined>
             {{ capitalize(variant) }}
-          </t-button>
+          </cat-button>
         </div>
       </t-demo-box>
 
       <t-demo-box label="Rounded">
         <div class="buttons">
-          <t-button variant="primary" rounded>
+          <cat-button variant="primary" rounded>
             Rounded
-          </t-button>
-          <t-button variant="info" rounded outlined>
+          </cat-button>
+          <cat-button variant="info" rounded outlined>
             Rounded Outlined
-          </t-button>
+          </cat-button>
         </div>
       </t-demo-box>
 
       <t-demo-box label="Icon Only">
         <div class="buttons">
-          <t-button variant="primary">
-            <t-icon icon="heart" />
-          </t-button>
-          <t-button variant="info">
-            <t-icon icon="share" />
-          </t-button>
-          <t-button variant="success">
-            <t-icon icon="check" />
-          </t-button>
-          <t-button variant="warning">
-            <t-icon icon="alert" />
-          </t-button>
-          <t-button variant="danger">
-            <t-icon icon="close" />
-          </t-button>
+          <cat-button variant="primary">
+            <cat-icon icon="heart" />
+          </cat-button>
+          <cat-button variant="info">
+            <cat-icon icon="share" />
+          </cat-button>
+          <cat-button variant="success">
+            <cat-icon icon="check" />
+          </cat-button>
+          <cat-button variant="warning">
+            <cat-icon icon="alert" />
+          </cat-button>
+          <cat-button variant="danger">
+            <cat-icon icon="close" />
+          </cat-button>
         </div>
       </t-demo-box>
 
       <t-demo-box label="Icon Props (icon-left / icon-right)">
         <div class="buttons">
-          <t-button variant="primary" icon-left="check">
+          <cat-button variant="primary" icon-left="check">
             Save
-          </t-button>
-          <t-button variant="danger" icon-left="delete">
+          </cat-button>
+          <cat-button variant="danger" icon-left="delete">
             Delete
-          </t-button>
-          <t-button variant="info" icon-right="download">
+          </cat-button>
+          <cat-button variant="info" icon-right="download">
             Download
-          </t-button>
-          <t-button variant="success" icon-left="upload" icon-right="check">
+          </cat-button>
+          <cat-button variant="success" icon-left="upload" icon-right="check">
             Upload & Verify
-          </t-button>
+          </cat-button>
         </div>
       </t-demo-box>
 
       <t-demo-box label="States">
         <div class="buttons">
-          <t-button variant="primary" loading>
+          <cat-button variant="primary" loading>
             Loading
-          </t-button>
-          <t-button variant="info" disabled>
+          </cat-button>
+          <cat-button variant="info" disabled>
             Disabled
-          </t-button>
-          <t-button variant="success" @click="handleClick">
+          </cat-button>
+          <cat-button variant="success" @click="handleClick">
             Click Me ({{ clickCount }})
-          </t-button>
+          </cat-button>
         </div>
       </t-demo-box>
 
       <t-demo-box label="Full Width">
-        <t-button variant="primary" fullwidth>
+        <cat-button variant="primary" fullwidth>
           Full Width Button
-        </t-button>
+        </cat-button>
       </t-demo-box>
 
       <t-demo-box label="Button Groups">
-        <t-field addons>
-          <t-button variant="primary">
+        <cat-field addons>
+          <cat-button variant="primary">
             Left
-          </t-button>
-          <t-button variant="primary">
+          </cat-button>
+          <cat-button variant="primary">
             Middle
-          </t-button>
-          <t-button variant="primary">
+          </cat-button>
+          <cat-button variant="primary">
             Right
-          </t-button>
-        </t-field>
+          </cat-button>
+        </cat-field>
 
-        <t-field addons>
-          <t-button>
+        <cat-field addons>
+          <cat-button>
             Yes
-          </t-button>
-          <t-button variant="info">
+          </cat-button>
+          <cat-button variant="info">
             Maybe
-          </t-button>
-          <t-button variant="danger">
+          </cat-button>
+          <cat-button variant="danger">
             No
-          </t-button>
-        </t-field>
+          </cat-button>
+        </cat-field>
       </t-demo-box>
     </section>
   </div>

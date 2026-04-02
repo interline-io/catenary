@@ -9,24 +9,24 @@
       </p>
 
       <t-demo-box label="Basic Card">
-        <t-card>
+        <cat-card>
           <div class="content">
             <p>
               This is a basic card with content. Cards are versatile containers
               that can hold any type of content.
             </p>
           </div>
-        </t-card>
+        </cat-card>
       </t-demo-box>
 
       <t-demo-box label="Card with Header">
-        <t-card>
+        <cat-card>
           <template #header>
             <p class="card-header-title">
               Component
             </p>
             <button class="card-header-icon" aria-label="more options">
-              <t-icon icon="dots-vertical" />
+              <cat-icon icon="dots-vertical" />
             </button>
           </template>
           <div class="content">
@@ -35,11 +35,11 @@
               Phasellus nec iaculis mauris.
             </p>
           </div>
-        </t-card>
+        </cat-card>
       </t-demo-box>
 
       <t-demo-box label="Card with Footer">
-        <t-card>
+        <cat-card>
           <div class="content">
             <p>
               This card includes a footer with action buttons.
@@ -50,27 +50,27 @@
             <a href="#" class="card-footer-item">Edit</a>
             <a href="#" class="card-footer-item">Delete</a>
           </template>
-        </t-card>
+        </cat-card>
       </t-demo-box>
 
       <t-demo-box label="Panel Variant">
         <div class="columns">
           <div class="column">
-            <t-card label="With Label Prop" variant="panel">
+            <cat-card label="With Label Prop" variant="panel">
               <div class="content">
                 <p>
                   Panel variant gives the header a dark background matching Bulma's panel-heading style.
                   Uses <code>variant="panel"</code>.
                 </p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
           <div class="column">
-            <t-card label="With Actions Slot" variant="panel">
+            <cat-card label="With Actions Slot" variant="panel">
               <template #actions>
-                <t-button size="small">
+                <cat-button size="small">
                   Edit
-                </t-button>
+                </cat-button>
               </template>
               <div class="content">
                 <p>
@@ -78,35 +78,35 @@
                   Header height stays constant whether actions are shown or hidden.
                 </p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
         </div>
         <div class="columns">
           <div class="column">
-            <t-card label="Conditional Actions" variant="panel">
+            <cat-card label="Conditional Actions" variant="panel">
               <template v-if="cardOpen" #actions>
-                <t-button size="small">
+                <cat-button size="small">
                   Action 1
-                </t-button>
-                <t-button size="small">
+                </cat-button>
+                <cat-button size="small">
                   Action 2
-                </t-button>
+                </cat-button>
               </template>
               <div class="content">
                 <p>
                   Actions can be conditional. Toggle the card below to show/hide actions here.
                 </p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
           <div class="column">
-            <t-card label="Expandable Panel" variant="panel" expandable>
+            <cat-card label="Expandable Panel" variant="panel" expandable>
               <div class="content">
                 <p>
                   Panel variant combined with expandable functionality.
                 </p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
         </div>
       </t-demo-box>
@@ -114,71 +114,71 @@
       <t-demo-box label="Expandable Card">
         <div class="columns">
           <div class="column">
-            <t-card label="Click to Expand" expandable>
+            <cat-card label="Click to Expand" expandable>
               <div class="content">
                 <p>
                   This card is initially closed. Click the header or the chevron icon to expand it.
                   The content smoothly animates in and out.
                 </p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
           <div class="column">
-            <t-card label="Initially Expanded" expandable :open="true">
+            <cat-card label="Initially Expanded" expandable :open="true">
               <div class="content">
                 <p>
                   This card starts in an expanded state. Click to collapse.
                 </p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
         </div>
       </t-demo-box>
 
       <t-demo-box label="Controlled Expandable Card">
         <div class="buttons mb-4">
-          <t-button @click="cardOpen = !cardOpen">
+          <cat-button @click="cardOpen = !cardOpen">
             {{ cardOpen ? 'Close Card' : 'Open Card' }}
-          </t-button>
+          </cat-button>
         </div>
-        <t-card v-model:open="cardOpen" label="Controlled Card" expandable>
+        <cat-card v-model:open="cardOpen" label="Controlled Card" expandable>
           <div class="content">
             <p>
               This card's open state is controlled externally via <code>v-model:open</code>.
               Use the button above to toggle.
             </p>
           </div>
-        </t-card>
+        </cat-card>
       </t-demo-box>
 
       <t-demo-box label="Expandable with Footer">
-        <t-card label="Settings" expandable>
+        <cat-card label="Settings" expandable>
           <div class="content">
             <p>
               When collapsed, both content and footer are hidden.
             </p>
-            <t-field label="Option 1">
-              <t-checkbox>Enable feature</t-checkbox>
-            </t-field>
-            <t-field label="Option 2">
-              <t-checkbox>Another option</t-checkbox>
-            </t-field>
+            <cat-field label="Option 1">
+              <cat-checkbox>Enable feature</cat-checkbox>
+            </cat-field>
+            <cat-field label="Option 2">
+              <cat-checkbox>Another option</cat-checkbox>
+            </cat-field>
           </div>
           <template #footer>
             <a href="#" class="card-footer-item">Save</a>
             <a href="#" class="card-footer-item">Cancel</a>
           </template>
-        </t-card>
+        </cat-card>
       </t-demo-box>
 
       <t-demo-box label="Complete Card">
-        <t-card>
+        <cat-card>
           <template #header>
             <p class="card-header-title">
               Card Title
             </p>
             <button class="card-header-icon" aria-label="more options">
-              <t-icon icon="chevron-down" />
+              <cat-icon icon="chevron-down" />
             </button>
           </template>
           <div class="content">
@@ -192,13 +192,13 @@
             <a href="#" class="card-footer-item">Action 2</a>
             <a href="#" class="card-footer-item">Action 3</a>
           </template>
-        </t-card>
+        </cat-card>
       </t-demo-box>
 
       <t-demo-box label="Example: Card with Image" example>
         <div class="columns">
           <div class="column is-one-third">
-            <t-card>
+            <cat-card>
               <template #header>
                 <p class="card-header-title">
                   Image Card 1
@@ -218,11 +218,11 @@
                 <a href="#" class="card-footer-item">View</a>
                 <a href="#" class="card-footer-item">Download</a>
               </template>
-            </t-card>
+            </cat-card>
           </div>
 
           <div class="column is-one-third">
-            <t-card>
+            <cat-card>
               <template #header>
                 <p class="card-header-title">
                   Image Card 2
@@ -242,11 +242,11 @@
                 <a href="#" class="card-footer-item">View</a>
                 <a href="#" class="card-footer-item">Download</a>
               </template>
-            </t-card>
+            </cat-card>
           </div>
 
           <div class="column is-one-third">
-            <t-card>
+            <cat-card>
               <template #header>
                 <p class="card-header-title">
                   Image Card 3
@@ -266,7 +266,7 @@
                 <a href="#" class="card-footer-item">View</a>
                 <a href="#" class="card-footer-item">Download</a>
               </template>
-            </t-card>
+            </cat-card>
           </div>
         </div>
       </t-demo-box>
@@ -274,7 +274,7 @@
       <t-demo-box label="Example: Statistics Cards" example>
         <div class="columns">
           <div class="column">
-            <t-card>
+            <cat-card>
               <div class="card-content has-text-centered">
                 <p class="heading">
                   Metric 1
@@ -283,14 +283,14 @@
                   1,234
                 </p>
                 <p class="has-text-success">
-                  <t-icon icon="arrow-up" />
+                  <cat-icon icon="arrow-up" />
                   +10%
                 </p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
           <div class="column">
-            <t-card>
+            <cat-card>
               <div class="card-content has-text-centered">
                 <p class="heading">
                   Metric 2
@@ -299,14 +299,14 @@
                   5,678
                 </p>
                 <p class="has-text-success">
-                  <t-icon icon="arrow-up" />
+                  <cat-icon icon="arrow-up" />
                   +15%
                 </p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
           <div class="column">
-            <t-card>
+            <cat-card>
               <div class="card-content has-text-centered">
                 <p class="heading">
                   Metric 3
@@ -315,14 +315,14 @@
                   987
                 </p>
                 <p class="has-text-danger">
-                  <t-icon icon="arrow-down" />
+                  <cat-icon icon="arrow-down" />
                   -5%
                 </p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
           <div class="column">
-            <t-card>
+            <cat-card>
               <div class="card-content has-text-centered">
                 <p class="heading">
                   Metric 4
@@ -331,11 +331,11 @@
                   456
                 </p>
                 <p class="has-text-success">
-                  <t-icon icon="arrow-up" />
+                  <cat-icon icon="arrow-up" />
                   +8%
                 </p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
         </div>
       </t-demo-box>

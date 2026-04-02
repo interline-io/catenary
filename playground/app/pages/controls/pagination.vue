@@ -10,7 +10,7 @@
 
       <!-- Basic Pagination -->
       <t-demo-box label="Basic Pagination">
-        <t-pagination v-model:current="basicPage" :total="100" :per-page="10" />
+        <cat-pagination v-model:current="basicPage" :total="100" :per-page="10" />
         <p class="has-text-grey mt-3">
           Current page: {{ basicPage }}
         </p>
@@ -22,19 +22,19 @@
           <p class="has-text-weight-semibold mb-2">
             Left
           </p>
-          <t-pagination v-model:current="positionPage" :total="100" :per-page="10" position="left" />
+          <cat-pagination v-model:current="positionPage" :total="100" :per-page="10" position="left" />
         </div>
         <div class="mb-4">
           <p class="has-text-weight-semibold mb-2">
             Centered
           </p>
-          <t-pagination v-model:current="positionPage" :total="100" :per-page="10" position="centered" />
+          <cat-pagination v-model:current="positionPage" :total="100" :per-page="10" position="centered" />
         </div>
         <div>
           <p class="has-text-weight-semibold mb-2">
             Right (default)
           </p>
-          <t-pagination v-model:current="positionPage" :total="100" :per-page="10" position="right" />
+          <cat-pagination v-model:current="positionPage" :total="100" :per-page="10" position="right" />
         </div>
       </t-demo-box>
 
@@ -44,13 +44,13 @@
           <p class="has-text-weight-semibold mb-2">
             {{ capitalize(paginationSize) }}
           </p>
-          <t-pagination v-model:current="sizePage" :total="100" :per-page="10" :size="paginationSize" />
+          <cat-pagination v-model:current="sizePage" :total="100" :per-page="10" :size="paginationSize" />
         </div>
       </t-demo-box>
 
       <!-- Rounded -->
       <t-demo-box label="Rounded">
-        <t-pagination v-model:current="roundedPage" :total="100" :per-page="10" rounded />
+        <cat-pagination v-model:current="roundedPage" :total="100" :per-page="10" rounded />
       </t-demo-box>
 
       <!-- Custom Range -->
@@ -59,13 +59,13 @@
           <p class="has-text-weight-semibold mb-2">
             Range Before: 2, Range After: 2
           </p>
-          <t-pagination v-model:current="rangePage" :total="200" :per-page="10" :range-before="2" :range-after="2" />
+          <cat-pagination v-model:current="rangePage" :total="200" :per-page="10" :range-before="2" :range-after="2" />
         </div>
         <div>
           <p class="has-text-weight-semibold mb-2">
             Range Before: 3, Range After: 3
           </p>
-          <t-pagination v-model:current="rangePage" :total="200" :per-page="10" :range-before="3" :range-after="3" />
+          <cat-pagination v-model:current="rangePage" :total="200" :per-page="10" :range-before="3" :range-after="3" />
         </div>
         <p class="has-text-grey mt-3">
           Current page: {{ rangePage }}
@@ -74,7 +74,7 @@
 
       <!-- Large Dataset -->
       <t-demo-box label="Large Dataset">
-        <t-pagination v-model:current="largePage" :total="1000" :per-page="25" />
+        <cat-pagination v-model:current="largePage" :total="1000" :per-page="25" />
         <p class="has-text-grey mt-3">
           Page {{ largePage }} of {{ Math.ceil(1000 / 25) }} ({{ 1000 }} total items)
         </p>
@@ -84,7 +84,7 @@
       <t-demo-box label="Custom Items Per Page">
         <div class="mb-4">
           <div class="buttons">
-            <t-button
+            <cat-button
               v-for="perPage in [5, 10, 25, 50]"
               :key="perPage"
               :variant="customPerPage === perPage ? 'primary' : undefined"
@@ -92,10 +92,10 @@
               @click="customPerPage = perPage"
             >
               {{ perPage }}
-            </t-button>
+            </cat-button>
           </div>
         </div>
-        <t-pagination v-model:current="customPage" :total="100" :per-page="customPerPage" />
+        <cat-pagination v-model:current="customPage" :total="100" :per-page="customPerPage" />
         <p class="has-text-grey mt-3">
           Showing page {{ customPage }} with {{ customPerPage }} items per page ({{ Math.ceil(100 / customPerPage) }} total pages)
         </p>
@@ -103,20 +103,20 @@
 
       <!-- Example: Data Table -->
       <t-demo-box label="Example: Data Table with Pagination" example>
-        <t-table :data="paginatedData">
+        <cat-table :data="paginatedData">
           <template #columns>
-            <t-table-column field="id" label="ID" />
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="email" label="Email" />
+            <cat-table-column field="id" label="ID" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="email" label="Email" />
           </template>
           <template #default="{ row }">
             <td>{{ row.id }}</td>
             <td>{{ row.name }}</td>
             <td>{{ row.email }}</td>
           </template>
-        </t-table>
+        </cat-table>
         <div class="mt-4">
-          <t-pagination v-model:current="tablePage" :total="tableData.length" :per-page="tablePerPage" position="centered" />
+          <cat-pagination v-model:current="tablePage" :total="tableData.length" :per-page="tablePerPage" position="centered" />
         </div>
         <p class="has-text-grey has-text-centered mt-2">
           Showing {{ (tablePage - 1) * tablePerPage + 1 }} - {{ Math.min(tablePage * tablePerPage, tableData.length) }} of {{ tableData.length }} items

@@ -9,8 +9,8 @@
       </p>
 
       <t-demo-box label="Basic Select">
-        <t-field label="Choose a country:">
-          <t-select v-model="basic">
+        <cat-field label="Choose a country:">
+          <cat-select v-model="basic">
             <option value="us">
               United States
             </option>
@@ -26,16 +26,16 @@
             <option value="de">
               Germany
             </option>
-          </t-select>
-        </t-field>
+          </cat-select>
+        </cat-field>
         <p class="has-text-grey">
           Selected: {{ basic || 'None' }}
         </p>
       </t-demo-box>
 
       <t-demo-box label="Multiple Selection">
-        <t-field label="Select multiple languages:">
-          <t-select v-model="multiple" multiple>
+        <cat-field label="Select multiple languages:">
+          <cat-select v-model="multiple" multiple>
             <option value="js">
               JavaScript
             </option>
@@ -54,16 +54,16 @@
             <option value="ts">
               TypeScript
             </option>
-          </t-select>
-        </t-field>
+          </cat-select>
+        </cat-field>
         <p class="has-text-grey">
           Selected: {{ Array.isArray(multiple) && multiple.length > 0 ? multiple.join(', ') : 'None' }}
         </p>
       </t-demo-box>
 
       <t-demo-box label="Variants">
-        <t-field v-for="variant in variants" :key="variant" :label="capitalize(variant) + ':'">
-          <t-select v-model="variantValues[variant]" :variant="variant">
+        <cat-field v-for="variant in variants" :key="variant" :label="capitalize(variant) + ':'">
+          <cat-select v-model="variantValues[variant]" :variant="variant">
             <option value="1">
               Option 1
             </option>
@@ -73,50 +73,50 @@
             <option value="3">
               Option 3
             </option>
-          </t-select>
-        </t-field>
+          </cat-select>
+        </cat-field>
       </t-demo-box>
 
       <t-demo-box label="Sizes">
-        <t-field v-for="size in sizes" :key="size" :label="capitalize(size) + ':'">
-          <t-select v-model="sizeValues[size]" :size="size">
+        <cat-field v-for="size in sizes" :key="size" :label="capitalize(size) + ':'">
+          <cat-select v-model="sizeValues[size]" :size="size">
             <option value="1">
               {{ capitalize(size) }} select
             </option>
-          </t-select>
-        </t-field>
+          </cat-select>
+        </cat-field>
       </t-demo-box>
 
       <t-demo-box label="States">
-        <t-field label="Disabled:">
-          <t-select v-model="stateDisabled" disabled>
+        <cat-field label="Disabled:">
+          <cat-select v-model="stateDisabled" disabled>
             <option value="1">
               Cannot select this
             </option>
-          </t-select>
-        </t-field>
-        <t-field label="Loading:">
-          <t-select v-model="stateLoading" loading>
+          </cat-select>
+        </cat-field>
+        <cat-field label="Loading:">
+          <cat-select v-model="stateLoading" loading>
             <option value="1">
               Loading data...
             </option>
-          </t-select>
-        </t-field>
-        <t-field label="Readonly:">
-          <t-select v-model="stateReadonly" readonly>
+          </cat-select>
+        </cat-field>
+        <cat-field label="Readonly:">
+          <cat-select v-model="stateReadonly" readonly>
             <option value="selected">
               Selected option
             </option>
             <option value="other">
               Other option
             </option>
-          </t-select>
-        </t-field>
+          </cat-select>
+        </cat-field>
       </t-demo-box>
 
       <t-demo-box label="Rounded Style">
-        <t-field label="Choose an option:">
-          <t-select v-model="rounded" rounded>
+        <cat-field label="Choose an option:">
+          <cat-select v-model="rounded" rounded>
             <option value="1">
               Rounded option 1
             </option>
@@ -126,13 +126,13 @@
             <option value="3">
               Rounded option 3
             </option>
-          </t-select>
-        </t-field>
+          </cat-select>
+        </cat-field>
       </t-demo-box>
 
       <t-demo-box label="With Icon">
-        <t-field label="Choose a theme:">
-          <t-select v-model="theme" icon="palette" fullwidth>
+        <cat-field label="Choose a theme:">
+          <cat-select v-model="theme" icon="palette" fullwidth>
             <option value="light">
               Light Theme
             </option>
@@ -142,15 +142,15 @@
             <option value="auto">
               Auto (System)
             </option>
-          </t-select>
-        </t-field>
+          </cat-select>
+        </cat-field>
       </t-demo-box>
 
       <t-demo-box label="Example: Product Filter" example>
         <div class="columns">
           <div class="column">
-            <t-field label="Category">
-              <t-select v-model="filter.category" fullwidth>
+            <cat-field label="Category">
+              <cat-select v-model="filter.category" fullwidth>
                 <option value="">
                   All Categories
                 </option>
@@ -166,12 +166,12 @@
                 <option value="home">
                   Home & Garden
                 </option>
-              </t-select>
-            </t-field>
+              </cat-select>
+            </cat-field>
           </div>
           <div class="column">
-            <t-field label="Sort By">
-              <t-select v-model="filter.sort" fullwidth>
+            <cat-field label="Sort By">
+              <cat-select v-model="filter.sort" fullwidth>
                 <option value="popular">
                   Most Popular
                 </option>
@@ -184,12 +184,12 @@
                 <option value="newest">
                   Newest First
                 </option>
-              </t-select>
-            </t-field>
+              </cat-select>
+            </cat-field>
           </div>
           <div class="column">
-            <t-field label="Price Range">
-              <t-select v-model="filter.price" fullwidth>
+            <cat-field label="Price Range">
+              <cat-select v-model="filter.price" fullwidth>
                 <option value="all">
                   All Prices
                 </option>
@@ -205,8 +205,8 @@
                 <option value="100+">
                   $100+
                 </option>
-              </t-select>
-            </t-field>
+              </cat-select>
+            </cat-field>
           </div>
         </div>
         <p class="has-text-grey">
@@ -215,8 +215,8 @@
       </t-demo-box>
 
       <t-demo-box label="Example: Time Zone Selector" example>
-        <t-field label="Select your time zone:">
-          <t-select v-model="timezone" fullwidth>
+        <cat-field label="Select your time zone:">
+          <cat-select v-model="timezone" fullwidth>
             <optgroup label="North America">
               <option value="PST">
                 Pacific Time (PST)
@@ -253,8 +253,8 @@
                 Japan Standard Time (JST)
               </option>
             </optgroup>
-          </t-select>
-        </t-field>
+          </cat-select>
+        </cat-field>
       </t-demo-box>
     </section>
   </div>

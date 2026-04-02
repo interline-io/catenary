@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div class="modal t-modal" :class="{ 'is-active': modelValue }">
+    <div class="modal cat-modal" :class="{ 'is-active': modelValue }">
       <div class="modal-background" @click="handleBackgroundClick" />
       <div class="modal-card" :class="modalCardClasses">
         <header class="modal-card-head">
@@ -38,11 +38,11 @@ import { computed, watch, onMounted, onBeforeUnmount } from 'vue'
  * Modal component using Bulma modal-card structure.
  * Wrapper around native Bulma modal with v-model support.
  *
- * @component t-modal
+ * @component cat-modal
  * @example
- * <t-modal v-model="showModal" title="Edit Item">
+ * <cat-modal v-model="showModal" title="Edit Item">
  *   <p>Modal content</p>
- * </t-modal>
+ * </cat-modal>
  */
 
 interface Props {
@@ -88,10 +88,10 @@ const emit = defineEmits<{
 }>()
 
 const modalCardClasses = computed(() => ({
-  't-modal-fullscreen': props.fullScreen,
-  't-modal-small': props.size === 'small',
-  't-modal-medium': props.size === 'medium',
-  't-modal-large': props.size === 'large'
+  'cat-modal-fullscreen': props.fullScreen,
+  'cat-modal-small': props.size === 'small',
+  'cat-modal-medium': props.size === 'medium',
+  'cat-modal-large': props.size === 'large'
 }))
 
 function close (): void {
@@ -140,24 +140,24 @@ onBeforeUnmount(() => {
 @use "bulma/sass/utilities/initial-variables" as *;
 @use "bulma/sass/utilities/derived-variables" as *;
 
-.t-modal {
+.cat-modal {
   .modal-card {
     width: 800px;
     max-width: 90vw;
 
-    &.t-modal-small {
+    &.cat-modal-small {
       width: 480px;
     }
 
-    &.t-modal-medium {
+    &.cat-modal-medium {
       width: 800px;
     }
 
-    &.t-modal-large {
+    &.cat-modal-large {
       width: 1200px;
     }
 
-    &.t-modal-fullscreen {
+    &.cat-modal-fullscreen {
       width: calc(100vw - 40px);
       height: calc(100vh - 40px);
       max-height: calc(100vh - 40px);

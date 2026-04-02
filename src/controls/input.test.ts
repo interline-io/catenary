@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import TInput from './input.vue'
+import CatInput from './input.vue'
 import {
   mountComponent,
   testVModel,
@@ -9,9 +9,9 @@ import {
   testDisabledState
 } from '../testutil/component-helpers'
 
-describe('TInput', () => {
+describe('CatInput', () => {
   it('renders text input by default', () => {
-    const wrapper = mountComponent(TInput, {
+    const wrapper = mountComponent(CatInput, {
       props: { modelValue: '' }
     })
 
@@ -22,7 +22,7 @@ describe('TInput', () => {
   })
 
   it('handles v-model binding', async () => {
-    const wrapper = mountComponent(TInput, {
+    const wrapper = mountComponent(CatInput, {
       props: { modelValue: 'initial' }
     })
 
@@ -33,7 +33,7 @@ describe('TInput', () => {
     const types = ['text', 'email', 'password', 'number', 'url', 'date']
 
     types.forEach((type) => {
-      const wrapper = mountComponent(TInput, {
+      const wrapper = mountComponent(CatInput, {
         props: {
           modelValue: '',
           type
@@ -46,7 +46,7 @@ describe('TInput', () => {
 
   it('renders all variants', () => {
     variantProps().forEach((variant) => {
-      const wrapper = mountComponent(TInput, {
+      const wrapper = mountComponent(CatInput, {
         props: {
           modelValue: '',
           variant
@@ -61,7 +61,7 @@ describe('TInput', () => {
     sizeProps().forEach((size) => {
       if (size === 'normal') return
 
-      const wrapper = mountComponent(TInput, {
+      const wrapper = mountComponent(CatInput, {
         props: {
           modelValue: '',
           size
@@ -73,7 +73,7 @@ describe('TInput', () => {
   })
 
   it('handles disabled state', () => {
-    const wrapper = mountComponent(TInput, {
+    const wrapper = mountComponent(CatInput, {
       props: {
         modelValue: '',
         disabled: true
@@ -84,7 +84,7 @@ describe('TInput', () => {
   })
 
   it('handles readonly state', () => {
-    const wrapper = mountComponent(TInput, {
+    const wrapper = mountComponent(CatInput, {
       props: {
         modelValue: 'readonly value',
         readonly: true
@@ -96,7 +96,7 @@ describe('TInput', () => {
   })
 
   it('renders loading state', () => {
-    const wrapper = mountComponent(TInput, {
+    const wrapper = mountComponent(CatInput, {
       props: {
         modelValue: '',
         loading: true
@@ -108,7 +108,7 @@ describe('TInput', () => {
   })
 
   it('renders rounded input', () => {
-    const wrapper = mountComponent(TInput, {
+    const wrapper = mountComponent(CatInput, {
       props: {
         modelValue: '',
         rounded: true
@@ -119,7 +119,7 @@ describe('TInput', () => {
   })
 
   it('handles placeholder', () => {
-    const wrapper = mountComponent(TInput, {
+    const wrapper = mountComponent(CatInput, {
       props: {
         modelValue: '',
         placeholder: 'Enter text'
@@ -130,7 +130,7 @@ describe('TInput', () => {
   })
 
   it('handles maxlength', () => {
-    const wrapper = mountComponent(TInput, {
+    const wrapper = mountComponent(CatInput, {
       props: {
         modelValue: '',
         maxlength: 20

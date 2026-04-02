@@ -1,7 +1,7 @@
 <template>
   <span
     ref="tooltipRef"
-    class="t-tooltip"
+    class="cat-tooltip"
     :class="`is-tooltip-${effectivePosition}`"
     v-bind="{ 'data-tooltip': text }"
     @mouseenter="adjustPosition"
@@ -17,11 +17,11 @@ import { ref, computed } from 'vue'
  * Pure CSS tooltip component with smart positioning.
  * Displays tooltip text on hover and automatically adjusts position to stay within viewport.
  *
- * @component t-tooltip
+ * @component cat-tooltip
  * @example
- * <t-tooltip text="Click to save">
+ * <cat-tooltip text="Click to save">
  *   <button class="button">Save</button>
- * </t-tooltip>
+ * </cat-tooltip>
  */
 
 interface Props {
@@ -129,7 +129,7 @@ $tooltip-arrow-size: 6px;
 $tooltip-arrow-offset: 2px;
 $tooltip-offset: 8px;
 
-.t-tooltip {
+.cat-tooltip {
   position: relative;
   display: inline-block;
 

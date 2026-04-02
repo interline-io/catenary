@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Catenary is a **standalone Vue 3 component library** (not a Nuxt module) that provides generic, domain-agnostic UI controls built on Bulma CSS. It is extracted from the `t-controls` portion of `tlv2-ui` and published to GitHub Packages as `@interline-io/catenary`.
 
-Consumers install it as a Vue plugin (`app.use(CatenaryPlugin)`) or import individual components (`import { TButton } from '@interline-io/catenary'`).
+Consumers install it as a Vue plugin (`app.use(CatenaryPlugin)`) or import individual components (`import { CatButton } from '@interline-io/catenary'`).
 
 ## Commands
 
@@ -34,7 +34,7 @@ Tests use **Vitest** with jsdom environment. Test files live alongside component
 
 ### Source Structure (`src/`)
 
-- **controls/** — 30 Vue components (prefix `t-`): button, input, modal, table, select, datepicker, taginput, etc. Styled with Bulma CSS. Components that use other controls import them explicitly (e.g., button imports icon, datepicker imports dropdown/input/select).
+- **controls/** — 30 Vue components (prefix `cat-`): button, input, modal, table, select, datepicker, taginput, etc. Styled with Bulma CSS. Components that use other controls import them explicitly (e.g., button imports icon, datepicker imports dropdown/input/select).
 - **controls/types.ts** — Shared TypeScript types for variants, sizes, and injection keys (`FieldIdKey`).
 - **testutil/** — Test helper utilities (mount helpers, variant/size generators, v-model testing, a11y checks).
 
@@ -48,9 +48,9 @@ Tests use **Vitest** with jsdom environment. Test files live alongside component
 ### CSS Conventions
 
 Components follow the pattern documented in the original `README-CLASSES.md`:
-- Root element gets both Bulma class and `t-` prefixed class (e.g., `class="card t-card"`)
+- Root element gets both Bulma class and `cat-` prefixed CSS class (e.g., `class="card cat-card"`)
 - Bulma helpers used directly (spacing, typography, flexbox)
-- Custom/invented classes always use `t-` prefix
+- Custom/invented CSS classes use the `cat-` prefix
 - SCSS `@each` loops for variant styling
 
 ### Playground

@@ -1,7 +1,7 @@
 <template>
   <div>
     <div
-      class="tabs t-tabs"
+      class="tabs cat-tabs"
       :class="tabsClasses"
     >
       <ul>
@@ -19,7 +19,7 @@
         </li>
       </ul>
     </div>
-    <div class="t-tab-content">
+    <div class="cat-tab-content">
       <slot />
     </div>
   </div>
@@ -30,14 +30,14 @@ import { computed, provide, ref, watch, nextTick } from 'vue'
 
 /**
  * Tabs component using Bulma styling.
- * Works with t-tab-item children to create tabbed interfaces.
+ * Works with cat-tab-item children to create tabbed interfaces.
  *
  * @example
  * ```vue
- * <t-tabs v-model="activeTab">
- *   <t-tab-item label="First">Content 1</t-tab-item>
- *   <t-tab-item label="Second">Content 2</t-tab-item>
- * </t-tabs>
+ * <cat-tabs v-model="activeTab">
+ *   <cat-tab-item label="First">Content 1</cat-tab-item>
+ *   <cat-tab-item label="Second">Content 2</cat-tab-item>
+ * </cat-tabs>
  * ```
  */
 
@@ -114,7 +114,7 @@ watch(() => props.modelValue, () => {
 
 <style lang="scss">
 /* Override .content ul styles for tabs - must be unscoped */
-.content .t-tabs ul {
+.content .cat-tabs ul {
   margin-left: 0;
   margin-inline-start: 0;
   list-style: none;

@@ -1,5 +1,5 @@
 <template>
-  <nav class="pagination t-pagination" :class="paginationClasses" role="navigation" aria-label="pagination">
+  <nav class="pagination cat-pagination" :class="paginationClasses" role="navigation" aria-label="pagination">
     <button
       type="button"
       class="pagination-previous"
@@ -7,7 +7,7 @@
       :aria-disabled="isFirst"
       @click="changePage(current - 1)"
     >
-      <t-icon icon="chevron-left" />
+      <cat-icon icon="chevron-left" />
     </button>
     <button
       type="button"
@@ -16,7 +16,7 @@
       :aria-disabled="isLast"
       @click="changePage(current + 1)"
     >
-      <t-icon icon="chevron-right" />
+      <cat-icon icon="chevron-right" />
     </button>
     <ul class="pagination-list">
       <!-- First page -->
@@ -58,16 +58,16 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { PaginationSize, PaginationPosition } from './types'
-import TIcon from './icon.vue'
+import CatIcon from './icon.vue'
 
 /**
  * Pagination component with Bulma styling.
  * Provides navigation between pages of content.
  *
- * @component t-pagination
+ * @component cat-pagination
  * @example
- * <t-pagination v-model:current="page" :total="100" :per-page="10" />
- * <t-pagination v-model:current="page" :total="500" size="small" position="centered" />
+ * <cat-pagination v-model:current="page" :total="100" :per-page="10" />
+ * <cat-pagination v-model:current="page" :total="500" size="small" position="centered" />
  */
 
 defineOptions({
@@ -183,7 +183,7 @@ function changePage (page: number) {
 </script>
 
 <style lang="scss" scoped>
-.t-pagination {
+.cat-pagination {
   .pagination-previous,
   .pagination-next,
   .pagination-link {

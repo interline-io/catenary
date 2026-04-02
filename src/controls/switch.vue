@@ -1,5 +1,5 @@
 <template>
-  <label class="switch t-switch" :class="switchClasses">
+  <label class="switch cat-switch" :class="switchClasses">
     <input
       type="checkbox"
       :checked="isChecked"
@@ -21,11 +21,11 @@ import type { SwitchVariant, SwitchSize } from './types'
  * Toggle switch component with v-model support.
  * Supports boolean or custom true/false values with type safety.
  *
- * @component t-switch
+ * @component cat-switch
  * @example
- * <t-switch v-model="enabled">Enable feature</t-switch>
- * <t-switch v-model="status" :true-value="1" :false-value="0">Active</t-switch>
- * <t-switch v-model="mode" true-value="dark" false-value="light">Dark Mode</t-switch>
+ * <cat-switch v-model="enabled">Enable feature</cat-switch>
+ * <cat-switch v-model="status" :true-value="1" :false-value="0">Active</cat-switch>
+ * <cat-switch v-model="mode" true-value="dark" false-value="light">Dark Mode</cat-switch>
  */
 
 const props = withDefaults(defineProps<{
@@ -101,7 +101,7 @@ function handleChange (event: Event) {
 </script>
 
 <style lang="scss" scoped>
-.t-switch {
+.cat-switch {
   cursor: pointer;
   display: inline-flex;
   align-items: center;

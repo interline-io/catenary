@@ -9,35 +9,35 @@
       </p>
 
       <t-demo-box label="Basic Dropdown">
-        <t-dropdown label="Actions">
-          <t-dropdown-item value="edit">
-            <t-icon icon="pencil" size="small" />
+        <cat-dropdown label="Actions">
+          <cat-dropdown-item value="edit">
+            <cat-icon icon="pencil" size="small" />
             <span>Edit</span>
-          </t-dropdown-item>
-          <t-dropdown-item value="duplicate">
-            <t-icon icon="content-copy" size="small" />
+          </cat-dropdown-item>
+          <cat-dropdown-item value="duplicate">
+            <cat-icon icon="content-copy" size="small" />
             <span>Duplicate</span>
-          </t-dropdown-item>
-          <t-dropdown-item value="delete">
-            <t-icon icon="delete" size="small" />
+          </cat-dropdown-item>
+          <cat-dropdown-item value="delete">
+            <cat-icon icon="delete" size="small" />
             <span>Delete</span>
-          </t-dropdown-item>
-        </t-dropdown>
+          </cat-dropdown-item>
+        </cat-dropdown>
       </t-demo-box>
 
       <t-demo-box label="Trigger Variants">
         <div class="buttons">
-          <t-dropdown v-for="variant in triggerVariants" :key="variant" :button-variant="variant" :label="capitalize(variant)">
-            <t-dropdown-item value="1">
+          <cat-dropdown v-for="variant in triggerVariants" :key="variant" :button-variant="variant" :label="capitalize(variant)">
+            <cat-dropdown-item value="1">
               Option 1
-            </t-dropdown-item>
-            <t-dropdown-item value="2">
+            </cat-dropdown-item>
+            <cat-dropdown-item value="2">
               Option 2
-            </t-dropdown-item>
-            <t-dropdown-item value="3">
+            </cat-dropdown-item>
+            <cat-dropdown-item value="3">
               Option 3
-            </t-dropdown-item>
-          </t-dropdown>
+            </cat-dropdown-item>
+          </cat-dropdown>
         </div>
       </t-demo-box>
 
@@ -45,185 +45,185 @@
         <p class="mb-3">
           Hover over the button to open the dropdown
         </p>
-        <t-dropdown hoverable label="Hover me" button-variant="link">
-          <t-dropdown-item value="option1">
+        <cat-dropdown hoverable label="Hover me" button-variant="link">
+          <cat-dropdown-item value="option1">
             Option 1
-          </t-dropdown-item>
-          <t-dropdown-item value="option2">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="option2">
             Option 2
-          </t-dropdown-item>
-          <t-dropdown-item value="option3">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="option3">
             Option 3
-          </t-dropdown-item>
-        </t-dropdown>
+          </cat-dropdown-item>
+        </cat-dropdown>
       </t-demo-box>
 
       <t-demo-box label="With Icons">
-        <t-dropdown label="My Account" icon-left="account-circle">
-          <t-dropdown-item value="profile">
-            <t-icon icon="account" size="small" />
+        <cat-dropdown label="My Account" icon-left="account-circle">
+          <cat-dropdown-item value="profile">
+            <cat-icon icon="account" size="small" />
             <span>Profile</span>
-          </t-dropdown-item>
-          <t-dropdown-item value="settings">
-            <t-icon icon="cog" size="small" />
+          </cat-dropdown-item>
+          <cat-dropdown-item value="settings">
+            <cat-icon icon="cog" size="small" />
             <span>Settings</span>
-          </t-dropdown-item>
-          <t-dropdown-item separator />
-          <t-dropdown-item value="help">
-            <t-icon icon="help-circle" size="small" />
+          </cat-dropdown-item>
+          <cat-dropdown-item separator />
+          <cat-dropdown-item value="help">
+            <cat-icon icon="help-circle" size="small" />
             <span>Help</span>
-          </t-dropdown-item>
-          <t-dropdown-item value="logout">
-            <t-icon icon="logout" size="small" />
+          </cat-dropdown-item>
+          <cat-dropdown-item value="logout">
+            <cat-icon icon="logout" size="small" />
             <span>Logout</span>
-          </t-dropdown-item>
-        </t-dropdown>
+          </cat-dropdown-item>
+        </cat-dropdown>
       </t-demo-box>
 
       <t-demo-box label="Dropdown Positions">
         <div class="buttons">
-          <t-dropdown label="Bottom Left (Default)">
-            <t-dropdown-item value="1">
+          <cat-dropdown label="Bottom Left (Default)">
+            <cat-dropdown-item value="1">
               Item 1
-            </t-dropdown-item>
-            <t-dropdown-item value="2">
+            </cat-dropdown-item>
+            <cat-dropdown-item value="2">
               Item 2
-            </t-dropdown-item>
-          </t-dropdown>
+            </cat-dropdown-item>
+          </cat-dropdown>
 
-          <t-dropdown position="bottom-right" label="Bottom Right">
-            <t-dropdown-item value="1">
+          <cat-dropdown position="bottom-right" label="Bottom Right">
+            <cat-dropdown-item value="1">
               Item 1
-            </t-dropdown-item>
-            <t-dropdown-item value="2">
+            </cat-dropdown-item>
+            <cat-dropdown-item value="2">
               Item 2
-            </t-dropdown-item>
-          </t-dropdown>
+            </cat-dropdown-item>
+          </cat-dropdown>
 
-          <t-dropdown position="top-left" label="Top Left">
-            <t-dropdown-item value="1">
+          <cat-dropdown position="top-left" label="Top Left">
+            <cat-dropdown-item value="1">
               Item 1
-            </t-dropdown-item>
-            <t-dropdown-item value="2">
+            </cat-dropdown-item>
+            <cat-dropdown-item value="2">
               Item 2
-            </t-dropdown-item>
-          </t-dropdown>
+            </cat-dropdown-item>
+          </cat-dropdown>
 
-          <t-dropdown position="top-right" label="Top Right">
-            <t-dropdown-item value="1">
+          <cat-dropdown position="top-right" label="Top Right">
+            <cat-dropdown-item value="1">
               Item 1
-            </t-dropdown-item>
-            <t-dropdown-item value="2">
+            </cat-dropdown-item>
+            <cat-dropdown-item value="2">
               Item 2
-            </t-dropdown-item>
-          </t-dropdown>
+            </cat-dropdown-item>
+          </cat-dropdown>
         </div>
       </t-demo-box>
 
       <t-demo-box label="With Disabled Items">
-        <t-dropdown label="File">
-          <t-dropdown-item value="new">
-            <t-icon icon="file-plus" size="small" />
+        <cat-dropdown label="File">
+          <cat-dropdown-item value="new">
+            <cat-icon icon="file-plus" size="small" />
             <span>New</span>
-          </t-dropdown-item>
-          <t-dropdown-item value="open">
-            <t-icon icon="folder-open" size="small" />
+          </cat-dropdown-item>
+          <cat-dropdown-item value="open">
+            <cat-icon icon="folder-open" size="small" />
             <span>Open</span>
-          </t-dropdown-item>
-          <t-dropdown-item value="save" disabled>
-            <t-icon icon="content-save" size="small" />
+          </cat-dropdown-item>
+          <cat-dropdown-item value="save" disabled>
+            <cat-icon icon="content-save" size="small" />
             <span>Save (disabled)</span>
-          </t-dropdown-item>
-          <t-dropdown-item separator />
-          <t-dropdown-item value="export">
-            <t-icon icon="export" size="small" />
+          </cat-dropdown-item>
+          <cat-dropdown-item separator />
+          <cat-dropdown-item value="export">
+            <cat-icon icon="export" size="small" />
             <span>Export</span>
-          </t-dropdown-item>
-        </t-dropdown>
+          </cat-dropdown-item>
+        </cat-dropdown>
       </t-demo-box>
 
       <t-demo-box label="Custom Trigger">
-        <t-dropdown>
+        <cat-dropdown>
           <template #trigger>
             <a class="navbar-item">
               <span>More</span>
-              <t-icon icon="menu-down" size="small" />
+              <cat-icon icon="menu-down" size="small" />
             </a>
           </template>
-          <t-dropdown-item value="docs">
+          <cat-dropdown-item value="docs">
             Documentation
-          </t-dropdown-item>
-          <t-dropdown-item value="examples">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="examples">
             Examples
-          </t-dropdown-item>
-          <t-dropdown-item value="api">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="api">
             API Reference
-          </t-dropdown-item>
-        </t-dropdown>
+          </cat-dropdown-item>
+        </cat-dropdown>
       </t-demo-box>
 
       <t-demo-box label="Multiple Selection (Array Model)">
         <p class="mb-3">
           Selected items: <strong>{{ multipleSelection.length > 0 ? multipleSelection.join(', ') : 'None' }}</strong>
         </p>
-        <t-dropdown v-model="multipleSelection as string[]" selectable multiple inline label="Select Multiple" button-variant="primary">
-          <t-dropdown-item value="cat">
+        <cat-dropdown v-model="multipleSelection as string[]" selectable multiple inline label="Select Multiple" button-variant="primary">
+          <cat-dropdown-item value="cat">
             🐱 Cat
-          </t-dropdown-item>
-          <t-dropdown-item value="dog">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="dog">
             🐶 Dog
-          </t-dropdown-item>
-          <t-dropdown-item value="rabbit">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="rabbit">
             🐰 Rabbit
-          </t-dropdown-item>
-          <t-dropdown-item value="mouse">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="mouse">
             🐭 Mouse
-          </t-dropdown-item>
-        </t-dropdown>
+          </cat-dropdown-item>
+        </cat-dropdown>
       </t-demo-box>
 
       <t-demo-box label="Example: Interactive Actions" example>
         <p class="mb-3">
           Selected action: <strong>{{ selectedAction || 'None' }}</strong>
         </p>
-        <t-dropdown @select="handleSelect">
+        <cat-dropdown @select="handleSelect">
           <template #trigger>
-            <t-button variant="primary">
+            <cat-button variant="primary">
               <span>Choose Action</span>
-              <t-icon icon="menu-down" size="small" />
-            </t-button>
+              <cat-icon icon="menu-down" size="small" />
+            </cat-button>
           </template>
-          <t-dropdown-item value="save">
-            <t-icon icon="content-save" size="small" />
+          <cat-dropdown-item value="save">
+            <cat-icon icon="content-save" size="small" />
             <span>Save</span>
-          </t-dropdown-item>
-          <t-dropdown-item value="export">
-            <t-icon icon="export" size="small" />
+          </cat-dropdown-item>
+          <cat-dropdown-item value="export">
+            <cat-icon icon="export" size="small" />
             <span>Export</span>
-          </t-dropdown-item>
-          <t-dropdown-item value="print">
-            <t-icon icon="printer" size="small" />
+          </cat-dropdown-item>
+          <cat-dropdown-item value="print">
+            <cat-icon icon="printer" size="small" />
             <span>Print</span>
-          </t-dropdown-item>
-          <t-dropdown-item separator />
-          <t-dropdown-item value="share">
-            <t-icon icon="share-variant" size="small" />
+          </cat-dropdown-item>
+          <cat-dropdown-item separator />
+          <cat-dropdown-item value="share">
+            <cat-icon icon="share-variant" size="small" />
             <span>Share</span>
-          </t-dropdown-item>
-        </t-dropdown>
+          </cat-dropdown-item>
+        </cat-dropdown>
       </t-demo-box>
 
       <t-demo-box label="Example: Notification Menu" example>
-        <t-dropdown>
+        <cat-dropdown>
           <template #trigger>
-            <t-button variant="info">
-              <t-icon icon="bell" size="small" />
+            <cat-button variant="info">
+              <cat-icon icon="bell" size="small" />
               <span class="tag is-danger is-rounded">
                 3
               </span>
-            </t-button>
+            </cat-button>
           </template>
-          <t-dropdown-item>
+          <cat-dropdown-item>
             <div style="min-width: 250px;">
               <p class="has-text-weight-bold">
                 New message from John
@@ -232,9 +232,9 @@
                 2 minutes ago
               </p>
             </div>
-          </t-dropdown-item>
-          <t-dropdown-item separator />
-          <t-dropdown-item>
+          </cat-dropdown-item>
+          <cat-dropdown-item separator />
+          <cat-dropdown-item>
             <div style="min-width: 250px;">
               <p class="has-text-weight-bold">
                 Update completed
@@ -243,9 +243,9 @@
                 1 hour ago
               </p>
             </div>
-          </t-dropdown-item>
-          <t-dropdown-item separator />
-          <t-dropdown-item>
+          </cat-dropdown-item>
+          <cat-dropdown-item separator />
+          <cat-dropdown-item>
             <div style="min-width: 250px;">
               <p class="has-text-weight-bold">
                 System maintenance scheduled
@@ -254,78 +254,78 @@
                 Yesterday
               </p>
             </div>
-          </t-dropdown-item>
-          <t-dropdown-item separator />
-          <t-dropdown-item value="view-all">
+          </cat-dropdown-item>
+          <cat-dropdown-item separator />
+          <cat-dropdown-item value="view-all">
             <p class="has-text-centered has-text-link">
               View all notifications
             </p>
-          </t-dropdown-item>
-        </t-dropdown>
+          </cat-dropdown-item>
+        </cat-dropdown>
       </t-demo-box>
 
       <t-demo-box label="Example: Language Selector" example>
         <p class="mb-3">
           Current language: <strong>{{ currentLanguage }}</strong>
         </p>
-        <t-dropdown @select="handleLanguageSelect">
+        <cat-dropdown @select="handleLanguageSelect">
           <template #trigger>
-            <t-button>
-              <t-icon icon="translate" size="small" />
+            <cat-button>
+              <cat-icon icon="translate" size="small" />
               <span>{{ currentLanguage }}</span>
-              <t-icon icon="menu-down" size="small" />
-            </t-button>
+              <cat-icon icon="menu-down" size="small" />
+            </cat-button>
           </template>
-          <t-dropdown-item value="English">
+          <cat-dropdown-item value="English">
             🇺🇸 English
-          </t-dropdown-item>
-          <t-dropdown-item value="Español">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="Español">
             🇪🇸 Español
-          </t-dropdown-item>
-          <t-dropdown-item value="Français">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="Français">
             🇫🇷 Français
-          </t-dropdown-item>
-          <t-dropdown-item value="Deutsch">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="Deutsch">
             🇩🇪 Deutsch
-          </t-dropdown-item>
-          <t-dropdown-item value="日本語">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="日本語">
             🇯🇵 日本語
-          </t-dropdown-item>
-        </t-dropdown>
+          </cat-dropdown-item>
+        </cat-dropdown>
       </t-demo-box>
 
       <t-demo-box label="Single Selection with v-model">
         <p class="mb-3">
           Selected option: <strong>{{ singleSelection || 'None' }}</strong>
         </p>
-        <t-dropdown v-model:model-value="singleSelection as any" selectable label="Select Option" button-variant="link">
-          <t-dropdown-item value="option1">
+        <cat-dropdown v-model:model-value="singleSelection as any" selectable label="Select Option" button-variant="link">
+          <cat-dropdown-item value="option1">
             Option 1
-          </t-dropdown-item>
-          <t-dropdown-item value="option2">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="option2">
             Option 2
-          </t-dropdown-item>
-          <t-dropdown-item value="option3">
+          </cat-dropdown-item>
+          <cat-dropdown-item value="option3">
             Option 3
-          </t-dropdown-item>
-        </t-dropdown>
+          </cat-dropdown-item>
+        </cat-dropdown>
       </t-demo-box>
 
       <t-demo-box label="Example: Numeric Values" example>
         <p class="mb-3">
           Selected user ID: <strong>{{ selectedUserId || 'None' }}</strong>
         </p>
-        <t-dropdown v-model:model-value="selectedUserId as any" selectable label="Select User" button-variant="info">
-          <t-dropdown-item :value="1">
+        <cat-dropdown v-model:model-value="selectedUserId as any" selectable label="Select User" button-variant="info">
+          <cat-dropdown-item :value="1">
             👤 John Doe (ID: 1)
-          </t-dropdown-item>
-          <t-dropdown-item :value="2">
+          </cat-dropdown-item>
+          <cat-dropdown-item :value="2">
             👤 Jane Smith (ID: 2)
-          </t-dropdown-item>
-          <t-dropdown-item :value="3">
+          </cat-dropdown-item>
+          <cat-dropdown-item :value="3">
             👤 Bob Johnson (ID: 3)
-          </t-dropdown-item>
-        </t-dropdown>
+          </cat-dropdown-item>
+        </cat-dropdown>
       </t-demo-box>
     </section>
   </div>

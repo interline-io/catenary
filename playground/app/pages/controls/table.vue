@@ -9,27 +9,27 @@
       </p>
 
       <t-demo-box label="Basic Table">
-        <t-table :data="basicData">
+        <cat-table :data="basicData">
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="age" label="Age" />
-            <t-table-column field="city" label="City" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="age" label="Age" />
+            <cat-table-column field="city" label="City" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
             <td>{{ row.age }}</td>
             <td>{{ row.city }}</td>
           </template>
-        </t-table>
+        </cat-table>
       </t-demo-box>
 
       <t-demo-box label="Sortable Columns">
-        <t-table :data="sortableData" hoverable>
+        <cat-table :data="sortableData" hoverable>
           <template #columns>
-            <t-table-column field="product" label="Product" sortable />
-            <t-table-column field="price" label="Price" sortable numeric />
-            <t-table-column field="stock" label="Stock" sortable numeric />
-            <t-table-column field="category" label="Category" sortable />
+            <cat-table-column field="product" label="Product" sortable />
+            <cat-table-column field="price" label="Price" sortable numeric />
+            <cat-table-column field="stock" label="Stock" sortable numeric />
+            <cat-table-column field="category" label="Category" sortable />
           </template>
           <template #default="{ row }">
             <td>{{ row.product }}</td>
@@ -41,76 +41,76 @@
             </td>
             <td>{{ row.category }}</td>
           </template>
-        </t-table>
+        </cat-table>
       </t-demo-box>
 
       <t-demo-box label="Striped">
-        <t-table :data="basicData" striped>
+        <cat-table :data="basicData" striped>
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="age" label="Age" />
-            <t-table-column field="city" label="City" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="age" label="Age" />
+            <cat-table-column field="city" label="City" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
             <td>{{ row.age }}</td>
             <td>{{ row.city }}</td>
           </template>
-        </t-table>
+        </cat-table>
       </t-demo-box>
 
       <t-demo-box label="Bordered">
-        <t-table :data="basicData" bordered>
+        <cat-table :data="basicData" bordered>
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="age" label="Age" />
-            <t-table-column field="city" label="City" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="age" label="Age" />
+            <cat-table-column field="city" label="City" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
             <td>{{ row.age }}</td>
             <td>{{ row.city }}</td>
           </template>
-        </t-table>
+        </cat-table>
       </t-demo-box>
 
       <t-demo-box label="Narrowed">
-        <t-table :data="basicData" narrowed>
+        <cat-table :data="basicData" narrowed>
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="age" label="Age" />
-            <t-table-column field="city" label="City" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="age" label="Age" />
+            <cat-table-column field="city" label="City" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
             <td>{{ row.age }}</td>
             <td>{{ row.city }}</td>
           </template>
-        </t-table>
+        </cat-table>
       </t-demo-box>
 
       <t-demo-box label="Combined Modifiers">
-        <t-table :data="basicData" hoverable striped bordered>
+        <cat-table :data="basicData" hoverable striped bordered>
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="age" label="Age" />
-            <t-table-column field="city" label="City" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="age" label="Age" />
+            <cat-table-column field="city" label="City" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
             <td>{{ row.age }}</td>
             <td>{{ row.city }}</td>
           </template>
-        </t-table>
+        </cat-table>
       </t-demo-box>
 
       <t-demo-box label="Nested Field Sorting">
-        <t-table :data="nestedData" hoverable striped>
+        <cat-table :data="nestedData" hoverable striped>
           <template #columns>
-            <t-table-column field="name" label="Name" sortable />
-            <t-table-column field="address.city" label="City" sortable />
-            <t-table-column field="address.country" label="Country" sortable />
-            <t-table-column field="contact.email" label="Email" sortable />
+            <cat-table-column field="name" label="Name" sortable />
+            <cat-table-column field="address.city" label="City" sortable />
+            <cat-table-column field="address.country" label="Country" sortable />
+            <cat-table-column field="contact.email" label="Email" sortable />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
@@ -118,14 +118,14 @@
             <td>{{ row.address.country }}</td>
             <td>{{ row.contact.email }}</td>
           </template>
-        </t-table>
+        </cat-table>
       </t-demo-box>
 
       <t-demo-box label="Empty State">
-        <t-table :data="[]" hoverable>
+        <cat-table :data="[]" hoverable>
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="value" label="Value" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="value" label="Value" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
@@ -133,13 +133,13 @@
           </template>
           <template #empty>
             <div class="has-text-centered py-5">
-              <t-icon icon="inbox" size="large" />
+              <cat-icon icon="inbox" size="large" />
               <p class="has-text-grey">
                 No data available
               </p>
             </div>
           </template>
-        </t-table>
+        </cat-table>
       </t-demo-box>
     </section>
   </div>

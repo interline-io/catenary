@@ -1,7 +1,7 @@
 <template>
-  <div class="t-checkbox-group" :class="groupClasses">
+  <div class="cat-checkbox-group" :class="groupClasses">
     <!-- Select All / Select None buttons -->
-    <div v-if="!hideSelectAll" class="t-checkbox-group-header">
+    <div v-if="!hideSelectAll" class="cat-checkbox-group-header">
       <div class="buttons has-addons are-small">
         <button
           type="button"
@@ -29,9 +29,9 @@
     </div>
 
     <!-- Individual checkboxes -->
-    <div class="t-checkbox-group-items">
-      <t-field v-for="option in options" :key="getOptionValue(option)">
-        <t-checkbox
+    <div class="cat-checkbox-group-items">
+      <cat-field v-for="option in options" :key="getOptionValue(option)">
+        <cat-checkbox
           :model-value="isOptionSelected(option)"
           :disabled="disabled || isOptionDisabled(option)"
           :variant="variant"
@@ -41,11 +41,11 @@
           <slot name="option" :option="option" :selected="isOptionSelected(option)">
             {{ getOptionLabel(option) }}
           </slot>
-        </t-checkbox>
-      </t-field>
+        </cat-checkbox>
+      </cat-field>
 
       <!-- Empty state -->
-      <div v-if="options.length === 0" class="t-checkbox-group-empty">
+      <div v-if="options.length === 0" class="cat-checkbox-group-empty">
         <slot name="empty">
           <span class="has-text-grey">{{ emptyLabel }}</span>
         </slot>
@@ -57,8 +57,8 @@
 <script setup lang="ts" generic="V extends string | number = string, O extends V | Record<string, any> = V">
 import { computed } from 'vue'
 import type { CheckboxVariant, CheckboxSize } from './types'
-import TCheckbox from './checkbox.vue'
-import TField from './field.vue'
+import CatCheckbox from './checkbox.vue'
+import CatField from './field.vue'
 
 /**
  * Checkbox group component with "null means all" semantic support.
@@ -90,10 +90,10 @@ import TField from './field.vue'
  *
  * Set `undefinedMeansNone` to `true` for traditional behavior where `undefined` = none selected.
  *
- * @component t-checkbox-group
+ * @component cat-checkbox-group
  * @example
  * <!-- Basic usage: null means all selected until user interacts -->
- * <t-checkbox-group
+ * <cat-checkbox-group
  *   v-model="selectedAgencies"
  *   :options="knownAgencies"
  *   label-field="name"
@@ -102,14 +102,14 @@ import TField from './field.vue'
  *
  * @example
  * <!-- Simple string options -->
- * <t-checkbox-group
+ * <cat-checkbox-group
  *   v-model="selectedRouteTypes"
  *   :options="['metro', 'bus', 'rail', 'ferry']"
  * />
  *
  * @example
  * <!-- Traditional behavior: undefined means none selected -->
- * <t-checkbox-group
+ * <cat-checkbox-group
  *   v-model="selection"
  *   :options="items"
  *   undefined-means-none
@@ -295,7 +295,7 @@ function emitValue (selected: V[]) {
 @use "bulma/sass/utilities/initial-variables" as *;
 @use "bulma/sass/utilities/derived-variables" as *;
 
-.t-checkbox-group {
+.cat-checkbox-group {
   &-header {
     margin-bottom: 0.5rem;
   }

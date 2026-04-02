@@ -24,7 +24,7 @@ import { controlsGroups } from '../../navigation'
               :to="item.path"
               :class="`button is-${group.variant}`"
             >
-              <t-icon :icon="item.icon" />
+              <cat-icon :icon="item.icon" />
               <span>{{ item.name }}</span>
             </NuxtLink>
           </div>

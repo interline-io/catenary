@@ -1,5 +1,5 @@
 <template>
-  <t-input
+  <cat-input
     expanded
     :model-value="modelValue ?? undefined"
     :placeholder="modelValue ? modelValue : placeholder"
@@ -14,15 +14,15 @@
 </template>
 
 <script setup lang="ts">
-import TInput from './input.vue'
+import CatInput from './input.vue'
 
 /**
- * Search bar component wrapping t-input with search-specific styling.
+ * Search bar component wrapping cat-input with search-specific styling.
  * Automatically shows clear button when populated and emits null when cleared.
  *
- * @component t-search-bar
+ * @component cat-search-bar
  * @example
- * <t-search-bar v-model="searchQuery" placeholder="Search..." />
+ * <cat-search-bar v-model="searchQuery" placeholder="Search..." />
  */
 
 interface Props {

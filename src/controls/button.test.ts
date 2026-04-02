@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import TButton from './button.vue'
+import CatButton from './button.vue'
 import {
   mountComponent,
   variantProps,
@@ -9,9 +9,9 @@ import {
   testDisabledState
 } from '../testutil/component-helpers'
 
-describe('TButton', () => {
+describe('CatButton', () => {
   it('renders default button', () => {
-    const wrapper = mountComponent(TButton, {
+    const wrapper = mountComponent(CatButton, {
       slots: {
         default: 'Click me'
       }
@@ -24,7 +24,7 @@ describe('TButton', () => {
 
   it('renders all variants', () => {
     variantProps().forEach((variant) => {
-      const wrapper = mountComponent(TButton, {
+      const wrapper = mountComponent(CatButton, {
         props: { variant },
         slots: { default: 'Button' }
       })
@@ -37,7 +37,7 @@ describe('TButton', () => {
     sizeProps().forEach((size) => {
       if (size === 'normal') return // 'normal' doesn't add a class
 
-      const wrapper = mountComponent(TButton, {
+      const wrapper = mountComponent(CatButton, {
         props: { size },
         slots: { default: 'Button' }
       })
@@ -47,7 +47,7 @@ describe('TButton', () => {
   })
 
   it('renders outlined variant', () => {
-    const wrapper = mountComponent(TButton, {
+    const wrapper = mountComponent(CatButton, {
       props: {
         variant: 'primary',
         outlined: true
@@ -59,7 +59,7 @@ describe('TButton', () => {
   })
 
   it('renders rounded variant', () => {
-    const wrapper = mountComponent(TButton, {
+    const wrapper = mountComponent(CatButton, {
       props: { rounded: true },
       slots: { default: 'Button' }
     })
@@ -68,7 +68,7 @@ describe('TButton', () => {
   })
 
   it('renders loading state', () => {
-    const wrapper = mountComponent(TButton, {
+    const wrapper = mountComponent(CatButton, {
       props: { loading: true },
       slots: { default: 'Button' }
     })
@@ -77,7 +77,7 @@ describe('TButton', () => {
   })
 
   it('handles disabled state', () => {
-    const wrapper = mountComponent(TButton, {
+    const wrapper = mountComponent(CatButton, {
       props: { disabled: true },
       slots: { default: 'Button' }
     })
@@ -86,7 +86,7 @@ describe('TButton', () => {
   })
 
   it('emits click event', async () => {
-    const wrapper = mountComponent(TButton, {
+    const wrapper = mountComponent(CatButton, {
       slots: { default: 'Button' }
     })
 
@@ -95,7 +95,7 @@ describe('TButton', () => {
   })
 
   it('renders slot content', () => {
-    const wrapper = mountComponent(TButton, {
+    const wrapper = mountComponent(CatButton, {
       slots: {
         default: '<span>Custom Content</span>'
       }
@@ -105,7 +105,7 @@ describe('TButton', () => {
   })
 
   it('does not emit click when disabled', async () => {
-    const wrapper = mountComponent(TButton, {
+    const wrapper = mountComponent(CatButton, {
       props: { disabled: true },
       slots: { default: 'Button' }
     })

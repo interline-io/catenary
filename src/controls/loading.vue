@@ -1,8 +1,8 @@
 <template>
-  <div v-if="active" class="t-loading" :class="{ 'is-full-page': fullPage }">
-    <div class="t-loading-background" :class="{ 'is-full-page': fullPage }" @click="handleCancel" />
-    <div class="t-loading-icon">
-      <div class="t-loading-spinner" />
+  <div v-if="active" class="cat-loading" :class="{ 'is-full-page': fullPage }">
+    <div class="cat-loading-background" :class="{ 'is-full-page': fullPage }" @click="handleCancel" />
+    <div class="cat-loading-icon">
+      <div class="cat-loading-spinner" />
     </div>
   </div>
 </template>
@@ -12,10 +12,10 @@
  * Loading overlay component with spinner.
  * Shows a loading indicator over content or full page.
  *
- * @component t-loading
+ * @component cat-loading
  * @example
- * <t-loading :active="isLoading" />
- * <t-loading :active="isLoading" full-page />
+ * <cat-loading :active="isLoading" />
+ * <cat-loading :active="isLoading" full-page />
  */
 
 interface Props {
@@ -63,7 +63,7 @@ function handleCancel () {
 @use "bulma/sass/utilities/initial-variables" as *;
 @use "bulma/sass/utilities/derived-variables" as *;
 
-.t-loading {
+.cat-loading {
   position: absolute;
   top: 0;
   left: 0;
@@ -81,7 +81,7 @@ function handleCancel () {
   }
 }
 
-.t-loading-background {
+.cat-loading-background {
   position: absolute;
   top: 0;
   left: 0;
@@ -94,12 +94,12 @@ function handleCancel () {
   }
 }
 
-.t-loading-icon {
+.cat-loading-icon {
   position: relative;
   z-index: 1;
 }
 
-.t-loading-spinner {
+.cat-loading-spinner {
   animation: spinAround 500ms infinite linear;
   border: 2px solid $grey-light;
   border-radius: $radius-rounded;

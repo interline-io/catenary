@@ -3,7 +3,7 @@
     <div style="display: none;">
       <slot name="columns" />
     </div>
-    <table class="table t-table" :class="tableClasses">
+    <table class="table cat-table" :class="tableClasses">
       <thead v-if="hasHeader">
         <tr>
           <slot name="header" :columns="columns" :sort="handleSort">
@@ -14,7 +14,7 @@
               @click="column.sortable ? handleSort(column.field) : null"
             >
               {{ column.label }}
-              <span v-if="column.sortable" class="t-sort-icon">
+              <span v-if="column.sortable" class="cat-sort-icon">
                 <i v-if="sortField === column.field" :class="sortIcon" />
                 <i v-else class="mdi mdi-sort" />
               </span>
@@ -201,7 +201,7 @@ provide('registerColumn', registerColumn)
 @use "bulma/sass/utilities/initial-variables" as *;
 @use "bulma/sass/utilities/derived-variables" as *;
 
-.t-table {
+.cat-table {
   th.is-sortable {
     cursor: pointer;
     user-select: none;
@@ -211,7 +211,7 @@ provide('registerColumn', registerColumn)
     }
   }
 
-  .t-sort-icon {
+  .cat-sort-icon {
     margin-left: 0.25rem;
 
     .mdi {
