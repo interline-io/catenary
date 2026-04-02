@@ -1,10 +1,10 @@
 <template>
-  <div class="t-slider-wrapper">
+  <div class="cat-slider-wrapper">
     <input
       :id="fieldId"
       ref="sliderRef"
       type="range"
-      class="t-slider"
+      class="cat-slider"
       :class="sliderClasses"
       :value="currentValue"
       :min="min"
@@ -20,12 +20,12 @@
     >
     <div
       v-if="tooltip && showTooltip"
-      class="t-slider-tooltip"
+      class="cat-slider-tooltip"
       :style="tooltipStyle"
     >
       {{ currentValue }}
     </div>
-    <div v-if="hasTicks" class="t-slider-ticks">
+    <div v-if="hasTicks" class="cat-slider-ticks">
       <slot />
     </div>
   </div>
@@ -150,11 +150,11 @@ provide('sliderSetValue', setValue)
 </script>
 
 <style lang="scss" scoped>
-.t-slider-wrapper {
+.cat-slider-wrapper {
   position: relative;
   width: 100%;
 
-  .t-slider {
+  .cat-slider {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
@@ -263,7 +263,7 @@ provide('sliderSetValue', setValue)
     }
   }
 
-  .t-slider-ticks {
+  .cat-slider-ticks {
     display: flex;
     justify-content: space-between;
     margin-top: -0.5rem;
@@ -271,7 +271,7 @@ provide('sliderSetValue', setValue)
     color: var(--bulma-grey);
   }
 
-  .t-slider-tooltip {
+  .cat-slider-tooltip {
     position: absolute;
     top: -2.5rem;
     transform: translateX(-50%);

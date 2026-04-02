@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import TTaginput from './taginput.vue'
+import CatTaginput from './taginput.vue'
 import {
   mountComponent,
   triggerKeyboard
@@ -11,9 +11,9 @@ const fruitOptions = [
   { value: 'cherry', label: 'Cherry' }
 ]
 
-describe('TTaginput allowNew', () => {
+describe('CatTaginput allowNew', () => {
   it('adds a free-form tag on Enter', async () => {
-    const wrapper = mountComponent(TTaginput, {
+    const wrapper = mountComponent(CatTaginput, {
       props: { modelValue: [], options: fruitOptions, allowNew: true }
     })
     const input = wrapper.find('input')
@@ -24,7 +24,7 @@ describe('TTaginput allowNew', () => {
   })
 
   it('adds a free-form tag on separator key', async () => {
-    const wrapper = mountComponent(TTaginput, {
+    const wrapper = mountComponent(CatTaginput, {
       props: { modelValue: [], options: fruitOptions, allowNew: true }
     })
     const input = wrapper.find('input')
@@ -35,7 +35,7 @@ describe('TTaginput allowNew', () => {
   })
 
   it('does not add free-form tag when allowNew is false', async () => {
-    const wrapper = mountComponent(TTaginput, {
+    const wrapper = mountComponent(CatTaginput, {
       props: { modelValue: [], options: fruitOptions, allowNew: false }
     })
     const input = wrapper.find('input')
@@ -45,7 +45,7 @@ describe('TTaginput allowNew', () => {
   })
 
   it('does not add duplicate tags', async () => {
-    const wrapper = mountComponent(TTaginput, {
+    const wrapper = mountComponent(CatTaginput, {
       props: { modelValue: ['existing'], options: fruitOptions, allowNew: true }
     })
     const input = wrapper.find('input')
@@ -56,7 +56,7 @@ describe('TTaginput allowNew', () => {
   })
 
   it('respects maxTags limit', async () => {
-    const wrapper = mountComponent(TTaginput, {
+    const wrapper = mountComponent(CatTaginput, {
       props: { modelValue: ['a', 'b'], options: fruitOptions, allowNew: true, maxTags: 2 }
     })
     const input = wrapper.find('input')
@@ -66,7 +66,7 @@ describe('TTaginput allowNew', () => {
   })
 
   it('trims whitespace from new tags', async () => {
-    const wrapper = mountComponent(TTaginput, {
+    const wrapper = mountComponent(CatTaginput, {
       props: { modelValue: [], options: fruitOptions, allowNew: true }
     })
     const input = wrapper.find('input')
@@ -77,7 +77,7 @@ describe('TTaginput allowNew', () => {
   })
 
   it('does not add empty tags', async () => {
-    const wrapper = mountComponent(TTaginput, {
+    const wrapper = mountComponent(CatTaginput, {
       props: { modelValue: [], options: fruitOptions, allowNew: true }
     })
     const input = wrapper.find('input')
@@ -87,7 +87,7 @@ describe('TTaginput allowNew', () => {
   })
 
   it('selects dropdown option over free-form when highlighted', async () => {
-    const wrapper = mountComponent(TTaginput, {
+    const wrapper = mountComponent(CatTaginput, {
       props: { modelValue: [], options: fruitOptions, allowNew: true }
     })
     const input = wrapper.find('input')

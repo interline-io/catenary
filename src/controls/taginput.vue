@@ -1,6 +1,6 @@
 <template>
   <div
-    class="t-taginput"
+    class="cat-taginput"
     :class="containerClasses"
     role="combobox"
     :aria-label="placeholder || 'Tag input'"
@@ -9,7 +9,7 @@
     :aria-owns="listboxId"
   >
     <!-- Selected tags (above input) -->
-    <div class="t-taginput-tags" role="list" aria-label="Selected tags">
+    <div class="cat-taginput-tags" role="list" aria-label="Selected tags">
       <template v-if="selectedTags.length > 0">
         <div
           v-for="tag in selectedTags"
@@ -33,14 +33,14 @@
         </div>
       </template>
       <!-- Placeholder to reserve vertical space when no tags selected -->
-      <span v-else class="t-taginput-placeholder">
+      <span v-else class="cat-taginput-placeholder">
         {{ emptyText }}
       </span>
       <!-- Counter for max tags -->
       <span
         v-if="maxTags !== undefined"
         :id="counterId"
-        class="t-taginput-counter"
+        class="cat-taginput-counter"
         :class="{ 'is-max': isMaxReached }"
         aria-live="polite"
       >
@@ -49,7 +49,7 @@
     </div>
 
     <!-- Input wrapper with dropdown positioned relative to it (hidden in readonly mode) -->
-    <div v-if="!readonly" class="t-taginput-input-wrapper">
+    <div v-if="!readonly" class="cat-taginput-input-wrapper">
       <!-- Input with icon -->
       <div class="control" :class="controlClasses">
         <input
@@ -78,23 +78,23 @@
       <div
         v-show="showDropdown"
         :id="listboxId"
-        class="t-taginput-dropdown"
+        class="cat-taginput-dropdown"
         role="listbox"
         aria-multiselectable="true"
         :aria-label="placeholder || 'Select options'"
       >
         <!-- Header slot -->
-        <div v-if="$slots.header" class="t-taginput-dropdown-header">
+        <div v-if="$slots.header" class="cat-taginput-dropdown-header">
           <slot name="header" />
         </div>
 
         <!-- Options list -->
-        <div class="t-taginput-dropdown-content">
+        <div class="cat-taginput-dropdown-content">
           <div
             v-for="(option, index) in filteredOptions"
             :id="`${componentId}-option-${index}`"
             :key="option.value"
-            class="t-taginput-dropdown-item"
+            class="cat-taginput-dropdown-item"
             :class="{ 'is-active': index === highlightedIndex }"
             role="option"
             tabindex="0"
@@ -108,7 +108,7 @@
               {{ option.label }}
             </slot>
           </div>
-          <div v-if="filteredOptions.length === 0 && $slots.empty" class="t-taginput-dropdown-item is-empty">
+          <div v-if="filteredOptions.length === 0 && $slots.empty" class="cat-taginput-dropdown-item is-empty">
             <slot name="empty" />
           </div>
         </div>
@@ -126,10 +126,10 @@ import type { TaginputVariant, TaginputSize, TagOption as TagOptionBase } from '
  * Allows selecting multiple values displayed as removable tags.
  * Uses generic type T for value types (defaults to string).
  *
- * @component t-taginput
+ * @component cat-taginput
  * @example
- * <t-taginput v-model="selectedIds" :options="options" />
- * <t-taginput v-model="tags" :options="items" variant="primary" open-on-focus />
+ * <cat-taginput v-model="selectedIds" :options="options" />
+ * <cat-taginput v-model="tags" :options="items" variant="primary" open-on-focus />
  */
 
 defineOptions({
@@ -440,7 +440,7 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
-.t-taginput {
+.cat-taginput {
   &.is-fullwidth {
     width: 100%;
   }
@@ -450,11 +450,11 @@ defineExpose({
     pointer-events: none;
   }
 
-  .t-taginput-input-wrapper {
+  .cat-taginput-input-wrapper {
     position: relative;
   }
 
-  .t-taginput-tags {
+  .cat-taginput-tags {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
@@ -473,13 +473,13 @@ defineExpose({
     }
   }
 
-  .t-taginput-placeholder {
+  .cat-taginput-placeholder {
     color: var(--bulma-text-weak);
     font-style: italic;
     line-height: 2em; // Match tag height
   }
 
-  .t-taginput-counter {
+  .cat-taginput-counter {
     margin-left: auto;
     font-size: 0.875rem;
     color: var(--bulma-text-weak);
@@ -490,7 +490,7 @@ defineExpose({
     }
   }
 
-  .t-taginput-dropdown {
+  .cat-taginput-dropdown {
     position: absolute;
     top: 100%;
     left: 0;
@@ -504,17 +504,17 @@ defineExpose({
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   }
 
-  .t-taginput-dropdown-header {
+  .cat-taginput-dropdown-header {
     padding: 0.5rem 0.75rem;
     background: var(--bulma-scheme-main-bis);
     border-bottom: 1px solid var(--bulma-border);
   }
 
-  .t-taginput-dropdown-content {
+  .cat-taginput-dropdown-content {
     padding: 0.25rem 0;
   }
 
-  .t-taginput-dropdown-item {
+  .cat-taginput-dropdown-item {
     display: block;
     padding: 0.5rem 0.75rem;
     color: var(--bulma-text);

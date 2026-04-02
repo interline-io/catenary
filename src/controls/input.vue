@@ -42,11 +42,11 @@ const fieldId = inject(FieldIdKey, undefined)
  * Text input component with Bulma styling.
  * Supports various input types, sizes, colors, states, and icons.
  *
- * @component t-input
+ * @component cat-input
  * @example
- * <t-input v-model="value" placeholder="Enter text" />
- * <t-input v-model="email" type="email" variant="primary" />
- * <t-input v-model="numberValue" type="number" />
+ * <cat-input v-model="value" placeholder="Enter text" />
+ * <cat-input v-model="email" type="email" variant="primary" />
+ * <cat-input v-model="numberValue" type="number" />
  */
 
 const props = withDefaults(defineProps<{

@@ -11,7 +11,7 @@
               :to="item.path"
               :class="{ 'is-active': route.path === item.path }"
             >
-              <t-icon :icon="item.icon" size="small" class="pr-2" />
+              <cat-icon :icon="item.icon" size="small" class="pr-2" />
               <span>{{ item.name }}</span>
             </NuxtLink>
           </li>

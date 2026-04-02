@@ -4,9 +4,9 @@
       Search for users from a mock API. Selections trigger server actions with loading states.
     </p>
 
-    <t-field label="Team Members">
+    <cat-field label="Team Members">
       <div class="async-taginput-wrapper" :class="{ 'is-processing': actionPending }">
-        <t-taginput
+        <cat-taginput
           v-model="selected"
           v-model:input="searchText"
           :options="options"
@@ -19,7 +19,7 @@
         >
           <template #option="{ option }">
             <div class="is-flex is-align-items-center">
-              <span class="t-avatar is-small mr-2">{{ option.avatar }}</span>
+              <span class="cat-avatar is-small mr-2">{{ option.avatar }}</span>
               <div>
                 <div>{{ option.label }}</div>
                 <div class="has-text-grey is-size-7">
@@ -29,20 +29,20 @@
             </div>
           </template>
           <template #tag="{ tag }">
-            <span class="t-avatar is-tiny mr-1">{{ tag.avatar }}</span>
+            <span class="cat-avatar is-tiny mr-1">{{ tag.avatar }}</span>
             {{ tag.label }}
           </template>
           <template #empty>
             <span v-if="searchText">No users found for "{{ searchText }}"</span>
             <span v-else>Type to search...</span>
           </template>
-        </t-taginput>
+        </cat-taginput>
         <div v-if="actionPending" class="processing-indicator">
           <span class="icon"><i class="mdi mdi-loading mdi-spin" /></span>
           <span>Saving...</span>
         </div>
       </div>
-    </t-field>
+    </cat-field>
 
     <!-- Activity Log -->
     <div class="box mt-4">
@@ -255,7 +255,7 @@ watch(selected, async (newVal, oldVal) => {
 </script>
 
 <style scoped lang="scss">
-.t-avatar {
+.cat-avatar {
   display: inline-flex;
   align-items: center;
   justify-content: center;

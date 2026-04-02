@@ -8,23 +8,23 @@
         Loading indicators and spinners
       </p>
 
-      <t-demo-box label="Basic Loading Spinner">
+      <demo-box label="Basic Loading Spinner">
         <div class="has-text-centered">
-          <t-loading :active="true" />
+          <cat-loading :active="true" />
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Inline Loading">
+      <demo-box label="Inline Loading">
         <p class="is-flex is-align-items-center">
-          <t-loading :active="true" />
+          <cat-loading :active="true" />
           <span class="ml-3">Loading data...</span>
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Loading Overlay">
+      <demo-box label="Loading Overlay">
         <div style="position: relative; min-height: 200px;">
           <div v-if="overlayLoading" class="loading-overlay">
-            <t-loading :active="true" />
+            <cat-loading :active="true" />
           </div>
           <div :class="{ 'is-invisible': overlayLoading }">
             <h3 class="subtitle">
@@ -37,57 +37,57 @@
               Lorem ipsum dolor sit amet, consectetur adipiscing elit.
             </p>
           </div>
-          <t-button class="mt-3" @click="toggleOverlay">
+          <cat-button class="mt-3" @click="toggleOverlay">
             {{ overlayLoading ? 'Stop Loading' : 'Start Loading' }}
-          </t-button>
+          </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Loading in Buttons">
+      <demo-box label="Loading in Buttons">
         <div class="buttons">
-          <t-button variant="primary" :loading="buttonLoading" @click="simulateAction">
+          <cat-button variant="primary" :loading="buttonLoading" @click="simulateAction">
             {{ buttonLoading ? '' : 'Submit' }}
-          </t-button>
-          <t-button variant="info" :loading="buttonLoading2" @click="simulateAction2">
+          </cat-button>
+          <cat-button variant="info" :loading="buttonLoading2" @click="simulateAction2">
             {{ buttonLoading2 ? '' : 'Save' }}
-          </t-button>
-          <t-button variant="success" :loading="buttonLoading3" @click="simulateAction3">
+          </cat-button>
+          <cat-button variant="success" :loading="buttonLoading3" @click="simulateAction3">
             {{ buttonLoading3 ? '' : 'Download' }}
-          </t-button>
+          </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Full Page Loading">
+      <demo-box label="Full Page Loading">
         <p class="mb-3">
           Click the button to show a full-page loading overlay
         </p>
-        <t-button variant="primary" @click="showFullPageLoading">
+        <cat-button variant="primary" @click="showFullPageLoading">
           Show Full Page Loading
-        </t-button>
-      </t-demo-box>
+        </cat-button>
+      </demo-box>
 
-      <t-demo-box label="Loading States">
-        <t-button variant="primary" @click="loadData">
+      <demo-box label="Loading States">
+        <cat-button variant="primary" @click="loadData">
           Load Data
-        </t-button>
+        </cat-button>
         <div v-if="dataLoading" class="mt-3">
           <div class="is-flex is-align-items-center">
-            <t-loading :active="true" />
+            <cat-loading :active="true" />
             <span class="ml-3">Loading data...</span>
           </div>
         </div>
         <div v-else-if="dataLoaded" class="mt-3">
           <div class="notification is-success is-light">
-            <t-icon icon="check-circle" />
+            <cat-icon icon="check-circle" />
             Data loaded successfully!
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Full Page Loading Overlay -->
       <div v-if="fullPageLoading" class="full-page-overlay">
         <div class="has-text-centered">
-          <t-loading />
+          <cat-loading />
           <p class="mt-4 has-text-white has-text-weight-bold">
             Processing...
           </p>
@@ -99,7 +99,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const overlayLoading = ref(false)
 const buttonLoading = ref(false)

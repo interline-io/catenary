@@ -10,11 +10,11 @@ import { computed } from 'vue'
 /**
  * Icon component using Material Design Icons (MDI) with Bulma's icon container.
  *
- * @component t-icon
+ * @component cat-icon
  * @example
- * <t-icon icon="check" />
- * <t-icon icon="close" size="small" @click="handleClick" />
- * <t-icon icon="loading" size="large" />
+ * <cat-icon icon="check" />
+ * <cat-icon icon="close" size="small" @click="handleClick" />
+ * <cat-icon icon="loading" size="large" />
  */
 
 const emit = defineEmits<{

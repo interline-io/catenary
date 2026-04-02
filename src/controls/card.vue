@@ -1,5 +1,5 @@
 <template>
-  <div class="card t-card" :class="{ 't-card--panel': variant === 'panel' }">
+  <div class="card cat-card" :class="{ 'cat-card--panel': variant === 'panel' }">
     <header
       v-if="label || $slots.header || $slots.actions"
       class="card-header"
@@ -26,14 +26,14 @@
         :aria-label="isOpen ? 'Collapse' : 'Expand'"
         @click.stop="toggle()"
       >
-        <t-icon
+        <cat-icon
           :icon="icon"
-          class="t-expand-icon"
+          class="cat-expand-icon"
           :class="{ 'is-rotated': !isOpen }"
         />
       </button>
     </header>
-    <Transition name="t-expand">
+    <Transition name="cat-expand">
       <div v-show="!expandable || isOpen">
         <div class="card-content">
           <slot />
@@ -48,18 +48,18 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import TIcon from './icon.vue'
+import CatIcon from './icon.vue'
 
 /**
  * Card component - a flexible content container.
  * Based on Bulma Card component with optional collapse functionality.
  *
- * @component t-card
+ * @component cat-card
  * @see https://bulma.io/documentation/components/card/
  * @example
- * <t-card label="Settings">Content</t-card>
- * <t-card label="Details" expandable>Expandable content</t-card>
- * <t-card label="Advanced" expandable v-model:open="isOpen">Controlled</t-card>
+ * <cat-card label="Settings">Content</cat-card>
+ * <cat-card label="Details" expandable>Expandable content</cat-card>
+ * <cat-card label="Advanced" expandable v-model:open="isOpen">Controlled</cat-card>
  */
 
 interface Props {
@@ -124,7 +124,7 @@ function toggle () {
 </script>
 
 <style lang="scss" scoped>
-.t-card {
+.cat-card {
   .card-header.is-clickable {
     cursor: pointer;
     user-select: none;
@@ -148,7 +148,7 @@ function toggle () {
     cursor: pointer;
   }
 
-  .t-expand-icon {
+  .cat-expand-icon {
     transition: transform 0.3s ease;
 
     &.is-rotated {
@@ -156,7 +156,7 @@ function toggle () {
     }
   }
 
-  &.t-card--panel {
+  &.cat-card--panel {
     .card-header {
       background-color: hsl(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-text-l));
       color: hsl(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-text-invert-l));
@@ -169,20 +169,20 @@ function toggle () {
 }
 
 // Expand transition
-.t-expand-enter-active,
-.t-expand-leave-active {
+.cat-expand-enter-active,
+.cat-expand-leave-active {
   transition: all 0.3s ease;
   overflow: hidden;
 }
 
-.t-expand-enter-from,
-.t-expand-leave-to {
+.cat-expand-enter-from,
+.cat-expand-leave-to {
   opacity: 0;
   max-height: 0;
 }
 
-.t-expand-enter-to,
-.t-expand-leave-from {
+.cat-expand-enter-to,
+.cat-expand-leave-from {
   opacity: 1;
   max-height: 1000px; // Arbitrary large value
 }

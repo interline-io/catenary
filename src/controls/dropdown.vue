@@ -1,7 +1,7 @@
 <template>
   <div
     ref="dropdownRef"
-    class="dropdown t-dropdown"
+    class="dropdown cat-dropdown"
     :class="dropdownClass"
   >
     <div
@@ -46,15 +46,15 @@ import { ref, computed, onMounted, onBeforeUnmount, provide, useId } from 'vue'
  * Dropdown component using Bulma dropdown structure.
  * Supports single and multiple selection with v-model.
  *
- * @component t-dropdown
+ * @component cat-dropdown
  * @example
- * <t-dropdown v-model="selected" selectable>
+ * <cat-dropdown v-model="selected" selectable>
  *   <template #trigger>
  *     <button class="button">Select item</button>
  *   </template>
- *   <t-dropdown-item value="1">Option 1</t-dropdown-item>
- *   <t-dropdown-item value="2">Option 2</t-dropdown-item>
- * </t-dropdown>
+ *   <cat-dropdown-item value="1">Option 1</cat-dropdown-item>
+ *   <cat-dropdown-item value="2">Option 2</cat-dropdown-item>
+ * </cat-dropdown>
  */
 
 interface Props {
@@ -258,8 +258,8 @@ defineExpose({ open, close, toggle })
 </script>
 
 <style scoped lang="scss">
-/* Custom overrides using t-dropdown class */
-.t-dropdown .dropdown-menu {
+/* Custom overrides using cat-dropdown class */
+.cat-dropdown .dropdown-menu {
   min-width: 12rem;
 }
 </style>

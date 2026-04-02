@@ -9,7 +9,7 @@
       <div class="navbar-menu">
         <div class="navbar-end">
           <div class="navbar-item">
-            <t-theme-toggle />
+            <cat-theme-toggle />
           </div>
         </div>
       </div>

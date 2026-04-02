@@ -8,15 +8,15 @@
         Search input with suggestions and filtering
       </p>
 
-      <t-demo-box label="Basic Search Bar">
-        <t-search-bar v-model="basicSearch" placeholder="Search..." />
+      <demo-box label="Basic Search Bar">
+        <cat-search-bar v-model="basicSearch" placeholder="Search..." />
         <p class="has-text-grey mt-3">
           Search query: {{ basicSearch || 'None' }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Interactive Search with Results" example>
-        <t-search-bar
+      <demo-box label="Example: Interactive Search with Results" example>
+        <cat-search-bar
           v-model="interactiveSearch as string | null"
           placeholder="Search products..."
         />
@@ -35,9 +35,9 @@
                     {{ result.category }}
                   </p>
                 </div>
-                <t-tag :variant="result.inStock ? 'success' : 'danger'">
+                <cat-tag :variant="result.inStock ? 'success' : 'danger'">
                   {{ result.inStock ? 'In Stock' : 'Out of Stock' }}
-                </t-tag>
+                </cat-tag>
               </div>
             </div>
           </div>
@@ -45,15 +45,15 @@
         <p v-else-if="interactiveSearch" class="has-text-grey mt-3">
           No results found
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Search with Filters" example>
+      <demo-box label="Example: Search with Filters" example>
         <div class="field has-addons">
           <div class="control is-expanded">
-            <t-search-bar v-model="filterSearch" placeholder="Search..." />
+            <cat-search-bar v-model="filterSearch" placeholder="Search..." />
           </div>
           <div class="control">
-            <t-select v-model="filterCategory">
+            <cat-select v-model="filterCategory">
               <option value="">
                 All Categories
               </option>
@@ -66,17 +66,17 @@
               <option value="books">
                 Books
               </option>
-            </t-select>
+            </cat-select>
           </div>
           <div class="control">
-            <t-button variant="primary">
-              <t-icon icon="magnify" />
-            </t-button>
+            <cat-button variant="primary">
+              <cat-icon icon="magnify" />
+            </cat-button>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Navbar Search" example>
+      <demo-box label="Example: Navbar Search" example>
         <nav class="navbar is-light">
           <div class="navbar-brand">
             <a class="navbar-item" href="#">
@@ -91,15 +91,15 @@
             </div>
             <div class="navbar-end">
               <div class="navbar-item">
-                <t-search-bar v-model="navbarSearch" placeholder="Search..." />
+                <cat-search-bar v-model="navbarSearch" placeholder="Search..." />
               </div>
             </div>
           </div>
         </nav>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: With Suggestions" example>
-        <t-search-bar
+      <demo-box label="Example: With Suggestions" example>
+        <cat-search-bar
           v-model="suggestionSearch"
           placeholder="Type to see suggestions..."
         />
@@ -113,24 +113,24 @@
                 class="dropdown-item"
                 @click.prevent="applySuggestion(suggestion)"
               >
-                <t-icon icon="magnify" class="mr-2" />
+                <cat-icon icon="magnify" class="mr-2" />
                 {{ suggestion }}
               </a>
             </div>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Advanced Search Form" example>
-        <t-search-bar v-model="advancedSearch" placeholder="Search..." class="mb-4" />
+      <demo-box label="Example: Advanced Search Form" example>
+        <cat-search-bar v-model="advancedSearch" placeholder="Search..." class="mb-4" />
         <div v-if="showAdvancedOptions" class="content">
           <p class="has-text-weight-bold">
             Advanced Options:
           </p>
           <div class="columns">
             <div class="column">
-              <t-field label="Category:">
-                <t-select v-model="advancedCategory" fullwidth>
+              <cat-field label="Category:">
+                <cat-select v-model="advancedCategory" fullwidth>
                   <option value="">
                     All
                   </option>
@@ -143,12 +143,12 @@
                   <option value="desktop">
                     Desktop
                   </option>
-                </t-select>
-              </t-field>
+                </cat-select>
+              </cat-field>
             </div>
             <div class="column">
-              <t-field label="Date Range:">
-                <t-select v-model="advancedDateRange" fullwidth>
+              <cat-field label="Date Range:">
+                <cat-select v-model="advancedDateRange" fullwidth>
                   <option value="any">
                     Any time
                   </option>
@@ -161,32 +161,32 @@
                   <option value="month">
                     Past month
                   </option>
-                </t-select>
-              </t-field>
+                </cat-select>
+              </cat-field>
             </div>
           </div>
-          <t-field>
-            <t-checkbox v-model="advancedExact">
+          <cat-field>
+            <cat-checkbox v-model="advancedExact">
               Exact match only
-            </t-checkbox>
-          </t-field>
+            </cat-checkbox>
+          </cat-field>
         </div>
-        <t-button size="small" @click="showAdvancedOptions = !showAdvancedOptions">
+        <cat-button size="small" @click="showAdvancedOptions = !showAdvancedOptions">
           {{ showAdvancedOptions ? 'Hide' : 'Show' }} Advanced Options
-        </t-button>
-      </t-demo-box>
+        </cat-button>
+      </demo-box>
 
-      <t-demo-box label="Example: Real-time Search" example>
+      <demo-box label="Example: Real-time Search" example>
         <p class="mb-3">
           Search updates as you type
         </p>
-        <t-search-bar
+        <cat-search-bar
           v-model="realtimeSearch"
           placeholder="Search users..."
         />
         <div v-if="isSearching" class="mt-3">
           <div class="is-flex is-align-items-center">
-            <t-loading />
+            <cat-loading />
             <span class="ml-3">Searching...</span>
           </div>
         </div>
@@ -204,22 +204,22 @@
                 <td>{{ user.name }}</td>
                 <td>{{ user.email }}</td>
                 <td>
-                  <t-tag>
+                  <cat-tag>
                     {{ user.role }}
-                  </t-tag>
+                  </cat-tag>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const basicSearch = ref<string | null>('')
 const navbarSearch = ref<string | null>('')

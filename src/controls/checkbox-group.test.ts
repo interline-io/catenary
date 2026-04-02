@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import TCheckboxGroup from './checkbox-group.vue'
+import CatCheckboxGroup from './checkbox-group.vue'
 import { mountComponent } from '../testutil/component-helpers'
 
 // Helper to get checkbox element with proper typing
@@ -12,10 +12,10 @@ function getCheckboxAt (wrapper: ReturnType<typeof mountComponent>, index: numbe
   return checkbox.element as HTMLInputElement
 }
 
-describe('TCheckboxGroup', () => {
+describe('CatCheckboxGroup', () => {
   describe('undefined means all semantic (default)', () => {
     it('treats undefined as all selected by default', () => {
-      const wrapper = mountComponent(TCheckboxGroup, {
+      const wrapper = mountComponent(CatCheckboxGroup, {
         props: {
           modelValue: undefined,
           options: ['a', 'b', 'c']
@@ -32,7 +32,7 @@ describe('TCheckboxGroup', () => {
     })
 
     it('treats undefined as none selected when undefinedMeansNone is true', () => {
-      const wrapper = mountComponent(TCheckboxGroup, {
+      const wrapper = mountComponent(CatCheckboxGroup, {
         props: {
           modelValue: undefined,
           options: ['a', 'b', 'c'],
@@ -46,7 +46,7 @@ describe('TCheckboxGroup', () => {
     })
 
     it('emits undefined when all options are selected (default behavior)', async () => {
-      const wrapper = mountComponent(TCheckboxGroup, {
+      const wrapper = mountComponent(CatCheckboxGroup, {
         props: {
           modelValue: ['a', 'b'],
           options: ['a', 'b', 'c']
@@ -67,7 +67,7 @@ describe('TCheckboxGroup', () => {
 
   describe('empty array vs undefined distinction', () => {
     it('emits empty array when deselecting all options one by one', async () => {
-      const wrapper = mountComponent(TCheckboxGroup, {
+      const wrapper = mountComponent(CatCheckboxGroup, {
         props: {
           modelValue: ['a'],
           options: ['a', 'b', 'c']
@@ -85,7 +85,7 @@ describe('TCheckboxGroup', () => {
     })
 
     it('emits empty array when using Select None button', async () => {
-      const wrapper = mountComponent(TCheckboxGroup, {
+      const wrapper = mountComponent(CatCheckboxGroup, {
         props: {
           modelValue: undefined,
           options: ['a', 'b', 'c']
@@ -94,7 +94,7 @@ describe('TCheckboxGroup', () => {
       })
 
       // Click the "Select None" button
-      const buttons = wrapper.findAll('.t-checkbox-group-header button')
+      const buttons = wrapper.findAll('.cat-checkbox-group-header button')
       expect(buttons.length).toBe(2)
       const selectNoneButton = buttons[1]!
       await selectNoneButton.trigger('click')
@@ -110,7 +110,7 @@ describe('TCheckboxGroup', () => {
         { id: 'opt1', name: 'Option 1' },
         { id: 'opt2', name: 'Option 2' }
       ]
-      const wrapper = mountComponent(TCheckboxGroup, {
+      const wrapper = mountComponent(CatCheckboxGroup, {
         props: {
           modelValue: ['opt1'],
           options,
@@ -126,33 +126,33 @@ describe('TCheckboxGroup', () => {
 
   describe('select all functionality', () => {
     it('highlights Select All button when all options are selected', () => {
-      const wrapper = mountComponent(TCheckboxGroup, {
+      const wrapper = mountComponent(CatCheckboxGroup, {
         props: {
           modelValue: undefined, // undefined means all selected
           options: ['a', 'b', 'c']
         }
       })
 
-      const buttons = wrapper.findAll('.t-checkbox-group-header button')
+      const buttons = wrapper.findAll('.cat-checkbox-group-header button')
       expect(buttons.length).toBeGreaterThanOrEqual(1)
       expect(buttons[0]!.classes()).toContain('is-selected')
     })
 
     it('highlights Select None button when no options are selected', () => {
-      const wrapper = mountComponent(TCheckboxGroup, {
+      const wrapper = mountComponent(CatCheckboxGroup, {
         props: {
           modelValue: [],
           options: ['a', 'b', 'c']
         }
       })
 
-      const buttons = wrapper.findAll('.t-checkbox-group-header button')
+      const buttons = wrapper.findAll('.cat-checkbox-group-header button')
       expect(buttons.length).toBeGreaterThanOrEqual(2)
       expect(buttons[1]!.classes()).toContain('is-selected')
     })
 
     it('hides buttons when hideSelectAll is true', () => {
-      const wrapper = mountComponent(TCheckboxGroup, {
+      const wrapper = mountComponent(CatCheckboxGroup, {
         props: {
           modelValue: ['a'],
           options: ['a', 'b', 'c'],
@@ -160,13 +160,13 @@ describe('TCheckboxGroup', () => {
         }
       })
 
-      expect(wrapper.find('.t-checkbox-group-header').exists()).toBe(false)
+      expect(wrapper.find('.cat-checkbox-group-header').exists()).toBe(false)
     })
   })
 
   describe('empty options', () => {
     it('shows empty label when no options provided', () => {
-      const wrapper = mountComponent(TCheckboxGroup, {
+      const wrapper = mountComponent(CatCheckboxGroup, {
         props: {
           modelValue: undefined,
           options: [],

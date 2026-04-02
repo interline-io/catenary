@@ -8,14 +8,14 @@
 import { inject, onMounted, computed, type ComputedRef } from 'vue'
 
 /**
- * Tab item component - child of t-tabs.
+ * Tab item component - child of cat-tabs.
  * Content is only displayed when this tab is active.
  *
  * @example
  * ```vue
- * <t-tab-item label="My Tab">
+ * <cat-tab-item label="My Tab">
  *   <p>Tab content here</p>
- * </t-tab-item>
+ * </cat-tab-item>
  * ```
  */
 

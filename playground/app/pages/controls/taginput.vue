@@ -9,8 +9,8 @@
       </p>
 
       <!-- Basic Taginput -->
-      <t-demo-box label="Basic Taginput">
-        <t-taginput
+      <demo-box label="Basic Taginput">
+        <cat-taginput
           v-model="basicSelected"
           :options="fruitOptions"
           placeholder="Select fruits..."
@@ -18,91 +18,91 @@
         <p class="has-text-grey mt-3">
           Selected: {{ basicSelected }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- With Icon -->
-      <t-demo-box label="With Icon">
-        <t-taginput
+      <demo-box label="With Icon">
+        <cat-taginput
           v-model="iconSelected"
           :options="fruitOptions"
           icon="magnify"
           placeholder="Search fruits..."
         />
-      </t-demo-box>
+      </demo-box>
 
       <!-- Open on Focus -->
-      <t-demo-box label="Open on Focus">
-        <t-taginput
+      <demo-box label="Open on Focus">
+        <cat-taginput
           v-model="focusSelected"
           :options="fruitOptions"
           placeholder="Click to see options..."
           open-on-focus
         />
-      </t-demo-box>
+      </demo-box>
 
       <!-- Variants -->
-      <t-demo-box label="Tag Variants">
+      <demo-box label="Tag Variants">
         <div v-for="variant in variants" :key="variant" class="mb-4">
           <p class="has-text-weight-semibold mb-2">
             {{ capitalize(variant) }}
           </p>
-          <t-taginput
+          <cat-taginput
             v-model="variantValues[variant]"
             :options="colorOptions"
             :variant="variant"
             placeholder="Select colors..."
           />
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Sizes -->
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <div v-for="taginputSize in sizes" :key="taginputSize" class="mb-4">
           <p class="has-text-weight-semibold mb-2">
             {{ capitalize(taginputSize) }}
           </p>
-          <t-taginput
+          <cat-taginput
             v-model="sizeValues[taginputSize]"
             :options="fruitOptions"
             :size="taginputSize"
             placeholder="Select..."
           />
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Rounded -->
-      <t-demo-box label="Rounded Style">
-        <t-taginput
+      <demo-box label="Rounded Style">
+        <cat-taginput
           v-model="roundedSelected"
           :options="fruitOptions"
           placeholder="Rounded tags..."
           rounded
         />
-      </t-demo-box>
+      </demo-box>
 
       <!-- Fullwidth -->
-      <t-demo-box label="Fullwidth">
-        <t-taginput
+      <demo-box label="Fullwidth">
+        <cat-taginput
           v-model="fullwidthSelected"
           :options="fruitOptions"
           placeholder="Full width input..."
           fullwidth
         />
-      </t-demo-box>
+      </demo-box>
 
       <!-- Disabled -->
-      <t-demo-box label="Disabled">
-        <t-taginput
+      <demo-box label="Disabled">
+        <cat-taginput
           v-model="disabledSelected"
           :options="fruitOptions"
           placeholder="Cannot edit..."
           disabled
         />
-      </t-demo-box>
+      </demo-box>
 
       <!-- Readonly -->
-      <t-demo-box label="Readonly">
-        <t-taginput
+      <demo-box label="Readonly">
+        <cat-taginput
           v-model="readonlySelected"
           :options="fruitOptions"
           placeholder="View only..."
@@ -111,11 +111,11 @@
         <p class="has-text-grey mt-3">
           Tags are visible but cannot be added or removed
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Max Tags -->
-      <t-demo-box label="Max Tags Limit">
-        <t-taginput
+      <demo-box label="Max Tags Limit">
+        <cat-taginput
           v-model="maxTagsSelected"
           :options="fruitOptions"
           placeholder="Select up to 3 fruits..."
@@ -125,11 +125,11 @@
         <p class="has-text-grey mt-3">
           Limited to 3 selections. Counter shows progress and input hides when max is reached.
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Allow New (Free-form) -->
-      <t-demo-box label="Allow New Tags">
-        <t-taginput
+      <demo-box label="Allow New Tags">
+        <cat-taginput
           v-model="allowNewSelected"
           :options="fruitOptions"
           placeholder="Type and press Enter or comma..."
@@ -139,21 +139,21 @@
         <p class="has-text-grey mt-3">
           Type any text and press Enter or comma to add a custom tag. Selected: {{ allowNewSelected }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Not Closable -->
-      <t-demo-box label="Non-closable Tags">
-        <t-taginput
+      <demo-box label="Non-closable Tags">
+        <cat-taginput
           v-model="notClosableSelected"
           :options="fruitOptions"
           placeholder="Tags cannot be removed..."
           :closable="false"
         />
-      </t-demo-box>
+      </demo-box>
 
       <!-- Custom Slots -->
-      <t-demo-box label="Custom Slots">
-        <t-taginput
+      <demo-box label="Custom Slots">
+        <cat-taginput
           v-model="customSelected"
           :options="userOptions"
           placeholder="Search users..."
@@ -178,15 +178,15 @@
           <template #empty>
             <span class="has-text-grey">No users found</span>
           </template>
-        </t-taginput>
+        </cat-taginput>
         <p class="has-text-grey mt-3">
           Selected user IDs: {{ customSelected }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- With Search Filtering -->
-      <t-demo-box label="With Search Filtering">
-        <t-taginput
+      <demo-box label="With Search Filtering">
+        <cat-taginput
           v-model="searchSelected"
           v-model:input="searchText"
           :options="countryOptions"
@@ -196,30 +196,30 @@
         <p class="has-text-grey mt-3">
           Search text: "{{ searchText }}"
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Example: Async API Integration -->
-      <t-demo-box label="Example: Async API Integration" example>
+      <demo-box label="Example: Async API Integration" example>
         <TaginputAsyncDemo />
-      </t-demo-box>
+      </demo-box>
 
       <!-- Example: Form Integration -->
-      <t-demo-box label="Example: Form Integration" example>
+      <demo-box label="Example: Form Integration" example>
         <form @submit.prevent="handleSubmit">
-          <t-field label="Project Name">
-            <t-input v-model="form.name" placeholder="Enter project name" />
-          </t-field>
-          <t-field label="Tags">
-            <t-taginput
+          <cat-field label="Project Name">
+            <cat-input v-model="form.name" placeholder="Enter project name" />
+          </cat-field>
+          <cat-field label="Tags">
+            <cat-taginput
               v-model="form.tags"
               :options="tagOptions"
               placeholder="Add tags..."
               open-on-focus
               fullwidth
             />
-          </t-field>
-          <t-field label="Collaborators">
-            <t-taginput
+          </cat-field>
+          <cat-field label="Collaborators">
+            <cat-taginput
               v-model="form.collaborators"
               :options="userOptions"
               placeholder="Add team members..."
@@ -228,21 +228,21 @@
               open-on-focus
               fullwidth
             />
-          </t-field>
+          </cat-field>
           <div class="buttons">
-            <t-button variant="primary" type="submit">
+            <cat-button variant="primary" type="submit">
               Save Project
-            </t-button>
-            <t-button @click="resetForm">
+            </cat-button>
+            <cat-button @click="resetForm">
               Reset
-            </t-button>
+            </cat-button>
           </div>
         </form>
         <div v-if="submitted" class="notification is-success is-light mt-4">
           <p><strong>Form submitted!</strong></p>
           <pre>{{ JSON.stringify(form, null, 2) }}</pre>
         </div>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -251,7 +251,7 @@
 import { ref, reactive } from 'vue'
 import { TaginputVariants, TaginputSizes } from '../../../../src/controls/types'
 import TaginputAsyncDemo from '../../components/taginput-async-demo.vue'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const variants = TaginputVariants
 const sizes = TaginputSizes

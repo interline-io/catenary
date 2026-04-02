@@ -8,20 +8,20 @@
         Checkbox group with "undefined means all" semantic for async-loaded options
       </p>
 
-      <t-msg variant="info" class="mb-5">
+      <cat-msg variant="info" class="mb-5">
         <p>
           This component solves the common problem of checkbox groups backed by async-loaded options,
           where <code>undefined</code> means "all selected" and <code>[]</code> means "none selected".
           See the component's JSDoc for detailed documentation.
         </p>
-      </t-msg>
+      </cat-msg>
 
-      <t-demo-box label="Basic Usage (undefined means all by default)">
+      <demo-box label="Basic Usage (undefined means all by default)">
         <p class="mb-3">
           This demonstrates the key feature: <code>undefined</code> means "all selected" until the user interacts.
           An empty array <code>[]</code> means "none selected".
         </p>
-        <t-checkbox-group
+        <cat-checkbox-group
           v-model="selectedFruits"
           :options="fruitOptions"
           label-field="name"
@@ -36,19 +36,19 @@
           </p>
         </div>
         <div class="mt-3 buttons">
-          <t-button size="small" @click="selectedFruits = undefined">
+          <cat-button size="small" @click="selectedFruits = undefined">
             Reset to undefined
-          </t-button>
-          <t-button size="small" @click="selectedFruits = []">
+          </cat-button>
+          <cat-button size="small" @click="selectedFruits = []">
             Set to []
-          </t-button>
-          <t-button size="small" @click="selectedFruits = ['apple']">
+          </cat-button>
+          <cat-button size="small" @click="selectedFruits = ['apple']">
             Set to ['apple']
-          </t-button>
+          </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Simulated Async Loading + Custom Option Rendering">
+      <demo-box label="Simulated Async Loading + Custom Option Rendering">
         <p class="mb-3">
           This simulates the common pattern: options load after a delay, but selection state
           is preserved correctly. <code>undefined</code> means "all agencies selected" before AND after load.
@@ -59,14 +59,14 @@
           (like <code>option.name</code>) even though the model only stores the value field (<code>onestop_id</code>).
         </p>
         <div class="buttons mb-3">
-          <t-button :loading="loadingAgencies" @click="loadAgencies">
+          <cat-button :loading="loadingAgencies" @click="loadAgencies">
             {{ agencies.length > 0 ? 'Reload' : 'Load' }} Agencies
-          </t-button>
-          <t-button variant="warning" @click="resetDemo">
+          </cat-button>
+          <cat-button variant="warning" @click="resetDemo">
             Reset Demo
-          </t-button>
+          </cat-button>
         </div>
-        <t-checkbox-group
+        <cat-checkbox-group
           v-model="selectedAgencies"
           :options="agencies"
           label-field="name"
@@ -78,7 +78,7 @@
             <span>{{ option.name }}</span>
             <span class="tag is-light ml-2">{{ option.onestop_id }}</span>
           </template>
-        </t-checkbox-group>
+        </cat-checkbox-group>
         <div class="mt-4 p-3 has-background-light">
           <p><strong>selectedAgencies:</strong> <code>{{ JSON.stringify(selectedAgencies) }}</code></p>
           <p class="mt-2">
@@ -93,27 +93,27 @@
             </span>
           </p>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Simple String Options">
+      <demo-box label="Simple String Options">
         <p class="mb-3">
           Works with simple string arrays too.
         </p>
-        <t-checkbox-group
+        <cat-checkbox-group
           v-model="selectedRouteTypes"
           :options="routeTypeOptions"
         />
         <div class="mt-4 p-3 has-background-light">
           <p><strong>selectedRouteTypes:</strong> <code>{{ JSON.stringify(selectedRouteTypes) }}</code></p>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Traditional mode: undefined-means-none">
+      <demo-box label="Traditional mode: undefined-means-none">
         <p class="mb-3">
           When <code>undefined-means-none</code> is set, the component behaves traditionally:
           <code>undefined</code> is treated as empty selection.
         </p>
-        <t-checkbox-group
+        <cat-checkbox-group
           v-model="traditionalSelection"
           :options="['Option A', 'Option B', 'Option C']"
           undefined-means-none
@@ -121,9 +121,9 @@
         <div class="mt-4 p-3 has-background-light">
           <p><strong>traditionalSelection:</strong> <code>{{ JSON.stringify(traditionalSelection) }}</code></p>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Customization Options">
+      <demo-box label="Customization Options">
         <p class="mb-3">
           Various customization options: variants, sizes, hiding select-all, etc.
         </p>
@@ -132,7 +132,7 @@
             <h4 class="title is-6">
               With Variant
             </h4>
-            <t-checkbox-group
+            <cat-checkbox-group
               v-model="customDemo1"
               :options="['Red', 'Green', 'Blue']"
               variant="success"
@@ -142,7 +142,7 @@
             <h4 class="title is-6">
               hide-select-all
             </h4>
-            <t-checkbox-group
+            <cat-checkbox-group
               v-model="customDemo2"
               :options="['Small', 'Medium', 'Large']"
               hide-select-all
@@ -152,21 +152,21 @@
             <h4 class="title is-6">
               Disabled
             </h4>
-            <t-checkbox-group
+            <cat-checkbox-group
               v-model="customDemo3"
               :options="['Locked', 'Options']"
               disabled
             />
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Edge Case: Deselect All One-by-One">
+      <demo-box label="Edge Case: Deselect All One-by-One">
         <p class="mb-3">
           This demonstrates the fix for the bug where deselecting the last item would reset to "all selected".
           Try deselecting all items one by one - it should result in <code>[]</code>, not <code>undefined</code>.
         </p>
-        <t-checkbox-group
+        <cat-checkbox-group
           v-model="edgeCaseSelection"
           :options="['First', 'Second', 'Third']"
         />
@@ -176,19 +176,17 @@
             ✓ Correctly shows [] (empty array), not undefined!
           </p>
         </div>
-        <t-button class="mt-2" size="small" @click="edgeCaseSelection = undefined">
+        <cat-button class="mt-2" size="small" @click="edgeCaseSelection = undefined">
           Reset to undefined
-        </t-button>
-      </t-demo-box>
+        </cat-button>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
-import TCheckboxGroup from '../../../../src/controls/checkbox-group.vue'
-import TButton from '../../../../src/controls/button.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 // Basic demo
 const fruitOptions = [

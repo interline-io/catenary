@@ -1,5 +1,5 @@
 <template>
-  <label class="radio t-radio" :class="radioClasses">
+  <label class="radio cat-radio" :class="radioClasses">
     <input
       type="radio"
       :checked="modelValue === nativeValue"
@@ -20,11 +20,11 @@ import type { RadioVariant, RadioSize } from './types'
  * Radio button component using native HTML radio input with Bulma styling.
  * Type-safe with generic support for different value types.
  *
- * @component t-radio
+ * @component cat-radio
  * @example
- * <t-radio v-model="selected" native-value="option1" name="choice">Option 1</t-radio>
- * <t-radio v-model="selected" native-value="option2" name="choice">Option 2</t-radio>
- * <t-radio v-model="count" :native-value="1" name="number">One</t-radio>
+ * <cat-radio v-model="selected" native-value="option1" name="choice">Option 1</cat-radio>
+ * <cat-radio v-model="selected" native-value="option2" name="choice">Option 2</cat-radio>
+ * <cat-radio v-model="count" :native-value="1" name="number">One</cat-radio>
  */
 
 const props = withDefaults(defineProps<{
@@ -82,7 +82,7 @@ function handleChange () {
 </script>
 
 <style lang="scss" scoped>
-.t-radio {
+.cat-radio {
   cursor: pointer;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;

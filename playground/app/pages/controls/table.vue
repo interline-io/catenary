@@ -8,28 +8,28 @@
         Sortable table component with column configuration
       </p>
 
-      <t-demo-box label="Basic Table">
-        <t-table :data="basicData">
+      <demo-box label="Basic Table">
+        <cat-table :data="basicData">
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="age" label="Age" />
-            <t-table-column field="city" label="City" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="age" label="Age" />
+            <cat-table-column field="city" label="City" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
             <td>{{ row.age }}</td>
             <td>{{ row.city }}</td>
           </template>
-        </t-table>
-      </t-demo-box>
+        </cat-table>
+      </demo-box>
 
-      <t-demo-box label="Sortable Columns">
-        <t-table :data="sortableData" hoverable>
+      <demo-box label="Sortable Columns">
+        <cat-table :data="sortableData" hoverable>
           <template #columns>
-            <t-table-column field="product" label="Product" sortable />
-            <t-table-column field="price" label="Price" sortable numeric />
-            <t-table-column field="stock" label="Stock" sortable numeric />
-            <t-table-column field="category" label="Category" sortable />
+            <cat-table-column field="product" label="Product" sortable />
+            <cat-table-column field="price" label="Price" sortable numeric />
+            <cat-table-column field="stock" label="Stock" sortable numeric />
+            <cat-table-column field="category" label="Category" sortable />
           </template>
           <template #default="{ row }">
             <td>{{ row.product }}</td>
@@ -41,76 +41,76 @@
             </td>
             <td>{{ row.category }}</td>
           </template>
-        </t-table>
-      </t-demo-box>
+        </cat-table>
+      </demo-box>
 
-      <t-demo-box label="Striped">
-        <t-table :data="basicData" striped>
+      <demo-box label="Striped">
+        <cat-table :data="basicData" striped>
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="age" label="Age" />
-            <t-table-column field="city" label="City" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="age" label="Age" />
+            <cat-table-column field="city" label="City" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
             <td>{{ row.age }}</td>
             <td>{{ row.city }}</td>
           </template>
-        </t-table>
-      </t-demo-box>
+        </cat-table>
+      </demo-box>
 
-      <t-demo-box label="Bordered">
-        <t-table :data="basicData" bordered>
+      <demo-box label="Bordered">
+        <cat-table :data="basicData" bordered>
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="age" label="Age" />
-            <t-table-column field="city" label="City" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="age" label="Age" />
+            <cat-table-column field="city" label="City" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
             <td>{{ row.age }}</td>
             <td>{{ row.city }}</td>
           </template>
-        </t-table>
-      </t-demo-box>
+        </cat-table>
+      </demo-box>
 
-      <t-demo-box label="Narrowed">
-        <t-table :data="basicData" narrowed>
+      <demo-box label="Narrowed">
+        <cat-table :data="basicData" narrowed>
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="age" label="Age" />
-            <t-table-column field="city" label="City" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="age" label="Age" />
+            <cat-table-column field="city" label="City" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
             <td>{{ row.age }}</td>
             <td>{{ row.city }}</td>
           </template>
-        </t-table>
-      </t-demo-box>
+        </cat-table>
+      </demo-box>
 
-      <t-demo-box label="Combined Modifiers">
-        <t-table :data="basicData" hoverable striped bordered>
+      <demo-box label="Combined Modifiers">
+        <cat-table :data="basicData" hoverable striped bordered>
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="age" label="Age" />
-            <t-table-column field="city" label="City" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="age" label="Age" />
+            <cat-table-column field="city" label="City" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
             <td>{{ row.age }}</td>
             <td>{{ row.city }}</td>
           </template>
-        </t-table>
-      </t-demo-box>
+        </cat-table>
+      </demo-box>
 
-      <t-demo-box label="Nested Field Sorting">
-        <t-table :data="nestedData" hoverable striped>
+      <demo-box label="Nested Field Sorting">
+        <cat-table :data="nestedData" hoverable striped>
           <template #columns>
-            <t-table-column field="name" label="Name" sortable />
-            <t-table-column field="address.city" label="City" sortable />
-            <t-table-column field="address.country" label="Country" sortable />
-            <t-table-column field="contact.email" label="Email" sortable />
+            <cat-table-column field="name" label="Name" sortable />
+            <cat-table-column field="address.city" label="City" sortable />
+            <cat-table-column field="address.country" label="Country" sortable />
+            <cat-table-column field="contact.email" label="Email" sortable />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
@@ -118,14 +118,14 @@
             <td>{{ row.address.country }}</td>
             <td>{{ row.contact.email }}</td>
           </template>
-        </t-table>
-      </t-demo-box>
+        </cat-table>
+      </demo-box>
 
-      <t-demo-box label="Empty State">
-        <t-table :data="[]" hoverable>
+      <demo-box label="Empty State">
+        <cat-table :data="[]" hoverable>
           <template #columns>
-            <t-table-column field="name" label="Name" />
-            <t-table-column field="value" label="Value" />
+            <cat-table-column field="name" label="Name" />
+            <cat-table-column field="value" label="Value" />
           </template>
           <template #default="{ row }">
             <td>{{ row.name }}</td>
@@ -133,20 +133,20 @@
           </template>
           <template #empty>
             <div class="has-text-centered py-5">
-              <t-icon icon="inbox" size="large" />
+              <cat-icon icon="inbox" size="large" />
               <p class="has-text-grey">
                 No data available
               </p>
             </div>
           </template>
-        </t-table>
-      </t-demo-box>
+        </cat-table>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const basicData = [
   { name: 'Alice Johnson', age: 28, city: 'New York' },

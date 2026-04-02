@@ -18,19 +18,19 @@
 import { inject, computed } from 'vue'
 
 /**
- * Dropdown item component - must be used within t-dropdown.
+ * Dropdown item component - must be used within cat-dropdown.
  * Represents a single selectable option in a dropdown menu.
  * Type-safe with generic support matching parent dropdown's type.
  *
- * @component t-dropdown-item
+ * @component cat-dropdown-item
  * @example
- * <t-dropdown-item value="option1">
+ * <cat-dropdown-item value="option1">
  *   Option 1
- * </t-dropdown-item>
+ * </cat-dropdown-item>
  */
 
 const props = withDefaults(defineProps<{
-  /** Value associated with this item (used for selection). Type should match the parent t-dropdown's generic type. */
+  /** Value associated with this item (used for selection). Type should match the parent cat-dropdown's generic type. */
   value?: T
   /** Label text (alternative to using default slot). */
   label?: string
@@ -82,7 +82,7 @@ const itemClass = computed(() => ({
   'dropdown-item': true,
   'is-active': isSelected.value,
   'is-disabled': props.disabled,
-  't-dropdown-item-nested': props.nested,
+  'cat-dropdown-item-nested': props.nested,
 }))
 
 function handleClick (event: MouseEvent) {
@@ -110,13 +110,13 @@ function handleClick (event: MouseEvent) {
 }
 
 /* Tree-like hierarchy for nested items */
-.t-dropdown-item-nested {
+.cat-dropdown-item-nested {
   padding-left: 2rem;
   position: relative;
 }
 
 /* Vertical line for each nested item - always full height */
-.t-dropdown-item-nested::before {
+.cat-dropdown-item-nested::before {
   content: '';
   position: absolute;
   left: 1rem;
@@ -127,7 +127,7 @@ function handleClick (event: MouseEvent) {
 }
 
 /* Horizontal branch connecting to the vertical trunk line */
-.t-dropdown-item-nested::after {
+.cat-dropdown-item-nested::after {
   content: '';
   position: absolute;
   left: 1rem;

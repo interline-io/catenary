@@ -9,143 +9,143 @@
       </p>
 
       <!-- Basic Textarea -->
-      <t-demo-box label="Basic Textarea">
-        <t-field label="Enter your message:">
-          <t-textarea v-model="basic" placeholder="Type something..." />
-        </t-field>
+      <demo-box label="Basic Textarea">
+        <cat-field label="Enter your message:">
+          <cat-textarea v-model="basic" placeholder="Type something..." />
+        </cat-field>
         <p class="has-text-grey">
           Length: {{ basic.length }} characters
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Variants -->
-      <t-demo-box label="Variants">
-        <t-field v-for="variant in variants" :key="variant" :label="capitalize(variant) + ':'">
-          <t-textarea v-model="variantValues[variant]" :variant="variant" :placeholder="capitalize(variant) + ' textarea'" />
-        </t-field>
-      </t-demo-box>
+      <demo-box label="Variants">
+        <cat-field v-for="variant in variants" :key="variant" :label="capitalize(variant) + ':'">
+          <cat-textarea v-model="variantValues[variant]" :variant="variant" :placeholder="capitalize(variant) + ' textarea'" />
+        </cat-field>
+      </demo-box>
 
       <!-- Sizes -->
-      <t-demo-box label="Sizes">
-        <t-field v-for="textareaSize in sizes" :key="textareaSize" :label="capitalize(textareaSize) + ':'">
-          <t-textarea v-model="sizeValues[textareaSize]" :size="textareaSize" :placeholder="capitalize(textareaSize) + ' textarea'" />
-        </t-field>
-      </t-demo-box>
+      <demo-box label="Sizes">
+        <cat-field v-for="textareaSize in sizes" :key="textareaSize" :label="capitalize(textareaSize) + ':'">
+          <cat-textarea v-model="sizeValues[textareaSize]" :size="textareaSize" :placeholder="capitalize(textareaSize) + ' textarea'" />
+        </cat-field>
+      </demo-box>
 
       <!-- Rows -->
-      <t-demo-box label="Custom Row Height">
-        <t-field label="3 rows:">
-          <t-textarea v-model="rows3" :rows="3" placeholder="3 rows" />
-        </t-field>
-        <t-field label="5 rows:">
-          <t-textarea v-model="rows5" :rows="5" placeholder="5 rows" />
-        </t-field>
-        <t-field label="10 rows:">
-          <t-textarea v-model="rows10" :rows="10" placeholder="10 rows" />
-        </t-field>
-      </t-demo-box>
+      <demo-box label="Custom Row Height">
+        <cat-field label="3 rows:">
+          <cat-textarea v-model="rows3" :rows="3" placeholder="3 rows" />
+        </cat-field>
+        <cat-field label="5 rows:">
+          <cat-textarea v-model="rows5" :rows="5" placeholder="5 rows" />
+        </cat-field>
+        <cat-field label="10 rows:">
+          <cat-textarea v-model="rows10" :rows="10" placeholder="10 rows" />
+        </cat-field>
+      </demo-box>
 
       <!-- States -->
-      <t-demo-box label="States">
-        <t-field label="Disabled:">
-          <t-textarea v-model="stateDisabled" disabled placeholder="This is disabled" />
-        </t-field>
-        <t-field label="Readonly:">
-          <t-textarea v-model="stateReadonly" readonly />
-        </t-field>
-        <t-field label="Loading:">
-          <t-textarea v-model="stateLoading" loading placeholder="Loading..." />
-        </t-field>
-      </t-demo-box>
+      <demo-box label="States">
+        <cat-field label="Disabled:">
+          <cat-textarea v-model="stateDisabled" disabled placeholder="This is disabled" />
+        </cat-field>
+        <cat-field label="Readonly:">
+          <cat-textarea v-model="stateReadonly" readonly />
+        </cat-field>
+        <cat-field label="Loading:">
+          <cat-textarea v-model="stateLoading" loading placeholder="Loading..." />
+        </cat-field>
+      </demo-box>
 
       <!-- Maxlength -->
-      <t-demo-box label="With Maxlength Counter">
-        <t-field label="Tweet (280 characters max):">
-          <t-textarea v-model="tweet" :maxlength="280" placeholder="What's happening?" />
-        </t-field>
+      <demo-box label="With Maxlength Counter">
+        <cat-field label="Tweet (280 characters max):">
+          <cat-textarea v-model="tweet" :maxlength="280" placeholder="What's happening?" />
+        </cat-field>
         <p class="has-text-grey">
           {{ tweet.length }} / 280 characters
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Fixed Size -->
-      <t-demo-box label="Fixed Size (No Resize)">
-        <t-field label="Fixed size textarea:">
-          <t-textarea
+      <demo-box label="Fixed Size (No Resize)">
+        <cat-field label="Fixed size textarea:">
+          <cat-textarea
             v-model="fixed"
             has-fixed-size
             placeholder="This textarea cannot be resized"
           />
-        </t-field>
-      </t-demo-box>
+        </cat-field>
+      </demo-box>
 
       <!-- Practical Examples -->
-      <t-demo-box label="Example: Feedback Form" example>
-        <t-field label="Your Feedback:" message="Help us improve our service">
-          <t-textarea
+      <demo-box label="Example: Feedback Form" example>
+        <cat-field label="Your Feedback:" message="Help us improve our service">
+          <cat-textarea
             v-model="feedback"
             :rows="5"
             placeholder="Tell us what you think..."
             :maxlength="500"
           />
-        </t-field>
+        </cat-field>
         <p class="help">
           {{ feedback.length }} / 500 characters
         </p>
-        <t-button variant="primary" class="mt-3" @click="submitFeedback">
+        <cat-button variant="primary" class="mt-3" @click="submitFeedback">
           Submit Feedback
-        </t-button>
-      </t-demo-box>
+        </cat-button>
+      </demo-box>
 
       <!-- Code Editor -->
-      <t-demo-box label="Example: Code Snippet" example>
-        <t-field label="Enter your code:">
-          <t-textarea
+      <demo-box label="Example: Code Snippet" example>
+        <cat-field label="Enter your code:">
+          <cat-textarea
             v-model="code"
             :rows="8"
             placeholder="// Write your code here..."
             class="is-family-monospace"
           />
-        </t-field>
-      </t-demo-box>
+        </cat-field>
+      </demo-box>
 
       <!-- Comment Section -->
-      <t-demo-box label="Example: Comment Section" example>
-        <t-field label="Add a comment:">
-          <t-textarea
+      <demo-box label="Example: Comment Section" example>
+        <cat-field label="Add a comment:">
+          <cat-textarea
             v-model="comment"
             :rows="4"
             placeholder="Share your thoughts..."
             :maxlength="1000"
           />
-        </t-field>
+        </cat-field>
         <div class="is-flex is-justify-content-space-between is-align-items-center mt-2">
           <p class="help">
             {{ comment.length }}/1000
           </p>
-          <t-button
+          <cat-button
             variant="primary"
             :disabled="comment.trim().length === 0"
             @click="postComment"
           >
             Post Comment
-          </t-button>
+          </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Description with Help -->
-      <t-demo-box label="Example: With Help Text" example>
-        <t-field
+      <demo-box label="Example: With Help Text" example>
+        <cat-field
           label="Product Description:"
           message="Provide a detailed description of your product"
         >
-          <t-textarea
+          <cat-textarea
             v-model="description"
             :rows="6"
             placeholder="Describe features, specifications, and benefits..."
           />
-        </t-field>
-      </t-demo-box>
+        </cat-field>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -153,7 +153,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { TextareaVariants, TextareaSizes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const variants = TextareaVariants
 const sizes = TextareaSizes

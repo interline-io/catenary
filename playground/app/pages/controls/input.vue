@@ -8,83 +8,83 @@
         Text input control with validation and variants
       </p>
 
-      <t-demo-box label="Basic Input">
-        <t-field label="Name">
-          <t-input v-model="name" placeholder="Enter your name" />
-        </t-field>
+      <demo-box label="Basic Input">
+        <cat-field label="Name">
+          <cat-input v-model="name" placeholder="Enter your name" />
+        </cat-field>
         <p class="has-text-grey">
           Value: {{ name }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Input Types">
-        <t-field v-for="inputType in inputTypes" :key="inputType" :label="capitalize(inputType) + ':'">
-          <t-input v-model="typeValues[inputType]" :type="inputType" :placeholder="getPlaceholder(inputType)" />
-        </t-field>
-      </t-demo-box>
+      <demo-box label="Input Types">
+        <cat-field v-for="inputType in inputTypes" :key="inputType" :label="capitalize(inputType) + ':'">
+          <cat-input v-model="typeValues[inputType]" :type="inputType" :placeholder="getPlaceholder(inputType)" />
+        </cat-field>
+      </demo-box>
 
-      <t-demo-box label="Variants">
-        <t-field v-for="variant in variants" :key="variant" :label="capitalize(variant) + ':'">
-          <t-input v-model="variantValues[variant]" :variant="variant" :placeholder="capitalize(variant)" />
-        </t-field>
-      </t-demo-box>
+      <demo-box label="Variants">
+        <cat-field v-for="variant in variants" :key="variant" :label="capitalize(variant) + ':'">
+          <cat-input v-model="variantValues[variant]" :variant="variant" :placeholder="capitalize(variant)" />
+        </cat-field>
+      </demo-box>
 
-      <t-demo-box label="Sizes">
-        <t-field v-for="size in sizes" :key="size" :label="capitalize(size) + ':'">
-          <t-input v-model="sizeValues[size]" :size="size" :placeholder="capitalize(size) + ' input'" />
-        </t-field>
-      </t-demo-box>
+      <demo-box label="Sizes">
+        <cat-field v-for="size in sizes" :key="size" :label="capitalize(size) + ':'">
+          <cat-input v-model="sizeValues[size]" :size="size" :placeholder="capitalize(size) + ' input'" />
+        </cat-field>
+      </demo-box>
 
-      <t-demo-box label="States">
-        <t-field label="Disabled">
-          <t-input v-model="disabled" disabled placeholder="Disabled input" />
-        </t-field>
-        <t-field label="Readonly">
-          <t-input v-model="readonly" readonly placeholder="Readonly input" />
-        </t-field>
-        <t-field label="Loading">
-          <t-input v-model="loadingValue" loading placeholder="Loading input" />
-        </t-field>
-      </t-demo-box>
+      <demo-box label="States">
+        <cat-field label="Disabled">
+          <cat-input v-model="disabled" disabled placeholder="Disabled input" />
+        </cat-field>
+        <cat-field label="Readonly">
+          <cat-input v-model="readonly" readonly placeholder="Readonly input" />
+        </cat-field>
+        <cat-field label="Loading">
+          <cat-input v-model="loadingValue" loading placeholder="Loading input" />
+        </cat-field>
+      </demo-box>
 
-      <t-demo-box label="Static">
+      <demo-box label="Static">
         <p class="mb-3">
           Static inputs display like plain text, useful for read-only values in forms.
         </p>
-        <t-field label="Username" horizontal>
-          <t-input v-model="staticUsername" static />
-        </t-field>
-        <t-field label="Email" horizontal>
-          <t-input v-model="staticEmail" type="email" static />
-        </t-field>
-      </t-demo-box>
+        <cat-field label="Username" horizontal>
+          <cat-input v-model="staticUsername" static />
+        </cat-field>
+        <cat-field label="Email" horizontal>
+          <cat-input v-model="staticEmail" type="email" static />
+        </cat-field>
+      </demo-box>
 
-      <t-demo-box label="Rounded">
-        <t-field label="Rounded Input">
-          <t-input v-model="rounded" rounded placeholder="Rounded corners" />
-        </t-field>
-      </t-demo-box>
+      <demo-box label="Rounded">
+        <cat-field label="Rounded Input">
+          <cat-input v-model="rounded" rounded placeholder="Rounded corners" />
+        </cat-field>
+      </demo-box>
 
-      <t-demo-box label="With Icons">
-        <t-field label="Search">
-          <t-input v-model="search" icon="magnify" placeholder="Search..." />
-        </t-field>
-        <t-field label="Email with Icon">
-          <t-input v-model="emailIcon" type="email" icon="email" placeholder="email@example.com" />
-        </t-field>
-        <t-field label="With Right Icon">
-          <t-input v-model="clearable" icon="magnify" icon-right="close-circle" icon-right-clickable placeholder="Clearable search" @icon-right-click="clearable = ''" />
-        </t-field>
-      </t-demo-box>
+      <demo-box label="With Icons">
+        <cat-field label="Search">
+          <cat-input v-model="search" icon="magnify" placeholder="Search..." />
+        </cat-field>
+        <cat-field label="Email with Icon">
+          <cat-input v-model="emailIcon" type="email" icon="email" placeholder="email@example.com" />
+        </cat-field>
+        <cat-field label="With Right Icon">
+          <cat-input v-model="clearable" icon="magnify" icon-right="close-circle" icon-right-clickable placeholder="Clearable search" @icon-right-click="clearable = ''" />
+        </cat-field>
+      </demo-box>
 
-      <t-demo-box label="Example: Maxlength" example>
-        <t-field label="Username (max 20 chars)">
-          <t-input v-model="username" maxlength="20" placeholder="Enter username" />
-        </t-field>
+      <demo-box label="Example: Maxlength" example>
+        <cat-field label="Username (max 20 chars)">
+          <cat-input v-model="username" maxlength="20" placeholder="Enter username" />
+        </cat-field>
         <p class="has-text-grey">
           {{ username.length }} / 20 characters
         </p>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -92,7 +92,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { InputVariants, InputSizes, InputTypes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const variants = InputVariants
 const sizes = InputSizes

@@ -1,13 +1,13 @@
 <template>
-  <div class="control t-control">
-    <t-dropdown
+  <div class="control cat-control">
+    <cat-dropdown
       ref="dropdownRef"
       v-model:model-value="isActive as any"
       :position="position"
-      class="t-datepicker-dropdown"
+      class="cat-datepicker-dropdown"
     >
       <template #trigger>
-        <t-input
+        <cat-input
           ref="inputRef"
           :model-value="formattedValue"
           :placeholder="placeholder"
@@ -25,8 +25,8 @@
         />
       </template>
 
-      <div class="t-datepicker-calendar">
-        <header class="t-datepicker-header">
+      <div class="cat-datepicker-calendar">
+        <header class="cat-datepicker-header">
           <button
             type="button"
             class="button is-small"
@@ -38,8 +38,8 @@
             </span>
           </button>
 
-          <div class="t-datepicker-selects">
-            <t-select
+          <div class="cat-datepicker-selects">
+            <cat-select
               v-model:model-value="focusedMonth as any"
               size="small"
             >
@@ -50,9 +50,9 @@
               >
                 {{ month }}
               </option>
-            </t-select>
+            </cat-select>
 
-            <t-select
+            <cat-select
               v-model:model-value="focusedYear as any"
               size="small"
             >
@@ -63,7 +63,7 @@
               >
                 {{ year }}
               </option>
-            </t-select>
+            </cat-select>
           </div>
 
           <button
@@ -78,23 +78,23 @@
           </button>
         </header>
 
-        <div class="t-datepicker-body">
-          <div class="t-datepicker-weekdays">
+        <div class="cat-datepicker-body">
+          <div class="cat-datepicker-weekdays">
             <div
               v-for="day in dayNames"
               :key="day"
-              class="t-datepicker-weekday"
+              class="cat-datepicker-weekday"
             >
               {{ day }}
             </div>
           </div>
 
-          <div class="t-datepicker-days">
+          <div class="cat-datepicker-days">
             <button
               v-for="day in calendarDays"
               :key="`${day.date.getTime()}`"
               type="button"
-              class="t-datepicker-day"
+              class="cat-datepicker-day"
               :class="getDayClasses(day)"
               :disabled="!day.selectable"
               @click="selectDate(day.date)"
@@ -104,11 +104,11 @@
           </div>
         </div>
 
-        <footer v-if="$slots.footer" class="t-datepicker-footer">
+        <footer v-if="$slots.footer" class="cat-datepicker-footer">
           <slot name="footer" :close="close" />
         </footer>
       </div>
-    </t-dropdown>
+    </cat-dropdown>
   </div>
 </template>
 
@@ -116,9 +116,9 @@
 import { ref, computed, watch } from 'vue'
 import type { InputSize, InputVariant } from './types'
 import { format as formatDate, parse, isValid, isSameDay } from 'date-fns'
-import TDropdown from './dropdown.vue'
-import TInput from './input.vue'
-import TSelect from './select.vue'
+import CatDropdown from './dropdown.vue'
+import CatInput from './input.vue'
+import CatSelect from './select.vue'
 
 const DATE_FORMAT = 'yyyy-MM-dd'
 
@@ -134,12 +134,12 @@ function parseDate (dateString: string): Date | null {
  * - `v-model` for Date / Date[] values
  * - `v-model:date-string` for YYYY-MM-DD string / string[] values
  *
- * @component t-datepicker
+ * @component cat-datepicker
  * @example
- * <t-datepicker v-model="selectedDate" placeholder="Select date" />
- * <t-datepicker v-model:date-string="dateStr" placeholder="Select date" />
- * <t-datepicker v-model="dateRange" multiple placeholder="Select dates" />
- * <t-datepicker v-model:date-string="dateStrs" multiple placeholder="Select dates" />
+ * <cat-datepicker v-model="selectedDate" placeholder="Select date" />
+ * <cat-datepicker v-model:date-string="dateStr" placeholder="Select date" />
+ * <cat-datepicker v-model="dateRange" multiple placeholder="Select dates" />
+ * <cat-datepicker v-model:date-string="dateStrs" multiple placeholder="Select dates" />
  */
 
 interface CalendarDay {
@@ -462,12 +462,12 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
 </script>
 
 <style lang="scss" scoped>
-.t-datepicker-calendar {
+.cat-datepicker-calendar {
   min-width: 320px;
   padding: 1rem;
 }
 
-.t-datepicker-header {
+.cat-datepicker-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -475,20 +475,20 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
   gap: 0.5rem;
 }
 
-.t-datepicker-selects {
+.cat-datepicker-selects {
   display: flex;
   gap: 0.5rem;
   flex: 1;
 }
 
-.t-datepicker-weekdays {
+.cat-datepicker-weekdays {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.25rem;
   margin-bottom: 0.5rem;
 }
 
-.t-datepicker-weekday {
+.cat-datepicker-weekday {
   text-align: center;
   font-size: var(--bulma-size-small);
   font-weight: 600;
@@ -496,13 +496,13 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
   padding: 0.5rem 0;
 }
 
-.t-datepicker-days {
+.cat-datepicker-days {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.25rem;
 }
 
-.t-datepicker-day {
+.cat-datepicker-day {
   aspect-ratio: 1;
   border: 1px solid var(--bulma-grey-lighter);
   border-radius: var(--bulma-radius);
@@ -552,7 +552,7 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
   }
 }
 
-.t-datepicker-footer {
+.cat-datepicker-footer {
   margin-top: 1rem;
   padding-top: 1rem;
   border-top: 1px solid var(--bulma-grey-lighter);

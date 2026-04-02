@@ -8,14 +8,14 @@
         Switch between light and dark themes
       </p>
 
-      <t-demo-box label="Basic Usage">
+      <demo-box label="Basic Usage">
         <p class="mb-3">
           Click the button below to toggle between light and dark themes. The preference is saved to localStorage.
         </p>
-        <t-theme-toggle />
-      </t-demo-box>
+        <cat-theme-toggle />
+      </demo-box>
 
-      <t-demo-box label="Example: Theme Preview" example>
+      <demo-box label="Example: Theme Preview" example>
         <h3 class="subtitle is-5">
           Sample Content
         </h3>
@@ -27,20 +27,20 @@
         </p>
 
         <div class="mt-4">
-          <t-field label="Sample Input">
-            <t-input v-model="sampleText" placeholder="Type something..." />
-          </t-field>
+          <cat-field label="Sample Input">
+            <cat-input v-model="sampleText" placeholder="Type something..." />
+          </cat-field>
         </div>
 
         <div class="mt-4">
-          <t-field label="Sample Textarea">
-            <t-textarea v-model="sampleTextarea" placeholder="Enter multiple lines..." />
-          </t-field>
+          <cat-field label="Sample Textarea">
+            <cat-textarea v-model="sampleTextarea" placeholder="Enter multiple lines..." />
+          </cat-field>
         </div>
 
         <div class="mt-4">
-          <t-field label="Sample Select">
-            <t-select v-model="sampleSelect">
+          <cat-field label="Sample Select">
+            <cat-select v-model="sampleSelect">
               <option value="option1">
                 Option 1
               </option>
@@ -50,41 +50,41 @@
               <option value="option3">
                 Option 3
               </option>
-            </t-select>
-          </t-field>
+            </cat-select>
+          </cat-field>
         </div>
 
         <div class="mt-4">
-          <t-field>
-            <t-checkbox v-model="sampleCheckbox">
+          <cat-field>
+            <cat-checkbox v-model="sampleCheckbox">
               Sample checkbox
-            </t-checkbox>
-          </t-field>
+            </cat-checkbox>
+          </cat-field>
         </div>
 
         <div class="mt-4 buttons">
-          <t-button variant="primary">
+          <cat-button variant="primary">
             Primary Button
-          </t-button>
-          <t-button variant="info">
+          </cat-button>
+          <cat-button variant="info">
             Info Button
-          </t-button>
-          <t-button variant="success">
+          </cat-button>
+          <cat-button variant="success">
             Success Button
-          </t-button>
-          <t-button variant="warning">
+          </cat-button>
+          <cat-button variant="warning">
             Warning Button
-          </t-button>
-          <t-button variant="danger">
+          </cat-button>
+          <cat-button variant="danger">
             Danger Button
-          </t-button>
+          </cat-button>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Cards" example>
+      <demo-box label="Example: Cards" example>
         <div class="columns">
           <div class="column">
-            <t-card>
+            <cat-card>
               <template #header>
                 <p class="card-header-title">
                   Sample Card 1
@@ -93,10 +93,10 @@
               <div class="content">
                 <p>Card content adapts to the theme automatically.</p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
           <div class="column">
-            <t-card>
+            <cat-card>
               <template #header>
                 <p class="card-header-title">
                   Sample Card 2
@@ -105,28 +105,28 @@
               <div class="content">
                 <p>All components work seamlessly in both light and dark modes.</p>
               </div>
-            </t-card>
+            </cat-card>
           </div>
         </div>
-      </t-demo-box>
+      </demo-box>
 
-      <t-demo-box label="Example: Notifications" example>
-        <t-notification variant="info" class="mb-3">
+      <demo-box label="Example: Notifications" example>
+        <cat-notification variant="info" class="mb-3">
           <strong>Info:</strong> This is an info notification.
-        </t-notification>
-        <t-notification variant="success" class="mb-3">
+        </cat-notification>
+        <cat-notification variant="success" class="mb-3">
           <strong>Success:</strong> This is a success notification.
-        </t-notification>
-        <t-notification variant="warning" class="mb-3">
+        </cat-notification>
+        <cat-notification variant="warning" class="mb-3">
           <strong>Warning:</strong> This is a warning notification.
-        </t-notification>
-        <t-notification variant="danger">
+        </cat-notification>
+        <cat-notification variant="danger">
           <strong>Error:</strong> This is an error notification.
-        </t-notification>
-      </t-demo-box>
+        </cat-notification>
+      </demo-box>
 
-      <t-demo-box label="Example: Table" example>
-        <t-table>
+      <demo-box label="Example: Table" example>
+        <cat-table>
           <thead>
             <tr>
               <th>Name</th>
@@ -151,10 +151,10 @@
               <td>Manager</td>
             </tr>
           </tbody>
-        </t-table>
-      </t-demo-box>
+        </cat-table>
+      </demo-box>
 
-      <t-demo-box label="Implementation">
+      <demo-box label="Implementation">
         <h3 class="subtitle is-5">
           How It Works
         </h3>
@@ -171,19 +171,19 @@
         <h3 class="subtitle is-5 mt-5">
           Usage
         </h3>
-        <pre class="content"><code>&lt;t-theme-toggle /&gt;</code></pre>
+        <pre class="content"><code>&lt;cat-theme-toggle /&gt;</code></pre>
 
         <p class="help">
           Place this component anywhere in your layout, typically in the header or navigation bar.
         </p>
-      </t-demo-box>
+      </demo-box>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const sampleText = ref('')
 const sampleTextarea = ref('')

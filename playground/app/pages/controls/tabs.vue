@@ -9,174 +9,174 @@
       </p>
 
       <!-- Basic Tabs -->
-      <t-demo-box label="Basic Tabs">
-        <t-tabs v-model="basicTab">
-          <t-tab-item label="Home" value="home">
+      <demo-box label="Basic Tabs">
+        <cat-tabs v-model="basicTab">
+          <cat-tab-item label="Home" value="home">
             <div class="content">
               <h3>Home Content</h3>
               <p>This is the content for the Home tab.</p>
             </div>
-          </t-tab-item>
-          <t-tab-item label="Profile" value="profile">
+          </cat-tab-item>
+          <cat-tab-item label="Profile" value="profile">
             <div class="content">
               <h3>Profile Content</h3>
               <p>This is the content for the Profile tab.</p>
             </div>
-          </t-tab-item>
-          <t-tab-item label="Settings" value="settings">
+          </cat-tab-item>
+          <cat-tab-item label="Settings" value="settings">
             <div class="content">
               <h3>Settings Content</h3>
               <p>This is the content for the Settings tab.</p>
             </div>
-          </t-tab-item>
-        </t-tabs>
+          </cat-tab-item>
+        </cat-tabs>
         <p class="has-text-grey">
           Active tab: {{ basicTab }}
         </p>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Types -->
-      <t-demo-box label="Types">
+      <demo-box label="Types">
         <div v-for="tabsType in tabsTypes" :key="tabsType" class="mb-4">
           <h3 class="subtitle is-5">
             {{ formatType(tabsType) }}
           </h3>
-          <t-tabs v-model="typeValues[tabsType]" :type="tabsType">
-            <t-tab-item label="Home" value="1" />
-            <t-tab-item label="Profile" value="2" />
-            <t-tab-item label="Settings" value="3" />
-          </t-tabs>
+          <cat-tabs v-model="typeValues[tabsType]" :type="tabsType">
+            <cat-tab-item label="Home" value="1" />
+            <cat-tab-item label="Profile" value="2" />
+            <cat-tab-item label="Settings" value="3" />
+          </cat-tabs>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- With Icons -->
-      <t-demo-box label="With Icons">
-        <t-tabs v-model="iconTab">
-          <t-tab-item label="Dashboard" value="dashboard" icon="view-dashboard" />
-          <t-tab-item label="Messages" value="messages" icon="email" />
-          <t-tab-item label="Notifications" value="notifications" icon="bell" />
-          <t-tab-item label="Settings" value="settings" icon="cog" />
-        </t-tabs>
-      </t-demo-box>
+      <demo-box label="With Icons">
+        <cat-tabs v-model="iconTab">
+          <cat-tab-item label="Dashboard" value="dashboard" icon="view-dashboard" />
+          <cat-tab-item label="Messages" value="messages" icon="email" />
+          <cat-tab-item label="Notifications" value="notifications" icon="bell" />
+          <cat-tab-item label="Settings" value="settings" icon="cog" />
+        </cat-tabs>
+      </demo-box>
 
       <!-- Sizes -->
-      <t-demo-box label="Sizes">
+      <demo-box label="Sizes">
         <div v-for="tabsSize in sizes" :key="tabsSize" class="mb-4">
           <h3 class="subtitle is-5">
             {{ capitalize(tabsSize) }}
           </h3>
-          <t-tabs v-model="sizeValues[tabsSize]" :size="tabsSize">
-            <t-tab-item label="Tab 1" value="1" />
-            <t-tab-item label="Tab 2" value="2" />
-          </t-tabs>
+          <cat-tabs v-model="sizeValues[tabsSize]" :size="tabsSize">
+            <cat-tab-item label="Tab 1" value="1" />
+            <cat-tab-item label="Tab 2" value="2" />
+          </cat-tabs>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Alignment -->
-      <t-demo-box label="Alignment">
+      <demo-box label="Alignment">
         <div v-for="position in positions" :key="position" class="mb-4">
           <h3 class="subtitle is-5">
             {{ capitalize(position) }}{{ position === 'left' ? '-aligned' : position === 'right' ? '-aligned' : '' }}
           </h3>
-          <t-tabs v-model="positionValues[position]" :position="position">
-            <t-tab-item label="One" value="1" />
-            <t-tab-item label="Two" value="2" />
-            <t-tab-item label="Three" value="3" />
-          </t-tabs>
+          <cat-tabs v-model="positionValues[position]" :position="position">
+            <cat-tab-item label="One" value="1" />
+            <cat-tab-item label="Two" value="2" />
+            <cat-tab-item label="Three" value="3" />
+          </cat-tabs>
         </div>
-      </t-demo-box>
+      </demo-box>
 
       <!-- Full Width -->
-      <t-demo-box label="Full Width">
-        <t-tabs v-model="fullWidth" expanded>
-          <t-tab-item label="First" value="1" />
-          <t-tab-item label="Second" value="2" />
-          <t-tab-item label="Third" value="3" />
-          <t-tab-item label="Fourth" value="4" />
-        </t-tabs>
-      </t-demo-box>
+      <demo-box label="Full Width">
+        <cat-tabs v-model="fullWidth" expanded>
+          <cat-tab-item label="First" value="1" />
+          <cat-tab-item label="Second" value="2" />
+          <cat-tab-item label="Third" value="3" />
+          <cat-tab-item label="Fourth" value="4" />
+        </cat-tabs>
+      </demo-box>
 
       <!-- Practical Example: Settings Panel -->
-      <t-demo-box label="Example: Settings Panel" example>
-        <t-tabs v-model="settingsTab" type="boxed">
-          <t-tab-item label="Account" value="account" icon="account">
+      <demo-box label="Example: Settings Panel" example>
+        <cat-tabs v-model="settingsTab" type="boxed">
+          <cat-tab-item label="Account" value="account" icon="account">
             <div class="content">
               <h3>Account Settings</h3>
-              <t-field label="Username:">
-                <t-input v-model="settings.username" />
-              </t-field>
-              <t-field label="Email:">
-                <t-input v-model="settings.email" type="email" />
-              </t-field>
-              <t-button variant="primary">
+              <cat-field label="Username:">
+                <cat-input v-model="settings.username" />
+              </cat-field>
+              <cat-field label="Email:">
+                <cat-input v-model="settings.email" type="email" />
+              </cat-field>
+              <cat-button variant="primary">
                 Save Changes
-              </t-button>
+              </cat-button>
             </div>
-          </t-tab-item>
-          <t-tab-item label="Privacy" value="privacy" icon="lock">
+          </cat-tab-item>
+          <cat-tab-item label="Privacy" value="privacy" icon="lock">
             <div class="content">
               <h3>Privacy Settings</h3>
-              <t-field>
-                <t-switch v-model="settings.profilePublic">
+              <cat-field>
+                <cat-switch v-model="settings.profilePublic">
                   Public Profile
-                </t-switch>
-              </t-field>
-              <t-field>
-                <t-switch v-model="settings.showActivity">
+                </cat-switch>
+              </cat-field>
+              <cat-field>
+                <cat-switch v-model="settings.showActivity">
                   Show Activity Status
-                </t-switch>
-              </t-field>
-              <t-field>
-                <t-switch v-model="settings.allowMessages">
+                </cat-switch>
+              </cat-field>
+              <cat-field>
+                <cat-switch v-model="settings.allowMessages">
                   Allow Messages
-                </t-switch>
-              </t-field>
+                </cat-switch>
+              </cat-field>
             </div>
-          </t-tab-item>
-          <t-tab-item label="Notifications" value="notifications" icon="bell">
+          </cat-tab-item>
+          <cat-tab-item label="Notifications" value="notifications" icon="bell">
             <div class="content">
               <h3>Notification Preferences</h3>
-              <t-field>
-                <t-checkbox v-model="settings.emailNotifications">
+              <cat-field>
+                <cat-checkbox v-model="settings.emailNotifications">
                   Email Notifications
-                </t-checkbox>
-              </t-field>
-              <t-field>
-                <t-checkbox v-model="settings.pushNotifications">
+                </cat-checkbox>
+              </cat-field>
+              <cat-field>
+                <cat-checkbox v-model="settings.pushNotifications">
                   Push Notifications
-                </t-checkbox>
-              </t-field>
-              <t-field>
-                <t-checkbox v-model="settings.smsNotifications">
+                </cat-checkbox>
+              </cat-field>
+              <cat-field>
+                <cat-checkbox v-model="settings.smsNotifications">
                   SMS Notifications
-                </t-checkbox>
-              </t-field>
+                </cat-checkbox>
+              </cat-field>
             </div>
-          </t-tab-item>
-          <t-tab-item label="Security" value="security" icon="shield">
+          </cat-tab-item>
+          <cat-tab-item label="Security" value="security" icon="shield">
             <div class="content">
               <h3>Security Settings</h3>
-              <t-field label="Current Password:">
-                <t-input type="password" />
-              </t-field>
-              <t-field label="New Password:">
-                <t-input type="password" />
-              </t-field>
-              <t-field label="Confirm Password:">
-                <t-input type="password" />
-              </t-field>
-              <t-button variant="primary">
+              <cat-field label="Current Password:">
+                <cat-input type="password" />
+              </cat-field>
+              <cat-field label="New Password:">
+                <cat-input type="password" />
+              </cat-field>
+              <cat-field label="Confirm Password:">
+                <cat-input type="password" />
+              </cat-field>
+              <cat-button variant="primary">
                 Update Password
-              </t-button>
+              </cat-button>
             </div>
-          </t-tab-item>
-        </t-tabs>
-      </t-demo-box>
+          </cat-tab-item>
+        </cat-tabs>
+      </demo-box>
 
       <!-- Interactive Example -->
-      <t-demo-box label="Example: Product Details" example>
-        <t-tabs v-model="productTab">
-          <t-tab-item label="Description" value="description">
+      <demo-box label="Example: Product Details" example>
+        <cat-tabs v-model="productTab">
+          <cat-tab-item label="Description" value="description">
             <div class="content">
               <h3>Product Description</h3>
               <p>
@@ -190,8 +190,8 @@
                 <li>Feature 4: Energy efficient</li>
               </ul>
             </div>
-          </t-tab-item>
-          <t-tab-item label="Specifications" value="specs">
+          </cat-tab-item>
+          <cat-tab-item label="Specifications" value="specs">
             <div class="content">
               <h3>Technical Specifications</h3>
               <table class="table">
@@ -215,8 +215,8 @@
                 </tbody>
               </table>
             </div>
-          </t-tab-item>
-          <t-tab-item label="Reviews" value="reviews">
+          </cat-tab-item>
+          <cat-tab-item label="Reviews" value="reviews">
             <div class="content">
               <h3>Customer Reviews</h3>
               <article class="message is-success">
@@ -234,9 +234,9 @@
                 </div>
               </article>
             </div>
-          </t-tab-item>
-        </t-tabs>
-      </t-demo-box>
+          </cat-tab-item>
+        </cat-tabs>
+      </demo-box>
     </section>
   </div>
 </template>
@@ -244,7 +244,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { TabsSizes, TabsPositions, TabsTypes } from '../../../../src/controls/types'
-import TDemoBox from '../../components/t-demo-box.vue'
+import DemoBox from '../../components/demo-box.vue'
 
 const sizes = TabsSizes
 const positions = TabsPositions
