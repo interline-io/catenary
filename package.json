@@ -13,7 +13,7 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/catenary.js"
     },
-    "./dist/style.css": "./dist/style.css"
+    "./style.css": "./dist/catenary.css"
   },
   "files": [
     "dist"
