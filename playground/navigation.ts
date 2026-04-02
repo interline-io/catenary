@@ -36,7 +36,8 @@ export const controlsGroups: NavGroup[] = [
       { name: 'Tabs', path: '/controls/tabs', icon: 'tab' },
       { name: 'Dropdown', path: '/controls/dropdown', icon: 'menu-down' },
       { name: 'Modal', path: '/controls/modal', icon: 'window-restore' },
-      { name: 'Card', path: '/controls/card', icon: 'card' }
+      { name: 'Card', path: '/controls/card', icon: 'card' },
+      { name: 'Link', path: '/controls/link', icon: 'link-variant' }
     ]
   },
   {
@@ -46,8 +47,10 @@ export const controlsGroups: NavGroup[] = [
       { name: 'Table', path: '/controls/table', icon: 'table' },
       { name: 'Pagination', path: '/controls/pagination', icon: 'page-first' },
       { name: 'Tag', path: '/controls/tag', icon: 'tag' },
+      { name: 'Tree Control', path: '/controls/tree-control', icon: 'file-tree' },
       { name: 'Notification', path: '/controls/notification', icon: 'bell' },
-      { name: 'Message', path: '/controls/msg', icon: 'message' }
+      { name: 'Message', path: '/controls/msg', icon: 'message' },
+      { name: 'Safelink', path: '/controls/safelink', icon: 'link' }
     ]
   },
   {
@@ -58,7 +61,9 @@ export const controlsGroups: NavGroup[] = [
       { name: 'Loading', path: '/controls/loading', icon: 'loading' },
       { name: 'Tooltip', path: '/controls/tooltip', icon: 'tooltip' },
       { name: 'Search Bar', path: '/controls/search-bar', icon: 'magnify' },
-      { name: 'Theme Toggle', path: '/controls/theme-toggle', icon: 'theme-light-dark' }
+      { name: 'Theme Toggle', path: '/controls/theme-toggle', icon: 'theme-light-dark' },
+      { name: 'Download CSV', path: '/controls/download-csv', icon: 'file-delimited' },
+      { name: 'Download JSON', path: '/controls/download-json', icon: 'code-json' }
     ]
   }
 ]

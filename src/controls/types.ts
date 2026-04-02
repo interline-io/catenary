@@ -131,3 +131,9 @@ export interface TagOptionBase<T extends string | number = string> {
  */
 export type TagOption<T extends string | number = string> = TagOptionBase<T> & Record<string, unknown>
 export const FieldIdKey: InjectionKey<string> = Symbol('fieldId')
+
+/**
+ * Injection key for a route map used by cat-link.
+ * Consumers provide a Record<string, string> mapping route keys to vue-router route names.
+ */
+export const LinkRoutesKey: InjectionKey<Record<string, string>> = Symbol('linkRoutes')
