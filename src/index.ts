@@ -1,6 +1,5 @@
 import type { App, Plugin } from 'vue'
 
-// Controls
 import TButton from './controls/button.vue'
 import TCard from './controls/card.vue'
 import TCheckbox from './controls/checkbox.vue'
@@ -32,7 +31,7 @@ import TTextarea from './controls/textarea.vue'
 import TThemeToggle from './controls/theme-toggle.vue'
 import TTooltip from './controls/tooltip.vue'
 
-// Re-export all components
+// Named exports for tree-shaking
 export {
   TButton,
   TCard,
@@ -66,45 +65,19 @@ export {
   TTooltip
 }
 
-// Re-export types
 export * from './controls/types'
 
 // Vue plugin that registers all components globally
-const components: Record<string, any> = {
-  TButton,
-  TCard,
-  TCheckbox,
-  TCheckboxGroup,
-  TDatepicker,
-  TDropdown,
-  TDropdownItem,
-  TField,
-  TIcon,
-  TInput,
-  TLoading,
-  TModal,
-  TMsg,
-  TNotification,
-  TPagination,
-  TRadio,
-  TSearchBar,
-  TSelect,
-  TSlider,
-  TSliderTick,
-  TSwitch,
-  TTabItem,
-  TTable,
-  TTableColumn,
-  TTabs,
-  TTag,
-  TTaginput,
-  TTextarea,
-  TThemeToggle,
-  TTooltip
-}
-
 export const CatenaryPlugin: Plugin = {
   install (app: App) {
+    const components: Record<string, any> = {
+      TButton, TCard, TCheckbox, TCheckboxGroup, TDatepicker,
+      TDropdown, TDropdownItem, TField, TIcon, TInput,
+      TLoading, TModal, TMsg, TNotification, TPagination,
+      TRadio, TSearchBar, TSelect, TSlider, TSliderTick,
+      TSwitch, TTabItem, TTable, TTableColumn, TTabs,
+      TTag, TTaginput, TTextarea, TThemeToggle, TTooltip
+    }
     for (const [name, component] of Object.entries(components)) {
       app.component(name, component)
     }
