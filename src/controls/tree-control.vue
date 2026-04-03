@@ -43,6 +43,7 @@
 import { ref, computed } from 'vue'
 import type { TreeNode } from '../util/tree'
 import CatCheckbox from './checkbox.vue'
+import CatTreeControl from './tree-control.vue'
 
 interface Props {
   node?: TreeNode
