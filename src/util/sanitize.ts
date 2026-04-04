@@ -26,7 +26,7 @@ export function sanitizeFilename (v: string): string {
 /* eslint-disable no-control-regex */
 const ctrlCharactersRegex = /[\u0000-\u001F\u007F-\u009F\u2000-\u200D\uFEFF]/g
 const invalidProtocolRegex = /^\W*(?:javascript|data|vbscript)/im
-const htmlEntitiesRegex = /&#\w+\W?/g
+const htmlEntitiesRegex = /&#(\w+)\W?/g
 const htmlCtrlEntityRegex = /&(newline|tab);/gi
 const urlSchemeRegex = /^.+(?::|&colon;)/gim
 /* eslint-enable no-control-regex */
