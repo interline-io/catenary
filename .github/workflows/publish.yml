@@ -46,6 +46,12 @@ jobs:
       - name: Set version
         run: npm version ${{ steps.meta.outputs.version }} --no-git-tag-version
 
+      - name: Prepare playground types
+        run: pnpm dev:prepare
+
+      - name: Check
+        run: pnpm run check
+
       - name: Test
         run: pnpm run test
 
