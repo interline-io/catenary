@@ -82,21 +82,33 @@ export { sanitizeFilename, sanitizeUrl } from './util/sanitize'
 export { useDownload } from './util/download'
 export type { DownloadOptions } from './util/download'
 
+export interface CatenaryPluginOptions {
+  /** Component name prefix (default: 'Cat'). E.g. 'T' registers components as TButton, TInput, etc. */
+  prefix?: string
+}
+
 // Vue plugin that registers all components globally
 export const CatenaryPlugin: Plugin = {
-  install (app: App) {
+  install (app: App, options?: CatenaryPluginOptions) {
+    const prefix = options?.prefix ?? 'Cat'
     const components: Record<string, any> = {
-      CatButton, CatCard, CatCheckbox, CatCheckboxGroup, CatDatepicker,
-      CatDownloadCsv, CatDownloadJson,
-      CatDropdown, CatDropdownItem, CatField, CatIcon, CatInput, CatLink,
-      CatLoading, CatModal, CatMsg, CatNotification, CatPagination,
-      CatRadio, CatSafelink, CatSearchBar, CatSelect, CatSlider, CatSliderTick,
-      CatSwitch, CatTabItem, CatTable, CatTableColumn, CatTabs,
-      CatTag, CatTaginput, CatTextarea, CatThemeToggle, CatTooltip,
-      CatTreeControl
+      Button: CatButton, Card: CatCard, Checkbox: CatCheckbox,
+      CheckboxGroup: CatCheckboxGroup, Datepicker: CatDatepicker,
+      DownloadCsv: CatDownloadCsv, DownloadJson: CatDownloadJson,
+      Dropdown: CatDropdown, DropdownItem: CatDropdownItem,
+      Field: CatField, Icon: CatIcon, Input: CatInput, Link: CatLink,
+      Loading: CatLoading, Modal: CatModal, Msg: CatMsg,
+      Notification: CatNotification, Pagination: CatPagination,
+      Radio: CatRadio, Safelink: CatSafelink, SearchBar: CatSearchBar,
+      Select: CatSelect, Slider: CatSlider, SliderTick: CatSliderTick,
+      Switch: CatSwitch, TabItem: CatTabItem, Table: CatTable,
+      TableColumn: CatTableColumn, Tabs: CatTabs, Tag: CatTag,
+      Taginput: CatTaginput, Textarea: CatTextarea,
+      ThemeToggle: CatThemeToggle, Tooltip: CatTooltip,
+      TreeControl: CatTreeControl
     }
     for (const [name, component] of Object.entries(components)) {
-      app.component(name, component)
+      app.component(`${prefix}${name}`, component)
     }
   }
 }
