@@ -11,10 +11,12 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/catenary.js"
     },
-    "./style.css": "./dist/catenary.css"
+    "./style.css": "./dist/catenary.css",
+    "./eslint": "./src/eslint/index.ts"
   },
   "files": [
-    "dist"
+    "dist",
+    "src/eslint"
   ],
   "publishConfig": {
     "registry": "https://npm.pkg.github.com",
@@ -32,11 +34,19 @@
   },
   "peerDependencies": {
     "@mdi/font": "^7.4.0",
+    "@stylistic/eslint-plugin": "^5.0.0",
     "bulma": "^1.0.0",
+    "eslint": "^9.0.0",
     "vue": "^3.5.0",
     "vue-router": "^4.0.0"
   },
   "peerDependenciesMeta": {
+    "@stylistic/eslint-plugin": {
+      "optional": true
+    },
+    "eslint": {
+      "optional": true
+    },
     "vue-router": {
       "optional": true
     }
