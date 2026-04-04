@@ -92,19 +92,40 @@ export const CatenaryPlugin: Plugin = {
   install (app: App, options?: CatenaryPluginOptions) {
     const prefix = options?.prefix ?? 'Cat'
     const components: Record<string, any> = {
-      Button: CatButton, Card: CatCard, Checkbox: CatCheckbox,
-      CheckboxGroup: CatCheckboxGroup, Datepicker: CatDatepicker,
-      DownloadCsv: CatDownloadCsv, DownloadJson: CatDownloadJson,
-      Dropdown: CatDropdown, DropdownItem: CatDropdownItem,
-      Field: CatField, Icon: CatIcon, Input: CatInput, Link: CatLink,
-      Loading: CatLoading, Modal: CatModal, Msg: CatMsg,
-      Notification: CatNotification, Pagination: CatPagination,
-      Radio: CatRadio, Safelink: CatSafelink, SearchBar: CatSearchBar,
-      Select: CatSelect, Slider: CatSlider, SliderTick: CatSliderTick,
-      Switch: CatSwitch, TabItem: CatTabItem, Table: CatTable,
-      TableColumn: CatTableColumn, Tabs: CatTabs, Tag: CatTag,
-      Taginput: CatTaginput, Textarea: CatTextarea,
-      ThemeToggle: CatThemeToggle, Tooltip: CatTooltip,
+      Button: CatButton,
+      Card: CatCard,
+      Checkbox: CatCheckbox,
+      CheckboxGroup: CatCheckboxGroup,
+      Datepicker: CatDatepicker,
+      DownloadCsv: CatDownloadCsv,
+      DownloadJson: CatDownloadJson,
+      Dropdown: CatDropdown,
+      DropdownItem: CatDropdownItem,
+      Field: CatField,
+      Icon: CatIcon,
+      Input: CatInput,
+      Link: CatLink,
+      Loading: CatLoading,
+      Modal: CatModal,
+      Msg: CatMsg,
+      Notification: CatNotification,
+      Pagination: CatPagination,
+      Radio: CatRadio,
+      Safelink: CatSafelink,
+      SearchBar: CatSearchBar,
+      Select: CatSelect,
+      Slider: CatSlider,
+      SliderTick: CatSliderTick,
+      Switch: CatSwitch,
+      TabItem: CatTabItem,
+      Table: CatTable,
+      TableColumn: CatTableColumn,
+      Tabs: CatTabs,
+      Tag: CatTag,
+      Taginput: CatTaginput,
+      Textarea: CatTextarea,
+      ThemeToggle: CatThemeToggle,
+      Tooltip: CatTooltip,
       TreeControl: CatTreeControl
     }
     for (const [name, component] of Object.entries(components)) {
@@ -114,3 +135,43 @@ export const CatenaryPlugin: Plugin = {
 }
 
 export default CatenaryPlugin
+
+declare module 'vue' {
+  export interface GlobalComponents {
+    CatButton: typeof CatButton
+    CatCard: typeof CatCard
+    CatCheckbox: typeof CatCheckbox
+    CatCheckboxGroup: typeof CatCheckboxGroup
+    CatDatepicker: typeof CatDatepicker
+    CatDownloadCsv: typeof CatDownloadCsv
+    CatDownloadJson: typeof CatDownloadJson
+    CatDropdown: typeof CatDropdown
+    CatDropdownItem: typeof CatDropdownItem
+    CatField: typeof CatField
+    CatIcon: typeof CatIcon
+    CatInput: typeof CatInput
+    CatLink: typeof CatLink
+    CatLoading: typeof CatLoading
+    CatModal: typeof CatModal
+    CatMsg: typeof CatMsg
+    CatNotification: typeof CatNotification
+    CatPagination: typeof CatPagination
+    CatRadio: typeof CatRadio
+    CatSafelink: typeof CatSafelink
+    CatSearchBar: typeof CatSearchBar
+    CatSelect: typeof CatSelect
+    CatSlider: typeof CatSlider
+    CatSliderTick: typeof CatSliderTick
+    CatSwitch: typeof CatSwitch
+    CatTabItem: typeof CatTabItem
+    CatTable: typeof CatTable
+    CatTableColumn: typeof CatTableColumn
+    CatTabs: typeof CatTabs
+    CatTag: typeof CatTag
+    CatTaginput: typeof CatTaginput
+    CatTextarea: typeof CatTextarea
+    CatThemeToggle: typeof CatThemeToggle
+    CatTooltip: typeof CatTooltip
+    CatTreeControl: typeof CatTreeControl
+  }
+}

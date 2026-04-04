@@ -24,11 +24,11 @@ export function sanitizeFilename (v: string): string {
 // Based on https://github.com/braintree/sanitize-url
 
 /* eslint-disable no-control-regex */
-const ctrlCharactersRegex = /[\u0000-\u001F\u007F-\u009F\u2000-\u200D\uFEFF]/gim
-const invalidProtocolRegex = /^([^\w]*)(javascript|data|vbscript)/im
-const htmlEntitiesRegex = /&#(\w+)(^\w|;)?/g
+const ctrlCharactersRegex = /[\u0000-\u001F\u007F-\u009F\u2000-\u200D\uFEFF]/g
+const invalidProtocolRegex = /^\W*(?:javascript|data|vbscript)/im
+const htmlEntitiesRegex = /&#\w+\W?/g
 const htmlCtrlEntityRegex = /&(newline|tab);/gi
-const urlSchemeRegex = /^.+(:|&colon;)/gim
+const urlSchemeRegex = /^.+(?::|&colon;)/gim
 /* eslint-enable no-control-regex */
 const relativeFirstCharacters = ['.', '/']
 const BLANK_URL = 'about:blank'

@@ -30,7 +30,7 @@ Tests use **Vitest** with jsdom environment. Test files live alongside component
 
 ### Library Entry Point
 
-`src/index.ts` — Exports all 30 components individually and as a Vue plugin (`CatenaryPlugin`). Also re-exports all types from `src/controls/types.ts`.
+`src/index.ts` — Exports all components individually and as a Vue plugin (`CatenaryPlugin`). Also re-exports all types from `src/controls/types.ts`. When adding a new component, it must be registered in **four places** within this file: the import, the named export, the plugin `components` map, and the `GlobalComponents` type augmentation.
 
 ### Source Structure (`src/`)
 
