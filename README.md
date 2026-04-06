@@ -1,3 +1,8 @@
+<figure>
+  <img src="./docs/catbus.jpg" alt="still from the film 'My Neighbor Toroto' showing the Catbus in front of a train with a catenary power supply" />
+  <figcaption><a href="https://ghibli.fandom.com/wiki/Catbus?file=Carbus_and_Everyone.jpg">Film still © Studio Ghibli</a></figcaption>
+</figure>
+
 # Catenary
 
 A Vue 3 UI controls library built on [Bulma](https://bulma.io/) and [Material Design Icons](https://pictogrammers.com/library/mdi/). Catenary provides 30 general-purpose, domain-agnostic components designed to be reusable across any application.
