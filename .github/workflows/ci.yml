@@ -2,11 +2,12 @@ name: CI
 
 # Lint, type-check, test, and build on every PR. The accessibility gates live
 # here:
-#   - eslint-plugin-vuejs-accessibility runs as part of `pnpm lint` and
-#     `pnpm check`. Error-level a11y rules block this workflow; the
-#     `--max-warnings` cap in package.json blocks warning-count regressions.
-#   - vitest-axe assertions run as part of `pnpm test`. New axe violations
-#     in any touched component block this workflow.
+#   - eslint-plugin-vuejs-accessibility runs as part of `pnpm lint`.
+#     Error-level a11y rules block this workflow; the `--max-warnings` cap in
+#     package.json blocks warning-count regressions.
+#   - axe-core assertions (via the in-house wrapper in src/testutil/axe.ts)
+#     run as part of `pnpm test`. New axe violations in any touched component
+#     block this workflow.
 #
 # publish.yml runs the same checks on every push (because branch versions are
 # auto-published), so this workflow is the explicit, clearly-named gate for
@@ -25,7 +26,7 @@ permissions: {}
 
 jobs:
   ci:
-    name: lint • check • test • build
+    name: lint • typecheck • test • build
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -54,7 +55,7 @@ jobs:
       - name: Type-check
         run: pnpm typecheck
 
-      - name: Test (incl. vitest-axe assertions)
+      - name: Test (incl. axe-core assertions)
         run: pnpm test
 
       - name: Build
