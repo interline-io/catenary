@@ -1,6 +1,7 @@
 import { mount } from '@vue/test-utils'
 import type { VueWrapper } from '@vue/test-utils'
 import { expect } from 'vitest'
+import { axe } from './axe'
 
 /**
  * Helper utilities for testing t-* components
@@ -203,4 +204,24 @@ export function testA11y (
   Object.entries(attributes).forEach(([attr, value]) => {
     expect(wrapper.attributes(attr)).toBe(value)
   })
+}
+
+/**
+ * Run axe-core on a mounted component and assert no violations.
+ *
+ * Caveat: jsdom does not compute real styles, so axe under Vitest cannot detect
+ * color-contrast issues. Use the browser axe DevTools extension on the playground
+ * for those checks.
+ */
+export async function expectNoAxeViolations (
+  wrapper: VueWrapper,
+  options?: Parameters<typeof axe>[1]
+): Promise<void> {
+  const results = await axe(wrapper.element, options)
+  if (results.violations.length > 0) {
+    const summary = results.violations
+      .map(v => `  - [${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} nodes)`)
+      .join('\n')
+    expect.fail(`Axe found ${results.violations.length} accessibility violation(s):\n${summary}`)
+  }
 }

@@ -27,8 +27,9 @@
     "build:playground": "nuxi generate playground",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "lint": "eslint .",
-    "check": "eslint . && vue-tsc --noEmit && nuxi typecheck playground"
+    "lint": "eslint . --max-warnings 34",
+    "typecheck": "vue-tsc --noEmit && nuxi typecheck playground",
+    "check": "pnpm lint && pnpm typecheck"
   },
   "peerDependencies": {
     "@mdi/font": "^7.4.0",
@@ -53,9 +54,11 @@
     "@stylistic/eslint-plugin": "5.5.0",
     "@vitejs/plugin-vue": "6.0.1",
     "@vue/test-utils": "2.4.6",
+    "axe-core": "4.12.0",
     "bulma": "1.0.4",
     "eslint": "9.39.1",
     "eslint-plugin-vue": "10.5.1",
+    "eslint-plugin-vuejs-accessibility": "2.5.0",
     "h3": "1.15.1",
     "jsdom": "26.1.0",
     "nuxi": "3.30.0",
