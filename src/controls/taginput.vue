@@ -59,6 +59,7 @@
           class="input"
           :class="inputClasses"
           :placeholder="isMaxReached ? 'Maximum reached' : placeholder"
+          :aria-label="placeholder || 'Search tags'"
           :disabled="disabled || isMaxReached"
           autocomplete="off"
           role="searchbox"
@@ -101,6 +102,7 @@
             :aria-selected="modelValue?.includes(option.value) || false"
             @mousedown.prevent="selectOption(option)"
             @mouseenter="highlightedIndex = index"
+            @focus="highlightedIndex = index"
             @keydown.enter.prevent="selectOption(option)"
             @keydown.space.prevent="selectOption(option)"
           >
