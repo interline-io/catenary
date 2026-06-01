@@ -3,7 +3,18 @@
     <div style="display: none;">
       <slot name="columns" />
     </div>
-    <table class="table cat-table" :class="tableClasses">
+    <table
+      class="table cat-table"
+      :class="tableClasses"
+      :aria-label="ariaLabel"
+      :aria-labelledby="ariaLabelledby"
+      :aria-describedby="ariaDescribedby"
+    >
+      <caption v-if="hasCaption" :class="{ 'is-sr-only': captionHidden }">
+        <slot name="caption">
+          {{ caption }}
+        </slot>
+      </caption>
       <thead v-if="hasHeader">
         <tr>
           <slot name="header" :columns="columns" :sort="handleSort">
@@ -11,13 +22,23 @@
               v-for="column in columns"
               :key="column.field"
               :class="getHeaderClasses(column)"
-              @click="column.sortable ? handleSort(column.field) : null"
+              :aria-sort="getAriaSort(column)"
             >
-              {{ column.label }}
-              <span v-if="column.sortable" class="cat-sort-icon">
-                <i v-if="sortField === column.field" :class="sortIcon" />
-                <i v-else class="mdi mdi-sort" />
-              </span>
+              <button
+                v-if="column.sortable"
+                type="button"
+                class="cat-table-sort"
+                @click="handleSort(column.field)"
+              >
+                {{ column.label }}
+                <span class="cat-sort-icon">
+                  <i v-if="sortField === column.field" :class="sortIcon" />
+                  <i v-else class="mdi mdi-sort" />
+                </span>
+              </button>
+              <template v-else>
+                {{ column.label }}
+              </template>
             </th>
           </slot>
         </tr>
@@ -39,7 +60,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, provide } from 'vue'
+import { ref, computed, provide, useSlots } from 'vue'
+
+const slots = useSlots()
 
 interface Column {
   field: string
@@ -82,6 +105,43 @@ interface Props {
    * Default sort field and direction [field, 'asc' | 'desc'].
    */
   defaultSort?: [string, 'asc' | 'desc']
+
+  /**
+   * Table caption rendered as a native `<caption>`. Required for WCAG when
+   * the table's purpose is not clear from surrounding context. Use the
+   * `caption` slot for richer markup.
+   */
+  caption?: string
+
+  /**
+   * Visually hide the `<caption>` (still announced by assistive technology).
+   * Use when the table's title lives in surrounding UI — e.g., a tab name
+   * above the table — but you still want screen readers to know what the
+   * table represents.
+   * @default false
+   */
+  captionHidden?: boolean
+
+  /**
+   * Accessible name for the table when a visible caption isn't suitable.
+   * Prefer `caption` for sighted users; `ariaLabel` is a fallback.
+   */
+  ariaLabel?: string
+
+  /**
+   * Space-separated id(s) of element(s) that name this table. Use when the
+   * table's name is rendered elsewhere in the page (e.g., a tab label or a
+   * heading above the table) so screen readers can announce it without
+   * duplicating the text inside a caption.
+   */
+  ariaLabelledby?: string
+
+  /**
+   * Space-separated id(s) of element(s) that further describe this table.
+   * Use for longer-form context that complements the name — e.g., a summary
+   * sentence below the table, or a note about how the data was computed.
+   */
+  ariaDescribedby?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -90,8 +150,15 @@ const props = withDefaults(defineProps<Props>(), {
   striped: false,
   bordered: false,
   hoverable: false,
-  defaultSort: undefined
+  defaultSort: undefined,
+  caption: undefined,
+  captionHidden: false,
+  ariaLabel: undefined,
+  ariaLabelledby: undefined,
+  ariaDescribedby: undefined
 })
+
+const hasCaption = computed(() => Boolean(props.caption || slots.caption))
 
 const columns = ref<Column[]>([])
 const sortField = ref<string | null>(props.defaultSort?.[0] || null)
@@ -177,6 +244,12 @@ function getHeaderClasses (column: Column) {
   return classes
 }
 
+function getAriaSort (column: Column): 'ascending' | 'descending' | 'none' | undefined {
+  if (!column.sortable) return undefined
+  if (sortField.value !== column.field) return 'none'
+  return sortDirection.value === 'asc' ? 'ascending' : 'descending'
+}
+
 function handleSort (field: string) {
   if (sortField.value === field) {
     sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
@@ -203,11 +276,30 @@ provide('registerColumn', registerColumn)
 
 .cat-table {
   th.is-sortable {
+    padding: 0;
+
+    &:hover .cat-table-sort {
+      background-color: $white-bis;
+    }
+  }
+
+  .cat-table-sort {
+    // Make the button fill the th so the entire cell is the click target,
+    // matching the previous click-anywhere-in-th behavior.
+    appearance: none;
+    background: transparent;
+    border: 0;
+    width: 100%;
+    padding: 0.5em 0.75em;
+    text-align: inherit;
+    font: inherit;
+    color: inherit;
     cursor: pointer;
     user-select: none;
 
-    &:hover {
-      background-color: $white-bis;
+    &:focus-visible {
+      outline: 2px solid $link;
+      outline-offset: -2px;
     }
   }
 

@@ -25,7 +25,12 @@
         />
       </template>
 
-      <div class="cat-datepicker-calendar">
+      <div
+        class="cat-datepicker-calendar"
+        role="dialog"
+        aria-modal="false"
+        :aria-label="ariaDialogLabel"
+      >
         <header class="cat-datepicker-header">
           <button
             type="button"
@@ -213,6 +218,8 @@ const props = withDefaults(defineProps<{
   ariaSelectMonthLabel?: string
   /** Accessibility label for year select. @default 'Select year' */
   ariaSelectYearLabel?: string
+  /** Accessibility label for the calendar dialog. @default 'Choose date' */
+  ariaDialogLabel?: string
 }>(), {
   modelValue: undefined,
   dateString: undefined,
@@ -244,7 +251,8 @@ const props = withDefaults(defineProps<{
   ariaPreviousLabel: 'Previous month',
   ariaNextLabel: 'Next month',
   ariaSelectMonthLabel: 'Select month',
-  ariaSelectYearLabel: 'Select year'
+  ariaSelectYearLabel: 'Select year',
+  ariaDialogLabel: 'Choose date'
 })
 
 const emit = defineEmits<{

@@ -10,7 +10,7 @@
 
       <!-- Basic Tabs -->
       <demo-box label="Basic Tabs">
-        <cat-tabs v-model="basicTab">
+        <cat-tabs v-model="basicTab" aria-label="Sections">
           <cat-tab-item label="Home" value="home">
             <div class="content">
               <h3>Home Content</h3>

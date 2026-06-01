@@ -1,21 +1,52 @@
 <template>
+  <!-- The wrapper IS the keyboard-accessible trigger when the slot has no
+       focusable child; otherwise the slot's focusable element is the trigger
+       and gets aria-describedby applied programmatically. -->
+  <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
   <span
-    ref="tooltipRef"
+    ref="wrapperRef"
     class="cat-tooltip"
-    :class="`is-tooltip-${effectivePosition}`"
-    v-bind="{ 'data-tooltip': text }"
-    @mouseenter="adjustPosition"
+    :class="[`is-tooltip-${effectivePosition}`, { 'is-visible': isVisible }]"
+    :tabindex="needsTabindex ? 0 : undefined"
+    :aria-describedby="needsTabindex ? tooltipId : undefined"
+    @mouseenter="show"
+    @mouseleave="onMouseleave"
+    @focusin="show"
+    @focusout="onFocusout"
+    @keydown.escape="hide"
   >
     <slot />
+    <span
+      :id="tooltipId"
+      class="cat-tooltip-bubble"
+      role="tooltip"
+    >
+      {{ text }}
+    </span>
   </span>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, useId, nextTick, onMounted, onUpdated, onBeforeUnmount } from 'vue'
 
 /**
- * Pure CSS tooltip component with smart positioning.
- * Displays tooltip text on hover and automatically adjusts position to stay within viewport.
+ * Accessible tooltip following the WAI-ARIA Authoring Practices tooltip pattern.
+ * https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/
+ *
+ * Behavior:
+ * - Shows on hover (mouseenter) AND keyboard focus (focusin) of the trigger.
+ * - Dismissed by mouseleave, focusout, or Escape — but stays open while focus
+ *   remains inside the wrapper, and while the mouse moves between wrapper
+ *   children.
+ * - Tooltip is associated with the trigger via `aria-describedby` and
+ *   `role="tooltip"`. When the slot contains a focusable element, the id is
+ *   applied to that element (since aria-describedby is not inherited from the
+ *   wrapper); otherwise it lives on the wrapper, which is also the tab stop.
+ * - If the slot content isn't natively focusable, the wrapper exposes
+ *   `tabindex="0"` so the tooltip's trigger is reachable by keyboard.
+ *
+ * Tooltips per the spec should not contain interactive content — for that,
+ * build a non-modal dialog (popover) instead.
  *
  * @component cat-tooltip
  * @example
@@ -25,53 +56,135 @@ import { ref, computed } from 'vue'
  */
 
 interface Props {
-  /**
-   * Tooltip text content.
-   */
+  /** Tooltip text content. */
   text: string
-
-  /**
-   * Tooltip position relative to element.
-   * @default 'top'
-   */
+  /** Tooltip position relative to element. @default 'top' */
   position?: 'top' | 'bottom' | 'left' | 'right'
+  /**
+   * Force the wrapper to be focusable even when the slot already contains a
+   * focusable element. Defaults to auto-detect on mount.
+   */
+  alwaysFocusable?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  position: 'top'
+  position: 'top',
+  alwaysFocusable: false
 })
 
-const tooltipRef = ref<HTMLElement | null>(null)
+const wrapperRef = ref<HTMLElement | null>(null)
+const isVisible = ref(false)
+const slotIsFocusable = ref(false)
 const adjustedPosition = ref<string | null>(null)
+const tooltipId = useId()
 
-const effectivePosition = computed(() => {
-  return adjustedPosition.value || props.position
+// Slot element we've applied aria-describedby to, so we can clean it up when
+// the slot changes or the component unmounts.
+let describedSlotEl: HTMLElement | null = null
+
+const effectivePosition = computed(() => adjustedPosition.value || props.position)
+const needsTabindex = computed(() => props.alwaysFocusable || !slotIsFocusable.value)
+
+function detectFocusableSlot () {
+  const wrapper = wrapperRef.value
+  if (!wrapper) {
+    applyDescribedBy(null)
+    return
+  }
+  const focusable = wrapper.querySelector<HTMLElement>(
+    'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  )
+  // The tooltip bubble itself contains no focusable elements by design, so
+  // any focusable here is from the user's slot.
+  const isSlotFocusable = focusable !== null && !focusable.classList.contains('cat-tooltip-bubble')
+  slotIsFocusable.value = isSlotFocusable
+  applyDescribedBy(isSlotFocusable ? focusable : null)
+}
+
+// aria-describedby is not inherited, so when the slot child is the tab stop it
+// must carry the id itself. Append/remove our id without clobbering any
+// existing aria-describedby the consumer set.
+function applyDescribedBy (el: HTMLElement | null) {
+  if (el === describedSlotEl) return
+  if (describedSlotEl) {
+    const existing = describedSlotEl.getAttribute('aria-describedby')
+    if (existing) {
+      const ids = existing.split(/\s+/).filter(id => id && id !== tooltipId)
+      if (ids.length) describedSlotEl.setAttribute('aria-describedby', ids.join(' '))
+      else describedSlotEl.removeAttribute('aria-describedby')
+    }
+  }
+  describedSlotEl = el
+  if (el) {
+    const existing = el.getAttribute('aria-describedby')
+    const ids = existing ? existing.split(/\s+/).filter(Boolean) : []
+    if (!ids.includes(tooltipId)) ids.push(tooltipId)
+    el.setAttribute('aria-describedby', ids.join(' '))
+  }
+}
+
+function isFocusInside (): boolean {
+  const active = document.activeElement
+  return !!(active && wrapperRef.value && wrapperRef.value.contains(active))
+}
+
+function relatedTargetInside (event: FocusEvent | MouseEvent): boolean {
+  const target = event.relatedTarget as Node | null
+  return !!(target && wrapperRef.value && wrapperRef.value.contains(target))
+}
+
+function show () {
+  isVisible.value = true
+  nextTick(adjustPosition)
+}
+
+function onMouseleave (event: MouseEvent) {
+  if (relatedTargetInside(event)) return
+  if (isFocusInside()) return
+  hide()
+}
+
+function onFocusout (event: FocusEvent) {
+  if (relatedTargetInside(event)) return
+  hide()
+}
+
+function hide () {
+  isVisible.value = false
+  adjustedPosition.value = null
+}
+
+onMounted(() => {
+  detectFocusableSlot()
+})
+
+onUpdated(() => {
+  detectFocusableSlot()
+})
+
+onBeforeUnmount(() => {
+  applyDescribedBy(null)
 })
 
 function adjustPosition () {
-  if (!tooltipRef.value) return
-
-  // Reset to original position first
+  if (!wrapperRef.value) return
   adjustedPosition.value = null
 
-  // Wait for next frame to get proper dimensions
   requestAnimationFrame(() => {
-    if (!tooltipRef.value) return
+    if (!wrapperRef.value) return
 
-    const rect = tooltipRef.value.getBoundingClientRect()
-    const tooltipWidth = 300 // max-width of tooltip
-    const tooltipHeight = 100 // estimated max height
-    const margin = 20 // safety margin
+    const rect = wrapperRef.value.getBoundingClientRect()
+    const tooltipWidth = 300
+    const tooltipHeight = 100
+    const margin = 20
 
-    let newPosition = props.position
+    let newPosition: 'top' | 'bottom' | 'left' | 'right' = props.position
 
-    // Check horizontal clipping
     if (props.position === 'top' || props.position === 'bottom') {
       const tooltipLeft = rect.left + rect.width / 2 - tooltipWidth / 2
       const tooltipRight = rect.left + rect.width / 2 + tooltipWidth / 2
 
       if (tooltipLeft < margin) {
-        // Would clip on left, try right position
         if (rect.right + tooltipWidth + margin < window.innerWidth) {
           newPosition = 'right'
         } else if (props.position === 'top') {
@@ -80,7 +193,6 @@ function adjustPosition () {
           newPosition = 'top'
         }
       } else if (tooltipRight > window.innerWidth - margin) {
-        // Would clip on right, try left position
         if (rect.left - tooltipWidth - margin > 0) {
           newPosition = 'left'
         } else if (props.position === 'top') {
@@ -91,26 +203,16 @@ function adjustPosition () {
       }
     }
 
-    // Check vertical clipping
-    if (props.position === 'top') {
-      if (rect.top - tooltipHeight < margin) {
-        newPosition = 'bottom'
-      }
-    } else if (props.position === 'bottom') {
-      if (rect.bottom + tooltipHeight > window.innerHeight - margin) {
-        newPosition = 'top'
-      }
+    if (props.position === 'top' && rect.top - tooltipHeight < margin) {
+      newPosition = 'bottom'
+    } else if (props.position === 'bottom' && rect.bottom + tooltipHeight > window.innerHeight - margin) {
+      newPosition = 'top'
     }
 
-    // Check left/right positions
-    if (props.position === 'left') {
-      if (rect.left - tooltipWidth < margin) {
-        newPosition = 'right'
-      }
-    } else if (props.position === 'right') {
-      if (rect.right + tooltipWidth > window.innerWidth - margin) {
-        newPosition = 'left'
-      }
+    if (props.position === 'left' && rect.left - tooltipWidth < margin) {
+      newPosition = 'right'
+    } else if (props.position === 'right' && rect.right + tooltipWidth > window.innerWidth - margin) {
+      newPosition = 'left'
     }
 
     if (newPosition !== props.position) {
@@ -133,8 +235,14 @@ $tooltip-offset: 8px;
   position: relative;
   display: inline-block;
 
-  &::after {
-    content: attr(data-tooltip);
+  // Wrapper-applied focus ring when the slot itself isn't focusable.
+  &[tabindex]:focus-visible {
+    outline: 2px solid $black;
+    outline-offset: 2px;
+    border-radius: $radius-small;
+  }
+
+  .cat-tooltip-bubble {
     position: absolute;
     padding: 8px 12px;
     background: $tooltip-bg;
@@ -163,17 +271,16 @@ $tooltip-offset: 8px;
     z-index: 1000;
   }
 
-  &:hover {
-    &::after,
+  &.is-visible {
+    .cat-tooltip-bubble,
     &::before {
       opacity: 1;
       visibility: visible;
     }
   }
 
-  // Top position (default)
   &.is-tooltip-top {
-    &::after {
+    .cat-tooltip-bubble {
       bottom: 100%;
       left: 50%;
       transform: translateX(-50%);
@@ -189,9 +296,8 @@ $tooltip-offset: 8px;
     }
   }
 
-  // Bottom position
   &.is-tooltip-bottom {
-    &::after {
+    .cat-tooltip-bubble {
       top: 100%;
       left: 50%;
       transform: translateX(-50%);
@@ -207,9 +313,8 @@ $tooltip-offset: 8px;
     }
   }
 
-  // Left position
   &.is-tooltip-left {
-    &::after {
+    .cat-tooltip-bubble {
       right: 100%;
       top: 50%;
       transform: translateY(-50%);
@@ -225,9 +330,8 @@ $tooltip-offset: 8px;
     }
   }
 
-  // Right position
   &.is-tooltip-right {
-    &::after {
+    .cat-tooltip-bubble {
       left: 100%;
       top: 50%;
       transform: translateY(-50%);

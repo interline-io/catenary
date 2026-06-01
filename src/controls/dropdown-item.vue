@@ -3,30 +3,35 @@
     v-if="separator"
     class="dropdown-divider"
   >
-  <a
+  <button
     v-else
+    type="button"
     :class="itemClass"
+    :role="effectiveRole"
     :aria-disabled="props.disabled"
-    :role="props.ariaRole"
+    :aria-selected="effectiveRole === 'option' ? isSelected : undefined"
+    :tabindex="-1"
+    :disabled="props.disabled"
     @click.stop="handleClick"
   >
     <slot>{{ label }}</slot>
-  </a>
+  </button>
 </template>
 
 <script setup lang="ts" generic="T = any">
 import { inject, computed } from 'vue'
 
 /**
- * Dropdown item component - must be used within cat-dropdown.
- * Represents a single selectable option in a dropdown menu.
- * Type-safe with generic support matching parent dropdown's type.
+ * Dropdown item — child of cat-dropdown. Renders as a native `<button>` for
+ * keyboard reachability; the parent cat-dropdown manages roving focus via
+ * ArrowUp / ArrowDown.
+ *
+ * Role defaults to `menuitem` (for action menus) or `option` when the parent
+ * dropdown is `selectable`.
  *
  * @component cat-dropdown-item
  * @example
- * <cat-dropdown-item value="option1">
- *   Option 1
- * </cat-dropdown-item>
+ * <cat-dropdown-item value="option1">Option 1</cat-dropdown-item>
  */
 
 const props = withDefaults(defineProps<{
@@ -40,7 +45,7 @@ const props = withDefaults(defineProps<{
   active?: boolean
   /** Render as a separator (divider) */
   separator?: boolean
-  /** ARIA role for accessibility @default 'listitem' */
+  /** Override ARIA role. Defaults to 'option' when parent dropdown is selectable, else 'menuitem'. */
   ariaRole?: string
   /** Color variant for this item (overrides parent dropdown variant) */
   variant?: import('./types').DropdownTriggerVariant
@@ -52,7 +57,7 @@ const props = withDefaults(defineProps<{
   disabled: false,
   active: false,
   separator: false,
-  ariaRole: 'listitem',
+  ariaRole: undefined,
   variant: undefined,
   nested: false
 })
@@ -60,6 +65,7 @@ const props = withDefaults(defineProps<{
 interface DropdownContext<T> {
   handleItemClick: (value: T) => void
   isMultiple: boolean
+  isSelectable: boolean
   selectedValue: { value: T | T[] | undefined }
   variant?: { value: import('./types').DropdownTriggerVariant | undefined }
 }
@@ -76,6 +82,11 @@ const isSelected = computed(() => {
   }
 
   return selectedValue === props.value
+})
+
+const effectiveRole = computed(() => {
+  if (props.ariaRole) return props.ariaRole
+  return dropdown?.isSelectable ? 'option' : 'menuitem'
 })
 
 const itemClass = computed(() => ({
@@ -98,10 +109,25 @@ function handleClick (event: MouseEvent) {
 </script>
 
 <style lang="scss" scoped>
+@use "bulma/sass/utilities/initial-variables" as *;
+@use "bulma/sass/utilities/derived-variables" as *;
+
 .dropdown-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  width: 100%;
+  text-align: inherit;
+  background: transparent;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.dropdown-item:focus-visible {
+  outline: 2px solid $link;
+  outline-offset: -2px;
 }
 
 .dropdown-item.is-disabled {
@@ -123,7 +149,7 @@ function handleClick (event: MouseEvent) {
   top: 0;
   bottom: 0;
   width: 2px;
-  background-color: var(--bulma-border, #dbdbdb);
+  background-color: $border;
 }
 
 /* Horizontal branch connecting to the vertical trunk line */
@@ -134,7 +160,7 @@ function handleClick (event: MouseEvent) {
   top: 50%;
   width: 0.5rem;
   height: 2px;
-  background-color: var(--bulma-border, #dbdbdb);
+  background-color: $border;
   transform: translateY(-50%);
 }
 </style>

@@ -192,3 +192,30 @@ const iconSize = computed((): 'small' | 'medium' | 'large' | undefined => {
   return 'small'
 })
 </script>
+
+<style lang="scss" scoped>
+@use "bulma/sass/utilities/initial-variables" as *;
+@use "bulma/sass/utilities/derived-variables" as *;
+
+/**
+ * WCAG 2.1 SC 1.4.11 / 2.4.7: focused buttons must have a focus indicator with
+ * at least 3:1 contrast against the button background. Bulma's default focus
+ * shadow on color variants (especially is-primary / is-link) doesn't meet that
+ * threshold on light backgrounds, so we layer a high-contrast outline on top.
+ *
+ * Uses :focus-visible so mouse clicks don't trigger the outline — only keyboard
+ * focus does.
+ */
+.button:focus-visible {
+  outline: 2px solid $black;
+  outline-offset: 2px;
+  // Bulma's box-shadow focus ring stays for the "soft" look on light variants.
+}
+
+// Variants with dark backgrounds need a light outline instead.
+@each $name in (primary, link, info, success, warning, danger, dark) {
+  .button.is-#{$name}:not(.is-outlined):not(.is-inverted):focus-visible {
+    outline-color: $white;
+  }
+}
+</style>
