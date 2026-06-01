@@ -209,15 +209,22 @@ export function testA11y (
 /**
  * Run axe-core on a mounted component and assert no violations.
  *
- * Caveat: jsdom does not compute real styles, so axe under Vitest cannot detect
- * color-contrast issues. Use the browser axe DevTools extension on the playground
- * for those checks.
+ * Caveat: jsdom does not compute real styles, so the color-contrast rule is
+ * disabled here (and would noisily warn about canvas anyway). Use the browser
+ * axe DevTools extension on the playground for contrast checks.
  */
 export async function expectNoAxeViolations (
   wrapper: VueWrapper,
   options?: Parameters<typeof axe>[1]
 ): Promise<void> {
-  const results = await axe(wrapper.element, options)
+  const mergedOptions = {
+    ...options,
+    rules: {
+      'color-contrast': { enabled: false },
+      ...(options?.rules ?? {})
+    }
+  }
+  const results = await axe(wrapper.element, mergedOptions)
   if (results.violations.length > 0) {
     const summary = results.violations
       .map(v => `  - [${v.impact}] ${v.id}: ${v.description} (${v.nodes.length} nodes)`)

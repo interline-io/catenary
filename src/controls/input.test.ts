@@ -139,4 +139,23 @@ describe('CatInput', () => {
 
     expect(wrapper.find('input').attributes('maxlength')).toBe('20')
   })
+
+  it('exposes focus() so parents can move focus programmatically', async () => {
+    const wrapper = mountComponent(CatInput, {
+      attachTo: document.body,
+      props: { modelValue: '' }
+    })
+
+    const exposed = wrapper.vm as unknown as { focus: () => void, blur: () => void }
+    expect(typeof exposed.focus).toBe('function')
+    expect(typeof exposed.blur).toBe('function')
+
+    exposed.focus()
+    expect(document.activeElement).toBe(wrapper.find('input').element)
+
+    exposed.blur()
+    expect(document.activeElement).not.toBe(wrapper.find('input').element)
+
+    wrapper.unmount()
+  })
 })

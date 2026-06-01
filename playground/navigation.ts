@@ -26,6 +26,7 @@ export const controlsGroups: NavGroup[] = [
       { name: 'Taginput', path: '/controls/taginput', icon: 'tag-multiple' },
       { name: 'Datepicker', path: '/controls/datepicker', icon: 'calendar' },
       { name: 'Field', path: '/controls/field', icon: 'form-textbox-password' },
+      { name: 'Fieldset', path: '/controls/fieldset', icon: 'form-textbox-lock' },
       { name: 'Slider', path: '/controls/slider', icon: 'tune' }
     ]
   },
