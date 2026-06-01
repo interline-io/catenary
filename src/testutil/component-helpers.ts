@@ -1,7 +1,7 @@
 import { mount } from '@vue/test-utils'
 import type { VueWrapper } from '@vue/test-utils'
 import { expect } from 'vitest'
-import { axe } from 'vitest-axe'
+import { axe } from './axe'
 
 /**
  * Helper utilities for testing t-* components
