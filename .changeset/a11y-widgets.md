@@ -11,4 +11,13 @@ Rebuild interactive widgets around their WAI-ARIA Authoring Practices patterns f
 - **`cat-button`** — adds a `:focus-visible` outline override meeting WCAG SC 1.4.11 (3:1 contrast) on Bulma's color variants. Mouse clicks don't trigger the outline.
 - **`cat-table`** — new `caption`, `captionHidden`, and `ariaLabel` props. Sortable headers gain `aria-sort=ascending/descending/none` and now render the column label inside a real `<button>` so keyboard users can change sort via Enter/Space.
 
-Consumers with CSS targeting the old DOM structure of these widgets (e.g., selectors expecting `<div>` instead of `<button>` for tabs or dropdown items) may need to update their selectors.
+### CSS impact (no Vue template changes needed)
+
+Existing `<cat-*>` templates keep working — no consumer template needs to be edited. However, the rebuilt internal markup will break CSS selectors that targeted the old DOM. Grep your consumer for these patterns:
+
+- **`cat-tabs`**: was Bulma's `<ul><li><a class="is-active">` structure; now `<div role="tablist"><button role="tab" class="cat-tab is-active">`. Selectors like `.tabs ul`, `.tabs li`, `.tabs a`, `.tabs a.is-active` will silently stop matching. Style `.cat-tab` / `.cat-tab.is-active` instead.
+- **`cat-dropdown-item`**: was `<a class="dropdown-item">`; now `<button class="dropdown-item">`. Selectors like `a.dropdown-item` or `.dropdown-content a` won't match — drop the tag qualifier or switch to `button.dropdown-item`.
+- **`cat-table`**: sortable column labels now render inside a `<button class="cat-table-sort">` nested in the `<th>`. Selectors targeting text or hover state directly on `th.is-sortable` may need to move to `.cat-table-sort` (e.g., `th.is-sortable:hover` no longer paints the text since the button fills the cell).
+- **`cat-dropdown`**: the menu container's default `ariaRole` changed from `'list'` to `'menu'` (or `'listbox'` when `selectable`). Tests or queries that read `role="list"` need updating.
+
+If your consumer styles or queries don't match any of the above, this change is non-breaking for you.
