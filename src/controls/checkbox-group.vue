@@ -4,7 +4,7 @@
     class="cat-checkbox-group"
     :class="groupClasses"
   >
-    <legend v-if="hasLabel" class="label" :class="{ 'is-sr-only': hiddenLabel }">
+    <legend v-if="hasLabel" class="label" :class="{ 'is-sr-only': hiddenLegend }">
       <slot name="label">
         {{ label }}
       </slot>
@@ -132,7 +132,7 @@ const props = withDefaults(defineProps<{
   /** Group label rendered as a `<legend>` inside a `<fieldset>` wrapper. Without this, the group renders as a plain `<div>` (no fieldset semantics). */
   label?: string
   /** Visually hide the legend while keeping it readable by assistive technology. */
-  hiddenLabel?: boolean
+  hiddenLegend?: boolean
   /** Selected values (v-model). `undefined`: all selected when undefinedMeansNone is false (default), `[]`: none selected, `['a', 'b']`: specific items selected */
   modelValue?: V[]
   /** Available options to display as checkboxes. Can be an array of strings/numbers or objects. */
@@ -161,7 +161,7 @@ const props = withDefaults(defineProps<{
   size?: CheckboxSize
 }>(), {
   label: undefined,
-  hiddenLabel: false,
+  hiddenLegend: false,
   modelValue: undefined,
   undefinedMeansNone: false,
   valueField: 'value',
