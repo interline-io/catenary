@@ -11,8 +11,8 @@
       :tabindex="expandable ? 0 : undefined"
       :aria-expanded="expandable ? isOpen : undefined"
       @click="expandable && toggle()"
-      @keydown.enter="expandable && toggle()"
-      @keydown.space.prevent="expandable && toggle()"
+      @keydown.enter.self="expandable && toggle()"
+      @keydown.space.self.prevent="expandable && toggle()"
     >
       <span>{{ title || defaultTitle }}</span>
       <cat-icon

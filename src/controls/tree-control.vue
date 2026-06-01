@@ -7,6 +7,7 @@
         type="button"
         class="expand-button"
         :class="expanded ? 'expand-button-down' : 'expand-button-right'"
+        :title="expanded ? 'Collapse' : 'Expand'"
         :aria-label="expanded ? 'Collapse' : 'Expand'"
         :aria-expanded="expanded"
         @click="toggleExpand"

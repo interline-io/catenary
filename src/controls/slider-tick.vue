@@ -4,7 +4,7 @@
     :type="setValue ? 'button' : undefined"
     class="cat-slider-tick"
     :class="{ 'is-clickable': !!setValue }"
-    @click="handleClick"
+    v-on="setValue ? { click: handleClick } : {}"
   >
     <slot />
   </component>

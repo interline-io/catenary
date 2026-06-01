@@ -194,6 +194,9 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
+@use "bulma/sass/utilities/initial-variables" as *;
+@use "bulma/sass/utilities/derived-variables" as *;
+
 /* Override default button styling so the clickable right icon visually
    matches the non-clickable span variant. */
 .cat-input-icon-button {
@@ -204,7 +207,7 @@ defineExpose({
   color: inherit;
 
   &:focus-visible {
-    outline: 2px solid var(--bulma-link, #485fc7);
+    outline: 2px solid $link;
     outline-offset: -2px;
   }
 }
