@@ -1,0 +1,58 @@
+name: CI
+
+# Lint, type-check, test, and build on every PR. The accessibility gates live
+# here:
+#   - eslint-plugin-vuejs-accessibility runs as part of `pnpm lint` and
+#     `pnpm check`. Error-level a11y rules block this workflow; the
+#     `--max-warnings` cap in package.json blocks warning-count regressions.
+#   - vitest-axe assertions run as part of `pnpm test`. New axe violations
+#     in any touched component block this workflow.
+#
+# publish.yml runs the same checks on every push (because branch versions are
+# auto-published), so this workflow is the explicit, clearly-named gate for
+# PR reviewers — both workflows must stay green.
+
+on:
+  pull_request:
+    branches:
+      - main
+
+# Cancel in-flight runs when a new commit lands on the same PR branch.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    name: lint • check • test • build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prepare playground types
+        run: pnpm dev:prepare
+
+      - name: Lint (incl. eslint-plugin-vuejs-accessibility)
+        run: pnpm lint
+
+      - name: Type-check
+        run: pnpm check
+
+      - name: Test (incl. vitest-axe assertions)
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
