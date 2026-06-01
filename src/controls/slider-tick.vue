@@ -1,7 +1,13 @@
 <template>
-  <div class="cat-slider-tick" :class="{ 'is-clickable': !!setValue }" @click="handleClick">
+  <component
+    :is="setValue ? 'button' : 'div'"
+    :type="setValue ? 'button' : undefined"
+    class="cat-slider-tick"
+    :class="{ 'is-clickable': !!setValue }"
+    @click="handleClick"
+  >
     <slot />
-  </div>
+  </component>
 </template>
 
 <script setup lang="ts">
@@ -35,6 +41,13 @@ function handleClick () {
   white-space: nowrap;
   font-size: $size-small;
   color: $grey;
+}
+
+button.cat-slider-tick {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font: inherit;
 
   &.is-clickable {
     cursor: pointer;
@@ -42,6 +55,11 @@ function handleClick () {
 
     &:hover {
       color: $link;
+    }
+
+    &:focus-visible {
+      outline: 2px solid $link;
+      outline-offset: 2px;
     }
   }
 }

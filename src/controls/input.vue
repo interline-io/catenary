@@ -17,14 +17,21 @@
       @input="handleInput"
     >
     <span v-if="icon" class="icon is-left">
-      <i :class="`mdi mdi-${icon}`" />
+      <i :class="`mdi mdi-${icon}`" aria-hidden="true" />
     </span>
-    <span
-      v-if="iconRight"
-      class="icon is-right"
-      :class="{ 'is-clickable': iconRightClickable }"
-      :style="iconRightClickable ? 'cursor: pointer; pointer-events: all;' : ''"
+    <button
+      v-if="iconRight && iconRightClickable"
+      type="button"
+      class="icon is-right is-clickable cat-input-icon-button"
+      :aria-label="iconRightAriaLabel || 'Action'"
       @click="handleIconRightClick"
+    >
+      <i :class="`mdi mdi-${iconRight}`" aria-hidden="true" />
+    </button>
+    <span
+      v-else-if="iconRight"
+      class="icon is-right"
+      aria-hidden="true"
     >
       <i :class="`mdi mdi-${iconRight}`" />
     </span>
@@ -84,6 +91,8 @@ const props = withDefaults(defineProps<{
   iconRight?: string
   /** Make right icon clickable. @default false */
   iconRightClickable?: boolean
+  /** Accessible label for the right icon when clickable. */
+  iconRightAriaLabel?: string
   /** Make input take full width (expanded). @default false */
   expanded?: boolean
 }>(), {
@@ -104,6 +113,7 @@ const props = withDefaults(defineProps<{
   icon: undefined,
   iconRight: undefined,
   iconRightClickable: false,
+  iconRightAriaLabel: undefined,
   expanded: false
 })
 
@@ -174,3 +184,20 @@ function handleIconRightClick (event: MouseEvent) {
   }
 }
 </script>
+
+<style scoped lang="scss">
+/* Override default button styling so the clickable right icon visually
+   matches the non-clickable span variant. */
+.cat-input-icon-button {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  pointer-events: all;
+  color: inherit;
+
+  &:focus-visible {
+    outline: 2px solid var(--bulma-link, #485fc7);
+    outline-offset: -2px;
+  }
+}
+</style>

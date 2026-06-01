@@ -1,28 +1,41 @@
 <template>
-  <a
+  <button
     v-if="isDelete"
+    type="button"
     class="tag is-delete"
+    aria-label="Delete"
     @click="handleClick"
   />
-  <span
+  <component
+    :is="hasClickListener ? 'button' : 'span'"
     v-else
+    :type="hasClickListener ? 'button' : undefined"
     class="tag"
     :class="tagClasses"
-    @click="handleClick"
+    @click="hasClickListener ? handleClick() : undefined"
   >
     <slot>{{ label }}</slot>
     <button
       v-if="closable"
       type="button"
       class="delete is-small"
+      aria-label="Remove"
       @click.stop="handleClose"
     />
-  </span>
+  </component>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, getCurrentInstance } from 'vue'
 import type { TagVariant, TagSize } from './types'
+
+// Reflect whether the parent attached a click listener so we can render the
+// tag as a <button> (keyboard-accessible) only when it's actually clickable.
+const instance = getCurrentInstance()
+const hasClickListener = computed(() => {
+  const attrs = instance?.vnode?.props ?? {}
+  return 'onClick' in attrs
+})
 
 interface Props {
   /**
