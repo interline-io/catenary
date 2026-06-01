@@ -27,8 +27,8 @@
     "build:playground": "nuxi generate playground",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "lint": "eslint . --max-warnings 34",
-    "check": "eslint . --max-warnings 34 && vue-tsc --noEmit && nuxi typecheck playground"
+    "lint": "eslint . --max-warnings 29",
+    "check": "eslint . --max-warnings 29 && vue-tsc --noEmit && nuxi typecheck playground"
   },
   "peerDependencies": {
     "@mdi/font": "^7.4.0",
