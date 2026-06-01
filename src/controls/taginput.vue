@@ -2,11 +2,11 @@
   <div
     class="cat-taginput"
     :class="containerClasses"
-    role="combobox"
+    :role="readonly ? undefined : 'combobox'"
     :aria-label="placeholder || 'Tag input'"
-    :aria-expanded="showDropdown"
-    :aria-haspopup="'listbox'"
-    :aria-controls="listboxId"
+    :aria-expanded="readonly ? undefined : showDropdown"
+    :aria-haspopup="readonly ? undefined : 'listbox'"
+    :aria-controls="readonly ? undefined : listboxId"
   >
     <!-- Selected tags (above input) -->
     <div class="cat-taginput-tags" role="list" aria-label="Selected tags">
