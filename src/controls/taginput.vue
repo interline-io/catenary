@@ -6,7 +6,7 @@
     :aria-label="placeholder || 'Tag input'"
     :aria-expanded="showDropdown"
     :aria-haspopup="'listbox'"
-    :aria-owns="listboxId"
+    :aria-controls="listboxId"
   >
     <!-- Selected tags (above input) -->
     <div class="cat-taginput-tags" role="list" aria-label="Selected tags">

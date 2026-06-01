@@ -33,6 +33,34 @@ export const eslintStylisticRules: Linter.RulesRecord = {
   '@stylistic/max-statements-per-line': ['error', { max: 3 }],
 }
 
+// Vue accessibility rules from eslint-plugin-vuejs-accessibility's `flat/recommended`.
+// Started as 'warn' so the lint job surfaces a11y findings without blocking CI while
+// the codebase catches up. Promote individual rules to 'error' as they reach zero violations.
+export const eslintA11yRules: Linter.RulesRecord = {
+  'vuejs-accessibility/alt-text': 'warn',
+  'vuejs-accessibility/anchor-has-content': 'warn',
+  'vuejs-accessibility/aria-props': 'error',
+  'vuejs-accessibility/aria-role': 'error',
+  'vuejs-accessibility/aria-unsupported-elements': 'error',
+  'vuejs-accessibility/click-events-have-key-events': 'warn',
+  'vuejs-accessibility/form-control-has-label': 'warn',
+  'vuejs-accessibility/heading-has-content': 'warn',
+  'vuejs-accessibility/iframe-has-title': 'error',
+  'vuejs-accessibility/interactive-supports-focus': 'warn',
+  'vuejs-accessibility/label-has-for': ['warn', {
+    required: { some: ['nesting', 'id'] },
+  }],
+  'vuejs-accessibility/media-has-caption': 'warn',
+  'vuejs-accessibility/mouse-events-have-key-events': 'warn',
+  'vuejs-accessibility/no-access-key': 'error',
+  'vuejs-accessibility/no-autofocus': 'warn',
+  'vuejs-accessibility/no-distracting-elements': 'error',
+  'vuejs-accessibility/no-redundant-roles': 'error',
+  'vuejs-accessibility/no-static-element-interactions': 'warn',
+  'vuejs-accessibility/role-has-required-aria-props': 'error',
+  'vuejs-accessibility/tabindex-no-positive': 'error',
+}
+
 export const stylisticConfig = {
   flat: true,
   indent: 2,
@@ -44,5 +72,6 @@ export const eslintConfig: { rules: Linter.RulesRecord } = {
   rules: {
     ...eslintTypescriptRules,
     ...eslintStylisticRules,
+    ...eslintA11yRules,
   },
 }
