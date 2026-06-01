@@ -123,7 +123,13 @@ function registerTab (label: string, value: string | number, icon: string | unde
   }
 }
 
+function deregisterTab (value: string | number) {
+  const idx = tabs.value.findIndex(t => t.value === value)
+  if (idx >= 0) tabs.value.splice(idx, 1)
+}
+
 provide('registerTab', registerTab)
+provide('deregisterTab', deregisterTab)
 provide('activeTab', computed(() => props.modelValue))
 
 function selectTab (value: string | number) {

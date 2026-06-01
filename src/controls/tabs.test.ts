@@ -113,4 +113,38 @@ describe('cat-tabs WAI-ARIA tablist', () => {
     await expectNoAxeViolations(wrapper)
     wrapper.unmount()
   })
+
+  it('deregisters tabs when their tab-item unmounts', async () => {
+    const active = ref('one')
+    const showSecond = ref(true)
+    const Host = defineComponent({
+      components: { CatTabs, CatTabItem },
+      setup () {
+        return () => h(CatTabs, {
+          'modelValue': active.value,
+          'aria-label': 'Demo',
+          'onUpdate:modelValue': (v: string | number) => { active.value = String(v) }
+        }, () => [
+          h(CatTabItem, { label: 'One', value: 'one' }, () => 'Panel 1'),
+          showSecond.value ? h(CatTabItem, { label: 'Two', value: 'two' }, () => 'Panel 2') : null,
+          h(CatTabItem, { label: 'Three', value: 'three' }, () => 'Panel 3')
+        ])
+      }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.findAll('[role="tab"]')).toHaveLength(3)
+
+    showSecond.value = false
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+
+    const remaining = wrapper.findAll('[role="tab"]')
+    expect(remaining).toHaveLength(2)
+    const labels = remaining.map(t => t.text())
+    expect(labels).toEqual(['One', 'Three'])
+
+    wrapper.unmount()
+  })
 })

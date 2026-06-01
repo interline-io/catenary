@@ -11,7 +11,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string">
-import { inject, onMounted, computed, useId, ref, type ComputedRef } from 'vue'
+import { inject, onMounted, onBeforeUnmount, computed, useId, ref, type ComputedRef } from 'vue'
 
 /**
  * Tab panel — child of cat-tabs. Content is only displayed when the tab is active.
@@ -39,8 +39,10 @@ type RegisterTabFn = (
   tabId: string,
   panelId: string
 ) => void
+type DeregisterTabFn = (value: string | number) => void
 
 const registerTab = inject<RegisterTabFn>('registerTab')
+const deregisterTab = inject<DeregisterTabFn>('deregisterTab')
 const activeTab = inject<ComputedRef<string | number | undefined>>('activeTab')
 
 // Pair of IDs that bind tab button ↔ tabpanel via aria-controls / aria-labelledby.
@@ -51,6 +53,15 @@ const hasFocusableChild = ref(false)
 onMounted(() => {
   if (registerTab) {
     registerTab(props.label, props.value, props.icon, tabId, panelId)
+  }
+})
+
+// Drop the registration when the tab-item unmounts (e.g., v-if toggles a tab
+// off). Without this, stale entries accumulate and the parent's keyboard nav
+// can land on a value with no rendered panel.
+onBeforeUnmount(() => {
+  if (deregisterTab) {
+    deregisterTab(props.value)
   }
 })
 
