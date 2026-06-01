@@ -2,6 +2,7 @@
   <div class="control" :class="controlClasses">
     <input
       :id="fieldId"
+      ref="inputRef"
       class="input"
       :class="inputClasses"
       :type="type"
@@ -39,11 +40,12 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string">
-import { computed, inject } from 'vue'
+import { computed, inject, ref } from 'vue'
 import type { InputVariant, InputSize } from './types'
 import { FieldIdKey } from './types'
 
 const fieldId = inject(FieldIdKey, undefined)
+const inputRef = ref<HTMLInputElement | null>(null)
 
 /**
  * Text input component with Bulma styling.
@@ -183,6 +185,12 @@ function handleIconRightClick (event: MouseEvent) {
     emit('icon-right-click', event)
   }
 }
+
+defineExpose({
+  focus: () => inputRef.value?.focus(),
+  blur: () => inputRef.value?.blur(),
+  select: () => inputRef.value?.select()
+})
 </script>
 
 <style scoped lang="scss">

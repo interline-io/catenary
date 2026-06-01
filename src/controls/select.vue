@@ -171,6 +171,11 @@ function handleChange (event: Event) {
 
   emit('update:modelValue', value as T)
 }
+
+defineExpose({
+  focus: () => selectRef.value?.focus(),
+  blur: () => selectRef.value?.blur()
+})
 </script>
 
 <style lang="scss" scoped>

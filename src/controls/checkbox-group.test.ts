@@ -177,4 +177,49 @@ describe('CatCheckboxGroup', () => {
       expect(wrapper.text()).toContain('No items available')
     })
   })
+
+  describe('fieldset wrapping (label prop)', () => {
+    it('renders as <fieldset> with <legend> when label is set', () => {
+      const wrapper = mountComponent(CatCheckboxGroup, {
+        props: {
+          modelValue: ['a'],
+          options: ['a', 'b'],
+          label: 'Pick options',
+          hideSelectAll: true,
+          undefinedMeansNone: true
+        }
+      })
+      expect(wrapper.element.tagName).toBe('FIELDSET')
+      const legend = wrapper.find('legend')
+      expect(legend.exists()).toBe(true)
+      expect(legend.text()).toBe('Pick options')
+    })
+
+    it('renders as <div> with no <legend> when label is absent', () => {
+      const wrapper = mountComponent(CatCheckboxGroup, {
+        props: {
+          modelValue: ['a'],
+          options: ['a', 'b'],
+          hideSelectAll: true,
+          undefinedMeansNone: true
+        }
+      })
+      expect(wrapper.element.tagName).toBe('DIV')
+      expect(wrapper.find('legend').exists()).toBe(false)
+    })
+
+    it('applies is-sr-only to the legend when hiddenLegend is true', () => {
+      const wrapper = mountComponent(CatCheckboxGroup, {
+        props: {
+          modelValue: ['a'],
+          options: ['a', 'b'],
+          label: 'Visually hidden',
+          hiddenLegend: true,
+          hideSelectAll: true,
+          undefinedMeansNone: true
+        }
+      })
+      expect(wrapper.find('legend').classes()).toContain('is-sr-only')
+    })
+  })
 })

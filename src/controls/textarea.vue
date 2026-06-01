@@ -2,6 +2,7 @@
   <p class="control" :class="controlClasses">
     <textarea
       :id="fieldId"
+      ref="textareaRef"
       class="textarea"
       :class="textareaClasses"
       :value="modelValue"
@@ -19,11 +20,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { computed, inject, ref } from 'vue'
 import type { TextareaVariant, TextareaSize } from './types'
 import { FieldIdKey } from './types'
 
 const fieldId = inject(FieldIdKey, undefined)
+const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 interface Props {
   /**
@@ -169,4 +171,10 @@ function handleInput (event: Event) {
   const target = event.target as HTMLTextAreaElement
   emit('update:modelValue', target.value)
 }
+
+defineExpose({
+  focus: () => textareaRef.value?.focus(),
+  blur: () => textareaRef.value?.blur(),
+  select: () => textareaRef.value?.select()
+})
 </script>
