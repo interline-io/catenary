@@ -1,21 +1,26 @@
-name: Publish branch preview to GitHub Packages
+name: Release
 
 on:
   push:
-    branches-ignore:
+    branches:
       - main
+
+concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 permissions: {}
 
 jobs:
-  publish:
+  release:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
+      pull-requests: write
       packages: write
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          fetch-depth: 0
 
       - name: Install pnpm
         uses: pnpm/action-setup@0e279bb959325dab635dd2c09392533439d90093 # v6.0.8
@@ -31,18 +36,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Compute version and tags
-        id: meta
-        run: |
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          BRANCH=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9._-]/-/g' | sed 's/^-//')
-          BASE_VERSION=$(node -p "require('./package.json').version")
-          echo "version=${BASE_VERSION}-branch.${BRANCH}.${SHORT_SHA}" >> $GITHUB_OUTPUT
-          echo "tag=${BRANCH}" >> $GITHUB_OUTPUT
-
-      - name: Set version
-        run: npm version ${{ steps.meta.outputs.version }} --no-git-tag-version
-
       - name: Prepare playground types
         run: pnpm dev:prepare
 
@@ -55,7 +48,13 @@ jobs:
       - name: Build
         run: pnpm run build
 
-      - name: Publish
-        run: npm publish --tag ${{ steps.meta.outputs.tag }}
+      - name: Create Release Pull Request or Publish
+        uses: changesets/action@63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b # v1.8.0
+        with:
+          version: pnpm changeset version
+          publish: pnpm changeset publish
+          title: 'Version Packages'
+          commit: 'chore: version packages'
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
