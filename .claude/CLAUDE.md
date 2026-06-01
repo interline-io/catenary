@@ -47,11 +47,33 @@ Tests use **Vitest** with jsdom environment. Test files live alongside component
 
 ### CSS Conventions
 
-Components follow the pattern documented in the original `README-CLASSES.md`:
+Catenary is intentionally **Bulma-first**: reach for Bulma helpers/variables before inventing custom CSS. Components follow the pattern documented in the original `README-CLASSES.md`:
+
 - Root element gets both Bulma class and `cat-` prefixed CSS class (e.g., `class="card cat-card"`)
-- Bulma helpers used directly (spacing, typography, flexbox)
-- Custom/invented CSS classes use the `cat-` prefix
+- Bulma helpers used directly (spacing `m-*`/`p-*`, typography `is-size-*`, visibility `is-sr-only`/`is-hidden`, flex `is-flex`, etc.)
+- Custom/invented CSS classes use the `cat-` prefix — and only fill gaps Bulma doesn't cover
 - SCSS `@each` loops for variant styling
+
+**Use Bulma SCSS variables, not CSS-var fallbacks.** When you need a Bulma color or sizing token, prefer importing the SCSS variable rather than referencing a CSS custom property with a hardcoded hex fallback:
+
+```scss
+// Preferred — SCSS variable resolves at compile time, tracks Bulma updates
+@use "bulma/sass/utilities/derived-variables" as *;
+@use "bulma/sass/utilities/initial-variables" as *;
+
+.cat-thing:focus-visible {
+  outline: 2px solid $link;
+}
+```
+
+```scss
+// Avoid — hex fallback drifts from Bulma if the palette changes
+.cat-thing:focus-visible {
+  outline: 2px solid var(--bulma-link, #485fc7);
+}
+```
+
+The CSS-variable approach is fine in `:deep()` selectors or when Bulma intentionally exposes a runtime-customizable token, but should not be the default.
 
 ### Playground
 
