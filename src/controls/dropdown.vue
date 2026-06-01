@@ -4,11 +4,15 @@
     class="dropdown cat-dropdown"
     :class="dropdownClass"
   >
-    <!-- Wrapper catches ArrowUp/ArrowDown to open the menu; the actual interactive
-         control is the <button> inside (default slot) or the user-supplied #trigger. -->
+    <!-- Wrapper catches click + ArrowUp/ArrowDown so the trigger toggles whether
+         it's the default <button> (click bubbles up) or a user-supplied #trigger.
+         The default button intentionally has no @click handler — clicks bubble to
+         the wrapper for a single toggle. Consumers who call `toggle()` from a
+         #trigger slot's own handler should stop propagation to avoid double-firing. -->
     <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
     <div
       class="dropdown-trigger"
+      @click="toggle"
       @keydown="onTriggerKeydown"
     >
       <slot name="trigger" :toggle="toggle" :is-active="isActive">
@@ -20,7 +24,6 @@
           :aria-haspopup="ariaHaspopup"
           :aria-controls="menuId"
           :aria-expanded="isActive"
-          @click="toggle"
         >
           <span v-if="iconLeft" class="icon is-small">
             <i :class="`mdi mdi-${iconLeft}`" aria-hidden="true" />
@@ -41,6 +44,7 @@
       ref="menuRef"
       class="dropdown-menu"
       :role="menuRole"
+      :aria-multiselectable="isMultiSelectListbox || undefined"
       :style="menuStyle"
       @keydown="onMenuKeydown"
     >
@@ -194,6 +198,7 @@ function focusableTrigger (): HTMLElement | null {
 
 const menuRole = computed(() => props.ariaRole ?? (props.selectable ? 'listbox' : 'menu'))
 const ariaHaspopup = computed<'menu' | 'listbox'>(() => props.selectable ? 'listbox' : 'menu')
+const isMultiSelectListbox = computed(() => menuRole.value === 'listbox' && props.multiple)
 
 const dropdownClass = computed(() => ({
   'is-active': isActive.value,

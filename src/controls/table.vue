@@ -7,6 +7,8 @@
       class="table cat-table"
       :class="tableClasses"
       :aria-label="ariaLabel"
+      :aria-labelledby="ariaLabelledby"
+      :aria-describedby="ariaDescribedby"
     >
       <caption v-if="hasCaption" :class="{ 'is-sr-only': captionHidden }">
         <slot name="caption">
@@ -21,13 +23,22 @@
               :key="column.field"
               :class="getHeaderClasses(column)"
               :aria-sort="getAriaSort(column)"
-              @click="column.sortable ? handleSort(column.field) : null"
             >
-              {{ column.label }}
-              <span v-if="column.sortable" class="cat-sort-icon">
-                <i v-if="sortField === column.field" :class="sortIcon" />
-                <i v-else class="mdi mdi-sort" />
-              </span>
+              <button
+                v-if="column.sortable"
+                type="button"
+                class="cat-table-sort"
+                @click="handleSort(column.field)"
+              >
+                {{ column.label }}
+                <span class="cat-sort-icon">
+                  <i v-if="sortField === column.field" :class="sortIcon" />
+                  <i v-else class="mdi mdi-sort" />
+                </span>
+              </button>
+              <template v-else>
+                {{ column.label }}
+              </template>
             </th>
           </slot>
         </tr>
@@ -116,6 +127,21 @@ interface Props {
    * Prefer `caption` for sighted users; `ariaLabel` is a fallback.
    */
   ariaLabel?: string
+
+  /**
+   * Space-separated id(s) of element(s) that name this table. Use when the
+   * table's name is rendered elsewhere in the page (e.g., a tab label or a
+   * heading above the table) so screen readers can announce it without
+   * duplicating the text inside a caption.
+   */
+  ariaLabelledby?: string
+
+  /**
+   * Space-separated id(s) of element(s) that further describe this table.
+   * Use for longer-form context that complements the name — e.g., a summary
+   * sentence below the table, or a note about how the data was computed.
+   */
+  ariaDescribedby?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -127,7 +153,9 @@ const props = withDefaults(defineProps<Props>(), {
   defaultSort: undefined,
   caption: undefined,
   captionHidden: false,
-  ariaLabel: undefined
+  ariaLabel: undefined,
+  ariaLabelledby: undefined,
+  ariaDescribedby: undefined
 })
 
 const hasCaption = computed(() => Boolean(props.caption || slots.caption))
@@ -248,11 +276,30 @@ provide('registerColumn', registerColumn)
 
 .cat-table {
   th.is-sortable {
+    padding: 0;
+
+    &:hover .cat-table-sort {
+      background-color: $white-bis;
+    }
+  }
+
+  .cat-table-sort {
+    // Make the button fill the th so the entire cell is the click target,
+    // matching the previous click-anywhere-in-th behavior.
+    appearance: none;
+    background: transparent;
+    border: 0;
+    width: 100%;
+    padding: 0.5em 0.75em;
+    text-align: inherit;
+    font: inherit;
+    color: inherit;
     cursor: pointer;
     user-select: none;
 
-    &:hover {
-      background-color: $white-bis;
+    &:focus-visible {
+      outline: 2px solid $link;
+      outline-offset: -2px;
     }
   }
 

@@ -148,8 +148,23 @@ function onTablistKeydown (event: KeyboardEvent) {
   const count = tabs.value.length
   if (count === 0) return
 
-  const currentIndex = tabs.value.findIndex(t => t.value === props.modelValue)
-  const idx = currentIndex >= 0 ? currentIndex : 0
+  // Source of truth is the actually-focused tab. Each tab carries data-index,
+  // so we can read it off the active element. Falls back to modelValue if no
+  // tab is currently focused (e.g., when handler fires before focus settles).
+  let idx = -1
+  if (typeof document !== 'undefined') {
+    const focused = document.activeElement as HTMLElement | null
+    const attr = focused?.getAttribute('data-index')
+    if (attr !== null && attr !== undefined) {
+      const parsed = Number.parseInt(attr, 10)
+      if (!Number.isNaN(parsed)) idx = parsed
+    }
+  }
+  if (idx < 0) {
+    const fallback = tabs.value.findIndex(t => t.value === props.modelValue)
+    idx = fallback >= 0 ? fallback : 0
+  }
+
   const horizontalKeys = props.orientation === 'horizontal'
   const prevKey = horizontalKeys ? 'ArrowLeft' : 'ArrowUp'
   const nextKey = horizontalKeys ? 'ArrowRight' : 'ArrowDown'
@@ -197,6 +212,9 @@ watch(() => props.modelValue, () => {
 </script>
 
 <style lang="scss">
+@use "bulma/sass/utilities/initial-variables" as *;
+@use "bulma/sass/utilities/derived-variables" as *;
+
 /* Override .content ul styles for tabs - must be unscoped */
 .content .cat-tabs ul {
   margin-left: 0;
@@ -221,10 +239,10 @@ watch(() => props.modelValue, () => {
   appearance: none;
   background: transparent;
   border: 1px solid transparent;
-  border-bottom-color: var(--bulma-border, #dbdbdb);
+  border-bottom-color: $border;
   margin-bottom: -1px;
   padding: 0.5em 1em;
-  color: var(--bulma-text, #4a4a4a);
+  color: $text;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -233,17 +251,17 @@ watch(() => props.modelValue, () => {
   line-height: 1.5;
 
   &:hover {
-    color: var(--bulma-text-strong, #363636);
-    border-bottom-color: var(--bulma-text-strong, #363636);
+    color: $text-strong;
+    border-bottom-color: $text-strong;
   }
 
   &.is-active {
-    color: var(--bulma-link, #485fc7);
-    border-bottom-color: var(--bulma-link, #485fc7);
+    color: $link;
+    border-bottom-color: $link;
   }
 
   &:focus-visible {
-    outline: 2px solid var(--bulma-link, #485fc7);
+    outline: 2px solid $link;
     outline-offset: -2px;
   }
 }
@@ -253,26 +271,26 @@ watch(() => props.modelValue, () => {
   border-radius: 4px 4px 0 0;
 
   &:hover {
-    background-color: var(--bulma-background, #f5f5f5);
-    border-color: var(--bulma-border, #dbdbdb);
+    background-color: $background;
+    border-color: $border;
   }
 
   &.is-active {
-    background-color: var(--bulma-scheme-main, #fff);
-    border-color: var(--bulma-border, #dbdbdb);
+    background-color: $scheme-main;
+    border-color: $border;
     border-bottom-color: transparent;
   }
 }
 
 .cat-tabs.is-toggle .cat-tablist {
   .cat-tab {
-    border-color: var(--bulma-border, #dbdbdb);
+    border-color: $border;
     margin-bottom: 0;
 
     &.is-active {
-      background-color: var(--bulma-link, #485fc7);
-      border-color: var(--bulma-link, #485fc7);
-      color: var(--bulma-link-invert, #fff);
+      background-color: $link;
+      border-color: $link;
+      color: $white;
       z-index: 1;
     }
   }

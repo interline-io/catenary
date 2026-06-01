@@ -55,16 +55,31 @@ describe('cat-table accessibility', () => {
     wrapper.unmount()
   })
 
-  it('applies aria-sort to sortable headers', async () => {
+  it('forwards ariaLabelledby and ariaDescribedby to the <table> element', async () => {
+    const wrapper = await mountTable({
+      ariaLabelledby: 'tab-routes',
+      ariaDescribedby: 'tab-routes-summary'
+    })
+    const table = wrapper.find('table')
+    expect(table.attributes('aria-labelledby')).toBe('tab-routes')
+    expect(table.attributes('aria-describedby')).toBe('tab-routes-summary')
+    wrapper.unmount()
+  })
+
+  it('applies aria-sort to sortable headers, toggled via the inner button', async () => {
     const wrapper = await mountTable({ defaultSort: ['id', 'asc'] })
     const headers = wrapper.findAll('th')
     expect(headers[0]?.attributes('aria-sort')).toBe('ascending')
     expect(headers[1]?.attributes('aria-sort')).toBe('none')
 
-    await headers[0]?.trigger('click')
+    // Sortable headers are activated via the keyboard-accessible <button> inside the th.
+    const sortButtons = wrapper.findAll('th .cat-table-sort')
+    expect(sortButtons.length).toBe(2)
+
+    await sortButtons[0]?.trigger('click')
     expect(headers[0]?.attributes('aria-sort')).toBe('descending')
 
-    await headers[1]?.trigger('click')
+    await sortButtons[1]?.trigger('click')
     expect(headers[1]?.attributes('aria-sort')).toBe('ascending')
     expect(headers[0]?.attributes('aria-sort')).toBe('none')
     wrapper.unmount()
