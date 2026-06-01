@@ -1,6 +1,10 @@
 <template>
   <Teleport to="body">
     <div class="modal cat-modal" :class="{ 'is-active': modelValue }">
+      <!-- Backdrop click is a convenience dismissal; the WAI-ARIA-compliant
+           keyboard dismissal is Escape, handled at document level via
+           handleKeydown. -->
+      <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/click-events-have-key-events -->
       <div class="modal-background" @click="handleBackgroundClick" />
       <div class="modal-card" :class="modalCardClasses">
         <header class="modal-card-head">

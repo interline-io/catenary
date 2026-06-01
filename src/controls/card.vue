@@ -1,5 +1,8 @@
 <template>
   <div class="card cat-card" :class="{ 'cat-card--panel': variant === 'panel' }">
+    <!-- Expandable header has role="button" + tabindex + keyboard handlers
+         via dynamic binds (rule can't see those statically). -->
+    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
     <header
       v-if="label || $slots.header || $slots.actions"
       class="card-header"

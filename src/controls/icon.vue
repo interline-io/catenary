@@ -1,4 +1,9 @@
 <template>
+  <!-- Icons are decorative-by-default. The @click here only re-emits to allow
+       parent components to attach listeners; consumers must wrap clickable
+       icons in a <button> (see how cat-button uses cat-icon for icon-only
+       buttons). -->
+  <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/click-events-have-key-events -->
   <span class="icon" :class="[sizeClass, variantClass]" @click="handleClick">
     <i :class="iconClass" />
   </span>
