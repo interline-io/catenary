@@ -4,6 +4,9 @@
     class="dropdown cat-dropdown"
     :class="dropdownClass"
   >
+    <!-- Wrapper catches ArrowUp/ArrowDown to open the menu; the actual interactive
+         control is the <button> inside (default slot) or the user-supplied #trigger. -->
+    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
     <div
       class="dropdown-trigger"
       @keydown="onTriggerKeydown"
@@ -29,6 +32,10 @@
         </button>
       </slot>
     </div>
+    <!-- Element has role="menu" or "listbox" via :role binding (rule can't see
+         dynamic bindings). Items inside are focusable buttons with arrow / Home /
+         End / Escape handling on the wrapper. -->
+    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
     <div
       :id="menuId"
       ref="menuRef"

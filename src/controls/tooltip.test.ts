@@ -3,6 +3,9 @@ import { mount } from '@vue/test-utils'
 import CatTooltip from './tooltip.vue'
 import { expectNoAxeViolations } from '../testutil/component-helpers'
 
+// The template starts with an HTML comment (an eslint-disable directive), so
+// the component renders as a fragment and wrapper.element isn't the <span>.
+// Look up .cat-tooltip explicitly for attribute and class checks.
 describe('cat-tooltip', () => {
   it('renders a tooltip element with role="tooltip"', () => {
     const wrapper = mount(CatTooltip, {
@@ -19,7 +22,8 @@ describe('cat-tooltip', () => {
       props: { text: 'Save' },
       slots: { default: '<button class="button">Save</button>' }
     })
-    const describedby = wrapper.attributes('aria-describedby')
+    const tooltip = wrapper.find('.cat-tooltip')
+    const describedby = tooltip.attributes('aria-describedby')
     const tooltipId = wrapper.find('[role="tooltip"]').attributes('id')
     expect(describedby).toBeDefined()
     expect(describedby).toBe(tooltipId)
@@ -31,7 +35,7 @@ describe('cat-tooltip', () => {
       props: { text: 'Info' },
       slots: { default: '<span>Plain text</span>' }
     })
-    expect(wrapper.attributes('tabindex')).toBe('0')
+    expect(wrapper.find('.cat-tooltip').attributes('tabindex')).toBe('0')
     wrapper.unmount()
   })
 
@@ -41,14 +45,15 @@ describe('cat-tooltip', () => {
       props: { text: 'Hint' },
       slots: { default: '<button class="button">Trigger</button>' }
     })
+    const tooltip = wrapper.find('.cat-tooltip')
 
-    expect(wrapper.classes()).not.toContain('is-visible')
+    expect(tooltip.classes()).not.toContain('is-visible')
 
-    await wrapper.trigger('focusin')
-    expect(wrapper.classes()).toContain('is-visible')
+    await tooltip.trigger('focusin')
+    expect(tooltip.classes()).toContain('is-visible')
 
-    await wrapper.trigger('focusout')
-    expect(wrapper.classes()).not.toContain('is-visible')
+    await tooltip.trigger('focusout')
+    expect(tooltip.classes()).not.toContain('is-visible')
 
     wrapper.unmount()
   })
@@ -59,12 +64,13 @@ describe('cat-tooltip', () => {
       props: { text: 'Hint' },
       slots: { default: '<button class="button">Trigger</button>' }
     })
+    const tooltip = wrapper.find('.cat-tooltip')
 
-    await wrapper.trigger('mouseenter')
-    expect(wrapper.classes()).toContain('is-visible')
+    await tooltip.trigger('mouseenter')
+    expect(tooltip.classes()).toContain('is-visible')
 
-    await wrapper.trigger('keydown', { key: 'Escape' })
-    expect(wrapper.classes()).not.toContain('is-visible')
+    await tooltip.trigger('keydown', { key: 'Escape' })
+    expect(tooltip.classes()).not.toContain('is-visible')
 
     wrapper.unmount()
   })

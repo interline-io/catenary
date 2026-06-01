@@ -1,4 +1,8 @@
 <template>
+  <!-- The wrapper IS the keyboard-accessible trigger: tabindex="0" when the
+       slot has no focusable child; mouse and focus events paired per the
+       WAI-ARIA tooltip pattern. -->
+  <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
   <span
     ref="wrapperRef"
     class="cat-tooltip"
