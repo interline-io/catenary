@@ -17,7 +17,9 @@ pnpm build            # Build library (vite + vue-tsc declarations)
 pnpm test             # Run all tests (vitest)
 pnpm test -- -t "test name"  # Run a single test by name
 pnpm test -- src/controls/button.test.ts  # Run a single test file
-pnpm check            # TypeScript type checking (vue-tsc --noEmit)
+pnpm lint             # ESLint (incl. eslint-plugin-vuejs-accessibility)
+pnpm typecheck        # vue-tsc + nuxi typecheck
+pnpm check            # Lint + typecheck
 ```
 
 Requires **Node v22.21.1** (see `.nvmrc`). Use `fnm use` before running commands.

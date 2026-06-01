@@ -52,7 +52,7 @@ jobs:
         run: pnpm lint
 
       - name: Type-check
-        run: pnpm check
+        run: pnpm typecheck
 
       - name: Test (incl. vitest-axe assertions)
         run: pnpm test

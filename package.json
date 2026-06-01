@@ -28,7 +28,8 @@
     "test": "vitest run",
     "test:watch": "vitest watch",
     "lint": "eslint . --max-warnings 34",
-    "check": "eslint . --max-warnings 34 && vue-tsc --noEmit && nuxi typecheck playground"
+    "typecheck": "vue-tsc --noEmit && nuxi typecheck playground",
+    "check": "pnpm lint && pnpm typecheck"
   },
   "peerDependencies": {
     "@mdi/font": "^7.4.0",

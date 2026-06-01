@@ -176,7 +176,9 @@ pnpm install
 pnpm dev              # Start Nuxt playground at localhost:3000
 pnpm build            # Build library (dist/catenary.js + types)
 pnpm test             # Run tests (vitest + jsdom)
-pnpm check            # TypeScript type check
+pnpm lint             # ESLint (incl. eslint-plugin-vuejs-accessibility)
+pnpm typecheck        # vue-tsc + nuxi typecheck
+pnpm check            # Lint + typecheck (runs both in sequence)
 pnpm changeset        # Record a user-facing change for the next release
 ```
 
