@@ -21,13 +21,22 @@
               :key="column.field"
               :class="getHeaderClasses(column)"
               :aria-sort="getAriaSort(column)"
-              @click="column.sortable ? handleSort(column.field) : null"
             >
-              {{ column.label }}
-              <span v-if="column.sortable" class="cat-sort-icon">
-                <i v-if="sortField === column.field" :class="sortIcon" />
-                <i v-else class="mdi mdi-sort" />
-              </span>
+              <button
+                v-if="column.sortable"
+                type="button"
+                class="cat-table-sort"
+                @click="handleSort(column.field)"
+              >
+                {{ column.label }}
+                <span class="cat-sort-icon">
+                  <i v-if="sortField === column.field" :class="sortIcon" />
+                  <i v-else class="mdi mdi-sort" />
+                </span>
+              </button>
+              <template v-else>
+                {{ column.label }}
+              </template>
             </th>
           </slot>
         </tr>
@@ -248,11 +257,30 @@ provide('registerColumn', registerColumn)
 
 .cat-table {
   th.is-sortable {
+    padding: 0;
+
+    &:hover .cat-table-sort {
+      background-color: $white-bis;
+    }
+  }
+
+  .cat-table-sort {
+    // Make the button fill the th so the entire cell is the click target,
+    // matching the previous click-anywhere-in-th behavior.
+    appearance: none;
+    background: transparent;
+    border: 0;
+    width: 100%;
+    padding: 0.5em 0.75em;
+    text-align: inherit;
+    font: inherit;
+    color: inherit;
     cursor: pointer;
     user-select: none;
 
-    &:hover {
-      background-color: $white-bis;
+    &:focus-visible {
+      outline: 2px solid $link;
+      outline-offset: -2px;
     }
   }
 

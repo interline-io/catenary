@@ -1,18 +1,18 @@
 <template>
-  <!-- The wrapper IS the keyboard-accessible trigger: tabindex="0" when the
-       slot has no focusable child; mouse and focus events paired per the
-       WAI-ARIA tooltip pattern. -->
+  <!-- The wrapper IS the keyboard-accessible trigger when the slot has no
+       focusable child; otherwise the slot's focusable element is the trigger
+       and gets aria-describedby applied programmatically. -->
   <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
   <span
     ref="wrapperRef"
     class="cat-tooltip"
     :class="[`is-tooltip-${effectivePosition}`, { 'is-visible': isVisible }]"
     :tabindex="needsTabindex ? 0 : undefined"
-    :aria-describedby="tooltipId"
+    :aria-describedby="needsTabindex ? tooltipId : undefined"
     @mouseenter="show"
-    @mouseleave="hide"
+    @mouseleave="onMouseleave"
     @focusin="show"
-    @focusout="hide"
+    @focusout="onFocusout"
     @keydown.escape="hide"
   >
     <slot />
@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useId, nextTick } from 'vue'
+import { ref, computed, useId, nextTick, onMounted, onUpdated, onBeforeUnmount } from 'vue'
 
 /**
  * Accessible tooltip following the WAI-ARIA Authoring Practices tooltip pattern.
@@ -35,13 +35,18 @@ import { ref, computed, useId, nextTick } from 'vue'
  *
  * Behavior:
  * - Shows on hover (mouseenter) AND keyboard focus (focusin) of the trigger.
- * - Dismissed by mouseleave, focusout, or Escape.
- * - Tooltip is associated with the trigger via `aria-describedby` and `role="tooltip"`.
- * - If the slot content isn't natively focusable, the wrapper exposes `tabindex="0"`
- *   so the tooltip's trigger is reachable by keyboard.
+ * - Dismissed by mouseleave, focusout, or Escape — but stays open while focus
+ *   remains inside the wrapper, and while the mouse moves between wrapper
+ *   children.
+ * - Tooltip is associated with the trigger via `aria-describedby` and
+ *   `role="tooltip"`. When the slot contains a focusable element, the id is
+ *   applied to that element (since aria-describedby is not inherited from the
+ *   wrapper); otherwise it lives on the wrapper, which is also the tab stop.
+ * - If the slot content isn't natively focusable, the wrapper exposes
+ *   `tabindex="0"` so the tooltip's trigger is reachable by keyboard.
  *
- * Tooltips per the spec should not contain interactive content — for that, build a
- * non-modal dialog (popover) instead.
+ * Tooltips per the spec should not contain interactive content — for that,
+ * build a non-modal dialog (popover) instead.
  *
  * @component cat-tooltip
  * @example
@@ -73,29 +78,93 @@ const slotIsFocusable = ref(false)
 const adjustedPosition = ref<string | null>(null)
 const tooltipId = useId()
 
+// Slot element we've applied aria-describedby to, so we can clean it up when
+// the slot changes or the component unmounts.
+let describedSlotEl: HTMLElement | null = null
+
 const effectivePosition = computed(() => adjustedPosition.value || props.position)
 const needsTabindex = computed(() => props.alwaysFocusable || !slotIsFocusable.value)
 
 function detectFocusableSlot () {
-  if (!wrapperRef.value) return
-  const focusable = wrapperRef.value.querySelector<HTMLElement>(
+  const wrapper = wrapperRef.value
+  if (!wrapper) {
+    applyDescribedBy(null)
+    return
+  }
+  const focusable = wrapper.querySelector<HTMLElement>(
     'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
   )
   // The tooltip bubble itself contains no focusable elements by design, so
   // any focusable here is from the user's slot.
-  slotIsFocusable.value = focusable !== null && !focusable.classList.contains('cat-tooltip-bubble')
+  const isSlotFocusable = focusable !== null && !focusable.classList.contains('cat-tooltip-bubble')
+  slotIsFocusable.value = isSlotFocusable
+  applyDescribedBy(isSlotFocusable ? focusable : null)
+}
+
+// aria-describedby is not inherited, so when the slot child is the tab stop it
+// must carry the id itself. Append/remove our id without clobbering any
+// existing aria-describedby the consumer set.
+function applyDescribedBy (el: HTMLElement | null) {
+  if (el === describedSlotEl) return
+  if (describedSlotEl) {
+    const existing = describedSlotEl.getAttribute('aria-describedby')
+    if (existing) {
+      const ids = existing.split(/\s+/).filter(id => id && id !== tooltipId)
+      if (ids.length) describedSlotEl.setAttribute('aria-describedby', ids.join(' '))
+      else describedSlotEl.removeAttribute('aria-describedby')
+    }
+  }
+  describedSlotEl = el
+  if (el) {
+    const existing = el.getAttribute('aria-describedby')
+    const ids = existing ? existing.split(/\s+/).filter(Boolean) : []
+    if (!ids.includes(tooltipId)) ids.push(tooltipId)
+    el.setAttribute('aria-describedby', ids.join(' '))
+  }
+}
+
+function isFocusInside (): boolean {
+  const active = document.activeElement
+  return !!(active && wrapperRef.value && wrapperRef.value.contains(active))
+}
+
+function relatedTargetInside (event: FocusEvent | MouseEvent): boolean {
+  const target = event.relatedTarget as Node | null
+  return !!(target && wrapperRef.value && wrapperRef.value.contains(target))
 }
 
 function show () {
-  detectFocusableSlot()
   isVisible.value = true
   nextTick(adjustPosition)
+}
+
+function onMouseleave (event: MouseEvent) {
+  if (relatedTargetInside(event)) return
+  if (isFocusInside()) return
+  hide()
+}
+
+function onFocusout (event: FocusEvent) {
+  if (relatedTargetInside(event)) return
+  hide()
 }
 
 function hide () {
   isVisible.value = false
   adjustedPosition.value = null
 }
+
+onMounted(() => {
+  detectFocusableSlot()
+})
+
+onUpdated(() => {
+  detectFocusableSlot()
+})
+
+onBeforeUnmount(() => {
+  applyDescribedBy(null)
+})
 
 function adjustPosition () {
   if (!wrapperRef.value) return
