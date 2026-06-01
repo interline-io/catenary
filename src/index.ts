@@ -10,6 +10,7 @@ import CatDownloadJson from './controls/download-json.vue'
 import CatDropdown from './controls/dropdown.vue'
 import CatDropdownItem from './controls/dropdown-item.vue'
 import CatField from './controls/field.vue'
+import CatFieldset from './controls/fieldset.vue'
 import CatLink from './controls/link.vue'
 import CatIcon from './controls/icon.vue'
 import CatInput from './controls/input.vue'
@@ -48,6 +49,7 @@ export {
   CatDropdown,
   CatDropdownItem,
   CatField,
+  CatFieldset,
   CatIcon,
   CatLink,
   CatInput,
@@ -102,6 +104,7 @@ export const CatenaryPlugin: Plugin = {
       Dropdown: CatDropdown,
       DropdownItem: CatDropdownItem,
       Field: CatField,
+      Fieldset: CatFieldset,
       Icon: CatIcon,
       Input: CatInput,
       Link: CatLink,
@@ -148,6 +151,7 @@ declare module 'vue' {
     CatDropdown: typeof CatDropdown
     CatDropdownItem: typeof CatDropdownItem
     CatField: typeof CatField
+    CatFieldset: typeof CatFieldset
     CatIcon: typeof CatIcon
     CatInput: typeof CatInput
     CatLink: typeof CatLink

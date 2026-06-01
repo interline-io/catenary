@@ -1,5 +1,15 @@
 <template>
-  <div class="cat-checkbox-group" :class="groupClasses">
+  <component
+    :is="hasLabel ? 'fieldset' : 'div'"
+    class="cat-checkbox-group"
+    :class="groupClasses"
+  >
+    <legend v-if="hasLabel" class="label" :class="{ 'is-sr-only': hiddenLegend }">
+      <slot name="label">
+        {{ label }}
+      </slot>
+    </legend>
+
     <!-- Select All / Select None buttons -->
     <div v-if="!hideSelectAll" class="cat-checkbox-group-header">
       <div class="buttons has-addons are-small">
@@ -51,14 +61,16 @@
         </slot>
       </div>
     </div>
-  </div>
+  </component>
 </template>
 
 <script setup lang="ts" generic="V extends string | number = string, O extends V | Record<string, any> = V">
-import { computed } from 'vue'
+import { computed, useSlots } from 'vue'
 import type { CheckboxVariant, CheckboxSize } from './types'
 import CatCheckbox from './checkbox.vue'
 import CatField from './field.vue'
+
+const slots = useSlots()
 
 /**
  * Checkbox group component with "null means all" semantic support.
@@ -117,6 +129,10 @@ import CatField from './field.vue'
  */
 
 const props = withDefaults(defineProps<{
+  /** Group label rendered as a `<legend>` inside a `<fieldset>` wrapper. Without this, the group renders as a plain `<div>` (no fieldset semantics). */
+  label?: string
+  /** Visually hide the legend while keeping it readable by assistive technology. */
+  hiddenLegend?: boolean
   /** Selected values (v-model). `undefined`: all selected when undefinedMeansNone is false (default), `[]`: none selected, `['a', 'b']`: specific items selected */
   modelValue?: V[]
   /** Available options to display as checkboxes. Can be an array of strings/numbers or objects. */
@@ -144,6 +160,8 @@ const props = withDefaults(defineProps<{
   /** Size for all checkboxes. */
   size?: CheckboxSize
 }>(), {
+  label: undefined,
+  hiddenLegend: false,
   modelValue: undefined,
   undefinedMeansNone: false,
   valueField: 'value',
@@ -165,6 +183,8 @@ const emit = defineEmits<{
    */
   'update:modelValue': [value: V[] | undefined]
 }>()
+
+const hasLabel = computed(() => Boolean(props.label || slots.label))
 
 // Get all option values
 const allOptionValues = computed(() => {
