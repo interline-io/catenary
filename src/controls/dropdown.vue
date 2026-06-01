@@ -6,15 +6,18 @@
   >
     <div
       class="dropdown-trigger"
-      @click="toggle"
+      @keydown="onTriggerKeydown"
     >
-      <slot name="trigger" :toggle="toggle">
+      <slot name="trigger" :toggle="toggle" :is-active="isActive">
         <button
+          ref="triggerButtonRef"
           class="button"
           :class="{ [`is-${props.buttonVariant}`]: props.buttonVariant }"
           type="button"
-          aria-haspopup="true"
-          :aria-controls="`dropdown-menu-${uid}`"
+          :aria-haspopup="ariaHaspopup"
+          :aria-controls="menuId"
+          :aria-expanded="isActive"
+          @click="toggle"
         >
           <span v-if="iconLeft" class="icon is-small">
             <i :class="`mdi mdi-${iconLeft}`" aria-hidden="true" />
@@ -27,10 +30,12 @@
       </slot>
     </div>
     <div
-      :id="`dropdown-menu-${uid}`"
+      :id="menuId"
+      ref="menuRef"
       class="dropdown-menu"
-      role="menu"
+      :role="menuRole"
       :style="menuStyle"
+      @keydown="onMenuKeydown"
     >
       <div class="dropdown-content">
         <slot :close="close" />
@@ -40,11 +45,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, provide, useId } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, provide, useId, nextTick } from 'vue'
 
 /**
- * Dropdown component using Bulma dropdown structure.
- * Supports single and multiple selection with v-model.
+ * Dropdown component using Bulma dropdown structure with WAI-ARIA keyboard support.
+ *
+ * Implements the menu-button pattern when `selectable` is false (default), or the
+ * listbox-with-button pattern when `selectable` is true:
+ * https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/
+ * https://www.w3.org/WAI/ARIA/apg/patterns/listbox/
+ *
+ * Keyboard:
+ *   - Enter/Space on the trigger: toggle the menu.
+ *   - ArrowDown on the trigger: open and focus the first item.
+ *   - ArrowUp on the trigger: open and focus the last item.
+ *   - ArrowUp/ArrowDown inside the menu: navigate between items, wrapping at ends.
+ *   - Home/End inside the menu: jump to first/last item.
+ *   - Enter/Space inside the menu: activate the focused item.
+ *   - Escape: close the menu and return focus to the trigger.
  *
  * @component cat-dropdown
  * @example
@@ -90,10 +108,10 @@ interface Props {
   width?: number
 
   /**
-   * ARIA role for accessibility
-   * @default 'list'
+   * ARIA role for the menu container. Defaults to 'menu' for action menus
+   * and 'listbox' when `selectable` is true.
    */
-  ariaRole?: string
+  ariaRole?: 'menu' | 'listbox' | string
 
   /**
    * Label shown in default trigger button
@@ -133,7 +151,7 @@ const props = withDefaults(defineProps<Props>(), {
   multiple: false,
   position: 'bottom-left',
   inline: false,
-  ariaRole: 'list',
+  ariaRole: undefined,
   label: 'Select',
   icon: 'menu-down',
   iconLeft: undefined,
@@ -151,8 +169,24 @@ const emit = defineEmits<{
 }>()
 
 const dropdownRef = ref<HTMLElement | null>(null)
+const triggerButtonRef = ref<HTMLButtonElement | null>(null)
+const menuRef = ref<HTMLElement | null>(null)
 const isActive = ref(false)
-const uid = useId()
+const menuId = useId()
+
+function focusableTrigger (): HTMLElement | null {
+  // Prefer the default <button> we render; fall back to the first focusable
+  // element inside the user-supplied #trigger slot (e.g., cat-input).
+  if (triggerButtonRef.value) return triggerButtonRef.value
+  const triggerWrapper = dropdownRef.value?.querySelector('.dropdown-trigger')
+  if (!triggerWrapper) return null
+  return triggerWrapper.querySelector<HTMLElement>(
+    'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+  )
+}
+
+const menuRole = computed(() => props.ariaRole ?? (props.selectable ? 'listbox' : 'menu'))
+const ariaHaspopup = computed<'menu' | 'listbox'>(() => props.selectable ? 'listbox' : 'menu')
 
 const dropdownClass = computed(() => ({
   'is-active': isActive.value,
@@ -167,26 +201,89 @@ const menuStyle = computed(() => {
   return undefined
 })
 
+function focusableMenuItems (): HTMLElement[] {
+  if (!menuRef.value) return []
+  return Array.from(
+    menuRef.value.querySelectorAll<HTMLElement>(
+      '.dropdown-item:not(.is-disabled):not([aria-disabled="true"]):not(hr)'
+    )
+  )
+}
+
+function focusMenuItem (index: number) {
+  const items = focusableMenuItems()
+  if (items.length === 0) return
+  const wrapped = ((index % items.length) + items.length) % items.length
+  const target = items[wrapped]
+  if (target) {
+    target.focus()
+  }
+}
+
 function toggle () {
-  isActive.value = !isActive.value
-  if (isActive.value) {
-    emit('open')
-  } else {
-    emit('close')
+  if (isActive.value) close()
+  else open()
+}
+
+function open (focusIndex?: 'first' | 'last') {
+  if (isActive.value && focusIndex === undefined) return
+  isActive.value = true
+  emit('open')
+  if (focusIndex !== undefined) {
+    nextTick(() => {
+      focusMenuItem(focusIndex === 'first' ? 0 : focusableMenuItems().length - 1)
+    })
   }
 }
 
-function open () {
-  if (!isActive.value) {
-    isActive.value = true
-    emit('open')
+function close (returnFocus = true) {
+  if (!isActive.value) return
+  isActive.value = false
+  emit('close')
+  if (returnFocus) {
+    nextTick(() => {
+      focusableTrigger()?.focus()
+    })
   }
 }
 
-function close () {
-  if (isActive.value) {
-    isActive.value = false
-    emit('close')
+function onTriggerKeydown (event: KeyboardEvent) {
+  if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    open('first')
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    open('last')
+  } else if (event.key === 'Escape' && isActive.value) {
+    event.preventDefault()
+    close()
+  }
+}
+
+function onMenuKeydown (event: KeyboardEvent) {
+  const items = focusableMenuItems()
+  if (items.length === 0) return
+
+  const currentIndex = items.findIndex(el => el === document.activeElement)
+
+  if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    focusMenuItem((currentIndex < 0 ? 0 : currentIndex + 1))
+  } else if (event.key === 'ArrowUp') {
+    event.preventDefault()
+    focusMenuItem(currentIndex < 0 ? items.length - 1 : currentIndex - 1)
+  } else if (event.key === 'Home') {
+    event.preventDefault()
+    focusMenuItem(0)
+  } else if (event.key === 'End') {
+    event.preventDefault()
+    focusMenuItem(items.length - 1)
+  } else if (event.key === 'Escape') {
+    event.preventDefault()
+    close()
+  } else if (event.key === 'Tab') {
+    // Per WAI-ARIA: Tab from an open menu closes it and continues focus order.
+    close(false)
   }
 }
 
@@ -226,7 +323,7 @@ function handleItemClick (value: any) {
 
 function handleClickOutside (event: MouseEvent) {
   if (isActive.value && dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
-    close()
+    close(false)
   }
 }
 
@@ -251,7 +348,8 @@ provide('dropdown', {
   handleItemClick,
   isMultiple: props.multiple,
   selectedValue: computed(() => props.modelValue),
-  variant: computed(() => props.variant)
+  variant: computed(() => props.variant),
+  isSelectable: props.selectable
 })
 
 defineExpose({ open, close, toggle })

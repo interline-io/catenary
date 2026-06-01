@@ -3,7 +3,16 @@
     <div style="display: none;">
       <slot name="columns" />
     </div>
-    <table class="table cat-table" :class="tableClasses">
+    <table
+      class="table cat-table"
+      :class="tableClasses"
+      :aria-label="ariaLabel"
+    >
+      <caption v-if="hasCaption" :class="{ 'is-sr-only': captionHidden }">
+        <slot name="caption">
+          {{ caption }}
+        </slot>
+      </caption>
       <thead v-if="hasHeader">
         <tr>
           <slot name="header" :columns="columns" :sort="handleSort">
@@ -11,6 +20,7 @@
               v-for="column in columns"
               :key="column.field"
               :class="getHeaderClasses(column)"
+              :aria-sort="getAriaSort(column)"
               @click="column.sortable ? handleSort(column.field) : null"
             >
               {{ column.label }}
@@ -39,7 +49,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, provide } from 'vue'
+import { ref, computed, provide, useSlots } from 'vue'
+
+const slots = useSlots()
 
 interface Column {
   field: string
@@ -82,6 +94,28 @@ interface Props {
    * Default sort field and direction [field, 'asc' | 'desc'].
    */
   defaultSort?: [string, 'asc' | 'desc']
+
+  /**
+   * Table caption rendered as a native `<caption>`. Required for WCAG when
+   * the table's purpose is not clear from surrounding context. Use the
+   * `caption` slot for richer markup.
+   */
+  caption?: string
+
+  /**
+   * Visually hide the `<caption>` (still announced by assistive technology).
+   * Use when the table's title lives in surrounding UI — e.g., a tab name
+   * above the table — but you still want screen readers to know what the
+   * table represents.
+   * @default false
+   */
+  captionHidden?: boolean
+
+  /**
+   * Accessible name for the table when a visible caption isn't suitable.
+   * Prefer `caption` for sighted users; `ariaLabel` is a fallback.
+   */
+  ariaLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -90,8 +124,13 @@ const props = withDefaults(defineProps<Props>(), {
   striped: false,
   bordered: false,
   hoverable: false,
-  defaultSort: undefined
+  defaultSort: undefined,
+  caption: undefined,
+  captionHidden: false,
+  ariaLabel: undefined
 })
+
+const hasCaption = computed(() => Boolean(props.caption || slots.caption))
 
 const columns = ref<Column[]>([])
 const sortField = ref<string | null>(props.defaultSort?.[0] || null)
@@ -175,6 +214,12 @@ function getHeaderClasses (column: Column) {
   }
 
   return classes
+}
+
+function getAriaSort (column: Column): 'ascending' | 'descending' | 'none' | undefined {
+  if (!column.sortable) return undefined
+  if (sortField.value !== column.field) return 'none'
+  return sortDirection.value === 'asc' ? 'ascending' : 'descending'
 }
 
 function handleSort (field: string) {
