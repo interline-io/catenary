@@ -177,10 +177,13 @@ pnpm dev              # Start Nuxt playground at localhost:3000
 pnpm build            # Build library (dist/catenary.js + types)
 pnpm test             # Run tests (vitest + jsdom)
 pnpm check            # TypeScript type check
+pnpm changeset        # Record a user-facing change for the next release
 ```
 
 The `playground/` directory is a Nuxt app with interactive demos for every component. It is a devDependency and is not included in the published package.
 
 ## Publishing
 
-The library is automatically published to GitHub Packages on every push via GitHub Actions. Version is computed from `package.json` version + git SHA. Pushes to `main` receive the `latest` dist-tag.
+Releases are managed with [Changesets](https://github.com/changesets/changesets). PRs that ship a user-facing change should include a changeset file (run `pnpm changeset` and commit the generated `.changeset/*.md`). On merge to `main`, the `Release` workflow opens or updates a "Version Packages" PR that bumps the version and updates `CHANGELOG.md`; merging that PR publishes a new release to GitHub Packages under the `latest` dist-tag.
+
+Pushes to non-`main` branches also publish preview tarballs to GitHub Packages as `0.1.0-branch.<branch>.<sha>`, under the branch name as a dist-tag. These are useful for testing changes in consuming apps before they are released.
