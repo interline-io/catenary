@@ -7,6 +7,8 @@
       class="table cat-table"
       :class="tableClasses"
       :aria-label="ariaLabel"
+      :aria-labelledby="ariaLabelledby"
+      :aria-describedby="ariaDescribedby"
     >
       <caption v-if="hasCaption" :class="{ 'is-sr-only': captionHidden }">
         <slot name="caption">
@@ -125,6 +127,21 @@ interface Props {
    * Prefer `caption` for sighted users; `ariaLabel` is a fallback.
    */
   ariaLabel?: string
+
+  /**
+   * Space-separated id(s) of element(s) that name this table. Use when the
+   * table's name is rendered elsewhere in the page (e.g., a tab label or a
+   * heading above the table) so screen readers can announce it without
+   * duplicating the text inside a caption.
+   */
+  ariaLabelledby?: string
+
+  /**
+   * Space-separated id(s) of element(s) that further describe this table.
+   * Use for longer-form context that complements the name — e.g., a summary
+   * sentence below the table, or a note about how the data was computed.
+   */
+  ariaDescribedby?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -136,7 +153,9 @@ const props = withDefaults(defineProps<Props>(), {
   defaultSort: undefined,
   caption: undefined,
   captionHidden: false,
-  ariaLabel: undefined
+  ariaLabel: undefined,
+  ariaLabelledby: undefined,
+  ariaDescribedby: undefined
 })
 
 const hasCaption = computed(() => Boolean(props.caption || slots.caption))

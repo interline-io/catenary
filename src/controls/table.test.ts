@@ -55,6 +55,17 @@ describe('cat-table accessibility', () => {
     wrapper.unmount()
   })
 
+  it('forwards ariaLabelledby and ariaDescribedby to the <table> element', async () => {
+    const wrapper = await mountTable({
+      ariaLabelledby: 'tab-routes',
+      ariaDescribedby: 'tab-routes-summary'
+    })
+    const table = wrapper.find('table')
+    expect(table.attributes('aria-labelledby')).toBe('tab-routes')
+    expect(table.attributes('aria-describedby')).toBe('tab-routes-summary')
+    wrapper.unmount()
+  })
+
   it('applies aria-sort to sortable headers, toggled via the inner button', async () => {
     const wrapper = await mountTable({ defaultSort: ['id', 'asc'] })
     const headers = wrapper.findAll('th')
