@@ -94,18 +94,39 @@
             </div>
           </div>
 
-          <div class="cat-datepicker-days">
-            <button
-              v-for="day in calendarDays"
-              :key="`${day.date.getTime()}`"
-              type="button"
-              class="cat-datepicker-day"
-              :class="getDayClasses(day)"
-              :disabled="!day.selectable"
-              @click="selectDate(day.date)"
+          <div
+            ref="daysGridRef"
+            class="cat-datepicker-days"
+            role="grid"
+            tabindex="-1"
+            :aria-label="visibleMonthLabel"
+            @keydown="handleGridKeydown"
+          >
+            <!-- Days grouped into week rows per the WAI-ARIA grid structure
+                 (gridcells must be owned by a row). display: contents on the
+                 row keeps the existing CSS grid layout unchanged. -->
+            <div
+              v-for="(week, wi) in calendarWeeks"
+              :key="wi"
+              role="row"
+              class="cat-datepicker-row"
             >
-              {{ day.date.getDate() }}
-            </button>
+              <button
+                v-for="day in week"
+                :key="`${day.date.getTime()}`"
+                type="button"
+                role="gridcell"
+                class="cat-datepicker-day"
+                :class="getDayClasses(day)"
+                :disabled="!day.selectable"
+                :tabindex="isSameDay(day.date, focusedDate) ? 0 : -1"
+                :data-date="formatDate(day.date, DATE_FORMAT)"
+                :aria-selected="day.isSelected"
+                @click="selectDate(day.date)"
+              >
+                {{ day.date.getDate() }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -118,7 +139,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends Date | Date[] = Date, S extends string | string[] = string">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import type { InputSize, InputVariant } from './types'
 import { format as formatDate, parse, isValid, isSameDay } from 'date-fns'
 import CatDropdown from './dropdown.vue'
@@ -267,12 +288,17 @@ const emit = defineEmits<{
 
 const dropdownRef = ref()
 const inputRef = ref()
+const daysGridRef = ref<HTMLElement | null>(null)
 const isActive = ref(false)
 
 // Current focused date in calendar
 const today = new Date()
 const focusedMonth = ref(today.getMonth())
 const focusedYear = ref(today.getFullYear())
+// The day currently keyboard-focused inside the grid — drives the roving
+// tabindex so only one day button is in the tab order at a time. Starts on
+// today; updates on grid keydown and when the user clicks a date.
+const focusedDate = ref<Date>(today)
 
 // Watch for month/year changes and emit events
 watch(focusedMonth, newMonth => emit('change-month', newMonth))
@@ -293,6 +319,15 @@ const activeDates = computed((): Date[] => {
   if (props.modelValue == null) return []
   if (Array.isArray(props.modelValue)) return props.modelValue as Date[]
   return [props.modelValue as Date]
+})
+
+// Accessible name for the day grid. The APG date-picker example labels the
+// grid with the heading that names the currently-visible month/year; our
+// component navigates month/year via selects rather than a heading, so we
+// compose the label directly.
+const visibleMonthLabel = computed(() => {
+  const monthName = props.monthNames[focusedMonth.value] ?? ''
+  return `${monthName} ${focusedYear.value}`.trim()
 })
 
 const availableYears = computed(() => {
@@ -362,6 +397,16 @@ const calendarDays = computed(() => {
   return days
 })
 
+// Group calendarDays into rows of 7 for the WAI-ARIA grid row structure.
+const calendarWeeks = computed(() => {
+  const weeks: CalendarDay[][] = []
+  const days = calendarDays.value
+  for (let i = 0; i < days.length; i += 7) {
+    weeks.push(days.slice(i, i + 7))
+  }
+  return weeks
+})
+
 function isDateSelected (date: Date): boolean {
   return activeDates.value.some(d => isSameDay(d, date))
 }
@@ -402,6 +447,110 @@ function emitDates (dates: Date[]) {
   emit('update:dateString', dates.map(d => formatDate(d, DATE_FORMAT)) as S)
 }
 
+// Shift a date by N months (or years), clamping the day-of-month so e.g.
+// Mar 31 + 1 month becomes Apr 30 instead of overflowing to May 1.
+// Date#setMonth doesn't clamp, so we compute the target year/month and the
+// clamped day-of-month explicitly.
+function shiftByMonths (d: Date, deltaMonths: number): Date {
+  const totalMonths = d.getFullYear() * 12 + d.getMonth() + deltaMonths
+  const targetYear = Math.floor(totalMonths / 12)
+  const targetMonth = ((totalMonths % 12) + 12) % 12
+  const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate()
+  return new Date(targetYear, targetMonth, Math.min(d.getDate(), lastDay))
+}
+
+function shiftByYears (d: Date, deltaYears: number): Date {
+  return shiftByMonths(d, deltaYears * 12)
+}
+
+// Walk day-by-day from `start` in `direction` (+1 or -1) until a selectable
+// day is found, or until `maxSteps` is reached. Used by keyboard navigation
+// so arrow keys "skip" past disabled days in the direction of travel rather
+// than landing on a disabled <button> (which can't receive focus and would
+// leave the roving tabindex out of sync with actual focus).
+function nextSelectableInDirection (start: Date, direction: 1 | -1, maxSteps: number = 60): Date | null {
+  let d = new Date(start)
+  for (let i = 0; i < maxSteps; i++) {
+    if (isDateSelectable(d)) return d
+    d = new Date(d)
+    d.setDate(d.getDate() + direction)
+  }
+  return null
+}
+
+// Move keyboard focus to a different day. Switches the visible month/year
+// when crossing a boundary so the focused day is rendered, then re-focuses
+// the day button after the DOM updates. focusedDate is re-read inside
+// nextTick so any clamping done by the focusedMonth/focusedYear watcher is
+// reflected in the focus target (and the data-date key is computed fresh).
+function focusDay (date: Date): void {
+  focusedDate.value = date
+  if (date.getMonth() !== focusedMonth.value || date.getFullYear() !== focusedYear.value) {
+    focusedMonth.value = date.getMonth()
+    focusedYear.value = date.getFullYear()
+  }
+  nextTick(() => {
+    const key = formatDate(focusedDate.value, DATE_FORMAT)
+    const btn = daysGridRef.value?.querySelector<HTMLButtonElement>(`[data-date="${key}"]`)
+    // Skip when the resolved button is disabled — focusing a disabled element
+    // is a no-op and would leave the roving tabindex out of sync with actual
+    // focus. The nearestSelectableDate clamping in the watcher should keep
+    // focusedDate on a selectable day, but guard anyway.
+    if (btn && !btn.disabled) btn.focus()
+  })
+}
+
+// Date-grid keyboard interactions per the WAI-ARIA grid pattern as used in
+// the APG Date Picker Dialog example.
+function handleGridKeydown (event: KeyboardEvent): void {
+  const current = new Date(focusedDate.value)
+  let next: Date | null = null
+  let shouldSelect = false
+  switch (event.key) {
+    case 'ArrowRight':
+      next = new Date(current); next.setDate(next.getDate() + 1); break
+    case 'ArrowLeft':
+      next = new Date(current); next.setDate(next.getDate() - 1); break
+    case 'ArrowDown':
+      next = new Date(current); next.setDate(next.getDate() + 7); break
+    case 'ArrowUp':
+      next = new Date(current); next.setDate(next.getDate() - 7); break
+    case 'Home': {
+      const offset = (current.getDay() - props.firstDayOfWeek + 7) % 7
+      next = new Date(current); next.setDate(next.getDate() - offset); break
+    }
+    case 'End': {
+      const offset = (current.getDay() - props.firstDayOfWeek + 7) % 7
+      next = new Date(current); next.setDate(next.getDate() + (6 - offset)); break
+    }
+    case 'PageUp':
+      next = event.shiftKey ? shiftByYears(current, -1) : shiftByMonths(current, -1)
+      break
+    case 'PageDown':
+      next = event.shiftKey ? shiftByYears(current, 1) : shiftByMonths(current, 1)
+      break
+    case 'Enter':
+    case ' ':
+      // The button's native click also fires for Enter/Space — but we
+      // preventDefault on Space here so the page doesn't scroll, then call
+      // selectDate explicitly to keep behavior consistent.
+      shouldSelect = true
+      break
+  }
+  if (next) {
+    event.preventDefault()
+    // Skip past disabled days in the direction of travel so focus lands on a
+    // selectable button. Direction is inferred from the relative date order;
+    // for Home (movement leftward in the week) the direction is -1, for End +1.
+    const direction: 1 | -1 = next.getTime() >= current.getTime() ? 1 : -1
+    const target = nextSelectableInDirection(next, direction)
+    if (target) focusDay(target)
+  } else if (shouldSelect) {
+    event.preventDefault()
+    selectDate(current)
+  }
+}
+
 function selectDate (date: Date) {
   if (!isDateSelectable(date)) return
 
@@ -420,6 +569,7 @@ function selectDate (date: Date) {
       close()
     }
   }
+  focusedDate.value = date
 }
 
 function handleInputChange (value: string) {
@@ -457,14 +607,56 @@ function close () {
   isActive.value = false
 }
 
-// Initialize focused date from the active selection
+// Walk the visible month looking for a selectable day near `target`. If the
+// target itself is selectable, return it. Otherwise sweep forward day-by-day
+// to the end of the month, then backward to the start. Returns the original
+// date if nothing in the visible month is selectable (the grid will have no
+// tabindex=0 button in that pathological case).
+function nearestSelectableInMonth (target: Date): Date {
+  if (isDateSelectable(target)) return target
+  const y = target.getFullYear()
+  const m = target.getMonth()
+  const lastDay = new Date(y, m + 1, 0).getDate()
+  for (let day = target.getDate() + 1; day <= lastDay; day++) {
+    const d = new Date(y, m, day)
+    if (isDateSelectable(d)) return d
+  }
+  for (let day = target.getDate() - 1; day >= 1; day--) {
+    const d = new Date(y, m, day)
+    if (isDateSelectable(d)) return d
+  }
+  return target
+}
+
+// Initialize focused date from the active selection so the calendar opens
+// on the right month and the roving tabindex lands on the selected day.
+// Runs immediately so the initial render has a valid tab stop in the grid.
 watch(activeDates, (dates) => {
   const date = dates[0]
   if (date) {
     focusedMonth.value = date.getMonth()
     focusedYear.value = date.getFullYear()
+    focusedDate.value = nearestSelectableInMonth(date)
+  } else {
+    // No selection: clamp today (or the current focusedDate) onto a selectable
+    // day so the tab stop is always focusable. minDate/maxDate or whitelists
+    // can otherwise leave today unselectable and the grid with no tab stop.
+    focusedDate.value = nearestSelectableInMonth(focusedDate.value)
   }
 }, { immediate: true })
+
+// When the visible month/year changes via the header (prev/next buttons or
+// month/year selects), keep focusedDate inside the visible month so the grid
+// always has exactly one day button in the tab order. Preserves day-of-month
+// when possible (clamps to the last day for shorter months), and walks to a
+// selectable day so the tab stop is always focusable.
+watch([focusedMonth, focusedYear], ([m, y]) => {
+  const fd = focusedDate.value
+  if (fd.getMonth() === m && fd.getFullYear() === y) return
+  const lastDay = new Date(y, m + 1, 0).getDate()
+  const target = new Date(y, m, Math.min(fd.getDate(), lastDay))
+  focusedDate.value = nearestSelectableInMonth(target)
+})
 
 defineExpose({ close, focus: () => inputRef.value?.focus() })
 </script>
@@ -508,6 +700,13 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.25rem;
+}
+
+// Week rows exist for ARIA grid structure (role="row" around gridcells);
+// display: contents lets their children participate in the parent's grid
+// layout so the visual calendar is unchanged.
+.cat-datepicker-row {
+  display: contents;
 }
 
 .cat-datepicker-day {
