@@ -8,10 +8,10 @@ Clean up remaining accessibility lint warnings, convert clickable non-button ele
   - `cat-safelink` — copy action becomes `<button>`; external link keeps `<a href>` and gains `aria-label="Open URL in new tab"`.
   - `cat-tag` — `isDelete` mode becomes `<button aria-label="Delete">`; the normal variant renders as `<button>` only when a click listener is attached, else `<span>`.
   - `cat-slider-tick` — `<button>` when the parent slider provides `setValue`, else `<div>`.
-  - `cat-tree-control` — expand toggle becomes `<button aria-expanded>`.
-  - `cat-input` — clickable right icon becomes `<button>`. **New `iconRightAriaLabel` prop is now expected when `iconRightClickable` is true.**
+  - `cat-tree-control` — expand toggle becomes `<button aria-expanded>`. `:title` is kept alongside `:aria-label` so mouse users still get the hover tooltip.
+  - `cat-input` — clickable right icon becomes `<button>`. New optional `iconRightAriaLabel` prop names the action for screen readers (defaults to "Action").
 - **`cat-taginput`** — search input gains `aria-label` (defaulting to `placeholder`). Dropdown options pair `@focus` with `@mouseenter` so keyboard navigation highlights match pointer hover. When `readonly`, the `combobox` role and popup-related ARIA attributes (`aria-expanded`, `aria-haspopup`, `aria-controls`) are now omitted, since the listbox is removed from the DOM and the previous attributes pointed at a non-existent element.
-- **`cat-msg`** — expandable header now has real keyboard handlers (`@keydown.enter/space`, `tabindex`, `role`) that were missing.
+- **`cat-msg`** — expandable header now has real keyboard handlers (`@keydown.enter/space`, `tabindex`, `role`) that were missing. Keydown handlers are scoped with `.self` so a focused close button can still be activated with Space without the parent header swallowing the keypress.
 - **Lint cap → 0** — `package.json` `--max-warnings` drops from 34 to 0. The following rules are promoted from `warn` to `error` in the exported ESLint config: `anchor-has-content`, `click-events-have-key-events`, `form-control-has-label`, `interactive-supports-focus`, `mouse-events-have-key-events`, `no-static-element-interactions`.
 
 ### CSS impact (no Vue template changes needed)
@@ -23,6 +23,6 @@ Existing `<cat-*>` templates keep working — no consumer template needs to be e
 - **`cat-slider-tick`**: was `<div>`; now `<button>` when the parent slider provides `setValue`, else `<div>`. Selectors like `div.cat-slider-tick` won't match the interactive case.
 - **`cat-tree-control`** expand toggle: was `<span>` / `<div>`; now `<button class="expand-button" aria-expanded>` (with `expand-button-right` / `expand-button-down` modifier classes for the chevron direction — unchanged from before).
 - **`cat-safelink`** copy action: was clickable `<span>` / anchor; now `<button>`. The external link variant keeps `<a href>` (unchanged).
-- **`cat-input`** clickable right icon: was clickable `<span class="icon is-right is-clickable">`; now `<button class="icon is-right is-clickable">`. Also: **new `iconRightAriaLabel` prop expected when `iconRightClickable` is true** (defaults to "Action").
+- **`cat-input`** clickable right icon: was clickable `<span class="icon is-right is-clickable">`; now `<button class="icon is-right is-clickable">`. Also: optional `iconRightAriaLabel` prop for naming the action to screen readers (defaults to "Action").
 
 If your consumer styles or queries don't match any of the above, this change is non-breaking for you.
