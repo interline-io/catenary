@@ -103,6 +103,9 @@ function handleChange (event: Event) {
 </script>
 
 <style lang="scss" scoped>
+@use "bulma/sass/utilities/initial-variables" as *;
+@use "bulma/sass/utilities/derived-variables" as *;
+
 .cat-switch {
   cursor: pointer;
   display: inline-flex;
@@ -120,6 +123,16 @@ function handleChange (event: Event) {
     opacity: 0;
     outline: none;
     z-index: -1;
+  }
+
+  // The native checkbox is visually hidden (opacity:0, z-index:-1) so its
+  // own focus ring is never seen. Reflect keyboard focus onto the styled
+  // .check toggle instead (WCAG SC 2.4.7 Focus Visible). Use Bulma's
+  // --bulma-focus-* tokens so consumers can theme the focus color
+  // independently of $link.
+  input[type="checkbox"]:focus-visible + .check {
+    outline: 2px solid hsl(var(--bulma-focus-h), var(--bulma-focus-s), var(--bulma-focus-l));
+    outline-offset: 2px;
   }
 
   .check {
