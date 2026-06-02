@@ -12,6 +12,7 @@
         <i class="mdi mdi-loading mdi-spin" />
       </span>
       <cat-icon v-if="iconLeft && !loading" :icon="iconLeft" :size="iconSize" />
+      <cat-icon v-if="isIconOnly && !loading" :icon="icon" :size="iconSize" aria-hidden="true" />
       <span v-if="$slots.default || label">
         <slot>{{ label }}</slot>
       </span>
@@ -21,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useSlots } from 'vue'
 import type { ButtonVariant, ButtonSize } from './types'
 import CatIcon from './icon.vue'
 
@@ -40,6 +41,8 @@ import CatIcon from './icon.vue'
 defineOptions({
   inheritAttrs: false
 })
+
+const slots = useSlots()
 
 const emit = defineEmits<{
   click: [event: MouseEvent]
@@ -107,6 +110,21 @@ interface Props {
   type?: 'button' | 'submit' | 'reset'
 
   /**
+   * Render an icon-only button. The MDI icon becomes the button's sole content
+   * (use this instead of slotting a bare `<cat-icon>`, which renders at the
+   * wrong size and inflates the button's height).
+   *
+   * Ignored when a default slot, `label`, `iconLeft`, or `iconRight` is present.
+   *
+   * Accessibility: an icon-only button has no text, so you MUST supply an
+   * accessible name via `aria-label` / `aria-labelledby` (or wrap it in
+   * `<cat-tooltip>` and label it). The rendered icon is marked `aria-hidden`.
+   * @example <cat-button variant="primary" icon="magnify" aria-label="Search" />
+   * @default undefined
+   */
+  icon?: string
+
+  /**
    * Icon to display on the left side of the button.
    * @default undefined
    */
@@ -134,10 +152,14 @@ const props = withDefaults(defineProps<Props>(), {
   fullwidth: false,
   rounded: false,
   type: 'button',
+  icon: undefined,
   iconLeft: undefined,
   iconRight: undefined,
   label: undefined
 })
+
+const isIconOnly = computed((): boolean =>
+  !!props.icon && !props.label && !props.iconLeft && !props.iconRight && !slots.default)
 
 const buttonClasses = computed(() => {
   const classes: string[] = []

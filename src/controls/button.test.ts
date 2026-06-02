@@ -113,4 +113,30 @@ describe('CatButton', () => {
     await wrapper.find('button').trigger('click')
     expect(wrapper.emitted('click')).toBeFalsy()
   })
+
+  it('renders an icon-only button from the icon prop', () => {
+    const wrapper = mountComponent(CatButton, {
+      props: { icon: 'magnify' },
+      attrs: { 'aria-label': 'Search' }
+    })
+
+    const icon = wrapper.find('button .icon i')
+    expect(icon.exists()).toBe(true)
+    expect(icon.classes()).toContain('mdi-magnify')
+    // The glyph is decorative; the accessible name comes from aria-label.
+    expect(wrapper.find('button .icon').attributes('aria-hidden')).toBe('true')
+    expect(wrapper.find('button').attributes('aria-label')).toBe('Search')
+    // No empty text span should be rendered for an icon-only button.
+    expect(wrapper.find('button > span:not(.icon)').exists()).toBe(false)
+  })
+
+  it('ignores the icon prop when a default slot is present', () => {
+    const wrapper = mountComponent(CatButton, {
+      props: { icon: 'magnify' },
+      slots: { default: 'Search' }
+    })
+
+    expect(wrapper.text()).toContain('Search')
+    expect(wrapper.find('button .icon').exists()).toBe(false)
+  })
 })
