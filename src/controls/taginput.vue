@@ -2,11 +2,11 @@
   <div
     class="cat-taginput"
     :class="containerClasses"
-    role="combobox"
+    :role="readonly ? undefined : 'combobox'"
     :aria-label="placeholder || 'Tag input'"
-    :aria-expanded="showDropdown"
-    :aria-haspopup="'listbox'"
-    :aria-controls="listboxId"
+    :aria-expanded="readonly ? undefined : showDropdown"
+    :aria-haspopup="readonly ? undefined : 'listbox'"
+    :aria-controls="readonly ? undefined : listboxId"
   >
     <!-- Selected tags (above input) -->
     <div class="cat-taginput-tags" role="list" aria-label="Selected tags">
@@ -59,6 +59,7 @@
           class="input"
           :class="inputClasses"
           :placeholder="isMaxReached ? 'Maximum reached' : placeholder"
+          :aria-label="placeholder || 'Search tags'"
           :disabled="disabled || isMaxReached"
           autocomplete="off"
           role="searchbox"
@@ -101,6 +102,7 @@
             :aria-selected="modelValue?.includes(option.value) || false"
             @mousedown.prevent="selectOption(option)"
             @mouseenter="highlightedIndex = index"
+            @focus="highlightedIndex = index"
             @keydown.enter.prevent="selectOption(option)"
             @keydown.space.prevent="selectOption(option)"
           >

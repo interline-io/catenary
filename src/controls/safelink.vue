@@ -4,11 +4,24 @@
       <div class="cat-safelink-desc">
         {{ text || sanitizedUrl }}
       </div>
-      <a v-if="text || sanitizedUrl" class="cat-safelink-action" @click="clipboard">
-        <i class="mdi mdi-content-paste" title="Copy to clipboard" role="button" />
-      </a>
-      <a v-if="url && sanitizedUrl" target="_blank" rel="noopener noreferrer" :href="sanitizedUrl ?? undefined" class="cat-safelink-action">
-        <i class="mdi mdi-link" title="Open URL" role="button" />
+      <button
+        v-if="text || sanitizedUrl"
+        type="button"
+        class="cat-safelink-action"
+        aria-label="Copy to clipboard"
+        @click="clipboard"
+      >
+        <i class="mdi mdi-content-paste" aria-hidden="true" />
+      </button>
+      <a
+        v-if="url && sanitizedUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        :href="sanitizedUrl ?? undefined"
+        class="cat-safelink-action"
+        aria-label="Open URL in new tab"
+      >
+        <i class="mdi mdi-link" aria-hidden="true" />
       </a>
     </div>
   </div>
@@ -90,6 +103,17 @@ const clipboard = async (): Promise<void> => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+  text-decoration: none;
+}
+
+button.cat-safelink-action:focus-visible,
+a.cat-safelink-action:focus-visible {
+  outline: 2px solid var(--bulma-link);
+  outline-offset: -2px;
 }
 
 @media only screen and (max-width: 600px) {

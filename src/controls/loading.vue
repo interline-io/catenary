@@ -1,5 +1,9 @@
 <template>
   <div v-if="active" class="cat-loading" :class="{ 'is-full-page': fullPage }">
+    <!-- Cancel-on-click is opt-in via canCancel. Loading overlays are not
+         supposed to capture keyboard focus; the surrounding app is expected
+         to wire its own Escape-to-cancel when canCancel is true. -->
+    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/click-events-have-key-events -->
     <div class="cat-loading-background" :class="{ 'is-full-page': fullPage }" @click="handleCancel" />
     <div class="cat-loading-icon">
       <div class="cat-loading-spinner" />

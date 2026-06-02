@@ -2,11 +2,14 @@
   <div>
     <div v-if="!hideRoot && node" class="tree-row">
       <span v-if="!hasChildren" class="indent-spacer">&nbsp;</span>
-      <span
+      <button
         v-else
+        type="button"
         class="expand-button"
         :class="expanded ? 'expand-button-down' : 'expand-button-right'"
         :title="expanded ? 'Collapse' : 'Expand'"
+        :aria-label="expanded ? 'Collapse' : 'Expand'"
+        :aria-expanded="expanded"
         @click="toggleExpand"
       />
       <cat-checkbox

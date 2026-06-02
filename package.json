@@ -27,7 +27,7 @@
     "build:playground": "nuxi generate playground",
     "test": "vitest run",
     "test:watch": "vitest watch",
-    "lint": "eslint . --max-warnings 34",
+    "lint": "eslint . --max-warnings 0",
     "typecheck": "vue-tsc --noEmit && nuxi typecheck playground",
     "check": "pnpm lint && pnpm typecheck"
   },

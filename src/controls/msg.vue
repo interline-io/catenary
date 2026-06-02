@@ -1,10 +1,18 @@
 <template>
   <article :class="msgClass">
+    <!-- When expandable, the header acts as a toggle: keyboard + tabindex
+         live on the dynamic role binding the static rule can't see. -->
+    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
     <div
       v-if="title || expandable || closable"
       class="message-header"
       :class="{ 'is-clickable': expandable }"
+      :role="expandable ? 'button' : undefined"
+      :tabindex="expandable ? 0 : undefined"
+      :aria-expanded="expandable ? isOpen : undefined"
       @click="expandable && toggle()"
+      @keydown.enter.self="expandable && toggle()"
+      @keydown.space.self.prevent="expandable && toggle()"
     >
       <span>{{ title || defaultTitle }}</span>
       <cat-icon

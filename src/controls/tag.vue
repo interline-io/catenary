@@ -1,28 +1,49 @@
 <template>
-  <a
+  <button
     v-if="isDelete"
+    type="button"
     class="tag is-delete"
+    aria-label="Delete"
     @click="handleClick"
   />
-  <span
+  <component
+    :is="hasClickListener ? 'button' : 'span'"
     v-else
+    :type="hasClickListener ? 'button' : undefined"
     class="tag"
     :class="tagClasses"
-    @click="handleClick"
+    @click="hasClickListener ? handleClick() : undefined"
   >
     <slot>{{ label }}</slot>
     <button
       v-if="closable"
       type="button"
       class="delete is-small"
+      aria-label="Remove"
       @click.stop="handleClose"
     />
-  </span>
+  </component>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, getCurrentInstance, onUpdated, ref } from 'vue'
 import type { TagVariant, TagSize } from './types'
+
+// Reflect whether the parent attached a click listener so we can render the
+// tag as a <button> (keyboard-accessible) only when it's actually clickable.
+// `vnode.props` itself isn't reactive — Vue replaces vnode on each render but
+// doesn't notify reactive dependencies. Read it at setup for the initial
+// render and re-sync on update so the rendered tag follows the parent if
+// listeners are added or removed across re-renders.
+const instance = getCurrentInstance()
+function detectClickListener (): boolean {
+  return 'onClick' in (instance?.vnode?.props ?? {})
+}
+const hasClickListenerRef = ref(detectClickListener())
+onUpdated(() => {
+  hasClickListenerRef.value = detectClickListener()
+})
+const hasClickListener = computed(() => hasClickListenerRef.value)
 
 interface Props {
   /**
