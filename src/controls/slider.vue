@@ -150,6 +150,9 @@ provide('sliderSetValue', setValue)
 </script>
 
 <style lang="scss" scoped>
+@use "bulma/sass/utilities/initial-variables" as *;
+@use "bulma/sass/utilities/derived-variables" as *;
+
 .cat-slider-wrapper {
   position: relative;
   width: 100%;
@@ -161,8 +164,19 @@ provide('sliderSetValue', setValue)
     height: 0.5rem;
     border-radius: var(--bulma-radius-rounded);
     background: var(--bulma-grey-lighter);
-    outline: none;
     margin: 1rem 0;
+
+    // Mouse clicks shouldn't show the focus ring, but keyboard focus must
+    // (WCAG SC 2.4.7 / 1.4.11). Use :focus-visible so the native browser
+    // outline is suppressed in mouse contexts only and the custom outline
+    // takes over for keyboard interactions.
+    outline: none;
+
+    &:focus-visible {
+      outline: 2px solid $link;
+      outline-offset: 4px;
+      border-radius: var(--bulma-radius-rounded);
+    }
 
     &::-webkit-slider-thumb {
       -webkit-appearance: none;
