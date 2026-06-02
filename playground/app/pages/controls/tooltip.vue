@@ -266,6 +266,26 @@
           </cat-tooltip>
         </div>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Tooltip"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/"
+        :keyboard="[
+          { key: 'Escape', description: 'Dismisses the tooltip.' },
+        ]"
+      >
+        <template #notes>
+          <p class="mt-3">
+            Tooltips show on hover (mouseenter) and keyboard focus (focusin), and hide on mouseleave, focusout, or Escape. Per the WAI-ARIA pattern, the tooltip stays open while focus or the cursor remains inside the wrapper. Moving between focusable children or hovering the tooltip itself won't dismiss it.
+          </p>
+          <p class="mt-2">
+            When the slot contains a focusable element (e.g., a <code>&lt;button&gt;</code>), <code>aria-describedby</code> is applied to that element so screen readers announce the tooltip text on focus. When the slot has no focusable child, the wrapper itself becomes the tab stop (<code>tabindex="0"</code>) and carries <code>aria-describedby</code>.
+          </p>
+          <p class="mt-2">
+            Tooltips per the spec should not contain interactive content; for that, build a non-modal dialog (popover) instead.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -273,6 +293,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const username = ref('')
 const password = ref('')

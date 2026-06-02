@@ -138,6 +138,25 @@
           </cat-button>
         </cat-field>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Button"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/button/"
+        :references="[
+          { label: 'WCAG SC 1.4.11: Non-text Contrast', url: 'https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html', note: 'focus indicators must have 3:1 contrast against the adjacent background' },
+          { label: 'WCAG SC 2.4.7: Focus Visible', url: 'https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html' },
+        ]"
+        :keyboard="[
+          { key: 'Space', description: 'Activates the button.' },
+          { key: 'Enter', description: 'Activates the button.' },
+        ]"
+      >
+        <template #notes>
+          <p class="mt-3">
+            <code>&lt;cat-button&gt;</code> renders as a native <code>&lt;button&gt;</code>, so all standard browser keyboard, focus, and form behaviors apply. Bulma's default focus ring is overridden with a <code>:focus-visible</code> outline that meets WCAG SC 1.4.11 (3:1 contrast) on the colored variants. Mouse clicks don't trigger the focus outline (only keyboard / programmatic focus does).
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -146,6 +165,7 @@
 import { ref } from 'vue'
 import { CoreVariants, ButtonVariants, ButtonSizes } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const coreVariants = CoreVariants
 const additionalVariants = ButtonVariants.filter(v => !CoreVariants.includes(v as any))

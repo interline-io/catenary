@@ -5,8 +5,25 @@
         <NuxtLink to="/" class="navbar-item">
           <strong>Catenary Controls</strong>
         </NuxtLink>
+        <button
+          class="navbar-burger"
+          :class="{ 'is-active': isMenuOpen }"
+          aria-label="menu"
+          :aria-expanded="isMenuOpen"
+          @click="isMenuOpen = !isMenuOpen"
+        >
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+        </button>
       </div>
-      <div class="navbar-menu">
+      <div class="navbar-menu" :class="{ 'is-active': isMenuOpen }">
+        <div class="navbar-start is-hidden-desktop">
+          <div class="navbar-item">
+            <nav-menu :groups="controlsGroups" @navigate="isMenuOpen = false" />
+          </div>
+        </div>
         <div class="navbar-end">
           <div class="navbar-item">
             <cat-theme-toggle />
@@ -22,8 +39,20 @@
 </template>
 
 <script setup lang="ts">
-import { controlsGroups } from '../navigation'
+import { computed, ref } from 'vue'
+import { useRoute } from 'vue-router'
+import { controlsGroups, navItems } from '../navigation'
 import SidebarLayout from './components/sidebar-layout.vue'
+import NavMenu from './components/nav-menu.vue'
+
+const isMenuOpen = ref(false)
+
+const route = useRoute()
+const pageTitle = computed(() => navItems.find(i => i.path === route.path)?.name ?? null)
+useHead({
+  title: pageTitle,
+  titleTemplate: t => (t ? `${t} · Catenary Controls` : 'Catenary Controls'),
+})
 </script>
 
 <style lang="scss">
