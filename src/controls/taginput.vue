@@ -362,6 +362,21 @@ function handleKeydown (event: KeyboardEvent) {
         highlightedIndex.value--
       }
       break
+    case 'Home':
+      // Per APG Listbox: jump to the first option when the listbox is open.
+      // Browsers also use Home to move the text cursor to the start of an
+      // input; we only intercept when the dropdown is showing options.
+      if (isOpen.value && filteredOptions.value.length > 0) {
+        event.preventDefault()
+        highlightedIndex.value = 0
+      }
+      break
+    case 'End':
+      if (isOpen.value && filteredOptions.value.length > 0) {
+        event.preventDefault()
+        highlightedIndex.value = filteredOptions.value.length - 1
+      }
+      break
     case 'Enter':
       event.preventDefault()
       if (highlightedIndex.value >= 0 && highlightedIndex.value < filteredOptions.value.length) {

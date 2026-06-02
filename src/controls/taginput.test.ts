@@ -99,3 +99,35 @@ describe('CatTaginput allowNew', () => {
     expect(emitted[emitted.length - 1]).toEqual([['apple']])
   })
 })
+
+describe('CatTaginput Home/End listbox navigation', () => {
+  it('Home jumps the highlighted option to the first one', async () => {
+    const wrapper = mountComponent(CatTaginput, {
+      props: { modelValue: [], options: fruitOptions, openOnFocus: true }
+    })
+    const input = wrapper.find('input')
+    // Open the listbox and arrow down twice so the third option is highlighted.
+    await input.trigger('focus')
+    await triggerKeyboard(wrapper, 'ArrowDown', 'input')
+    await triggerKeyboard(wrapper, 'ArrowDown', 'input')
+    await triggerKeyboard(wrapper, 'ArrowDown', 'input')
+
+    // Home should jump to the first option.
+    await triggerKeyboard(wrapper, 'Home', 'input')
+    const items = wrapper.findAll('.cat-taginput-dropdown-item')
+    expect(items[0]?.classes()).toContain('is-active')
+  })
+
+  it('End jumps the highlighted option to the last one', async () => {
+    const wrapper = mountComponent(CatTaginput, {
+      props: { modelValue: [], options: fruitOptions, openOnFocus: true }
+    })
+    const input = wrapper.find('input')
+    await input.trigger('focus')
+    await triggerKeyboard(wrapper, 'ArrowDown', 'input')
+
+    await triggerKeyboard(wrapper, 'End', 'input')
+    const items = wrapper.findAll('.cat-taginput-dropdown-item')
+    expect(items[items.length - 1]?.classes()).toContain('is-active')
+  })
+})
