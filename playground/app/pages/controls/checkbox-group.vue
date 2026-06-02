@@ -180,6 +180,26 @@
           Reset to undefined
         </cat-button>
       </demo-box>
+
+      <demo-a11y
+        :references="[
+          { label: 'W3C Tutorial: Grouping Controls', url: 'https://www.w3.org/WAI/tutorials/forms/grouping/' },
+          { label: 'WCAG SC 1.3.1: Info and Relationships', url: 'https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html' },
+        ]"
+        :keyboard="[
+          { key: 'Tab / Shift+Tab', description: 'Moves focus into the group and between checkboxes.' },
+          { key: 'Space', description: 'Toggles the focused checkbox.' },
+        ]"
+      >
+        <template #intro>
+          Renders a stack of native checkboxes, so the keyboard behavior matches the browser default for checkbox inputs.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            Set the <code>label</code> prop to give the group a name. The group then renders as a <code>&lt;fieldset&gt;</code> with <code>&lt;legend&gt;</code> so screen readers announce the group's name when focus enters it. Pair with <code>hiddenLegend</code> when the name is already visible in surrounding UI. Without <code>label</code>, the group renders as a plain <code>&lt;div&gt;</code> for backward compatibility.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -187,6 +207,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 // Basic demo
 const fruitOptions = [

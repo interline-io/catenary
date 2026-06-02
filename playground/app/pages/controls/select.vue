@@ -256,6 +256,21 @@
           </cat-select>
         </cat-field>
       </demo-box>
+
+      <demo-a11y
+        :references="[
+          { label: 'W3C Tutorial: Labeling Controls', url: 'https://www.w3.org/WAI/tutorials/forms/labels/' },
+        ]"
+      >
+        <template #intro>
+          Renders a native <code>&lt;select&gt;</code>, so the browser provides the full keyboard and screen-reader behavior, including the native dropdown UI and platform-specific list navigation. Pair with <code>&lt;cat-field label="…"&gt;</code> for a programmatic label association.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            Parents can call <code>focus()</code> / <code>blur()</code> via a template ref (exposed by <code>defineExpose</code>) to move focus to the select when revealing it dynamically.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -264,6 +279,7 @@
 import { ref, reactive } from 'vue'
 import { SelectVariants, SelectSizes } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const variants = SelectVariants
 const sizes = SelectSizes

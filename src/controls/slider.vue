@@ -150,6 +150,9 @@ provide('sliderSetValue', setValue)
 </script>
 
 <style lang="scss" scoped>
+@use "bulma/sass/utilities/initial-variables" as *;
+@use "bulma/sass/utilities/derived-variables" as *;
+
 .cat-slider-wrapper {
   position: relative;
   width: 100%;
@@ -161,8 +164,20 @@ provide('sliderSetValue', setValue)
     height: 0.5rem;
     border-radius: var(--bulma-radius-rounded);
     background: var(--bulma-grey-lighter);
-    outline: none;
     margin: 1rem 0;
+
+    // Mouse clicks shouldn't show the focus ring, but keyboard focus must
+    // (WCAG SC 2.4.7 Focus Visible). Suppress the default outline and apply
+    // a custom one only for :focus-visible (keyboard / programmatic focus).
+    outline: none;
+
+    &:focus-visible {
+      // Use Bulma's --bulma-focus-* tokens (rather than $link directly) so
+      // consumers can theme the focus color independently of the link color.
+      outline: 2px solid hsl(var(--bulma-focus-h), var(--bulma-focus-s), var(--bulma-focus-l));
+      outline-offset: 4px;
+      border-radius: var(--bulma-radius-rounded);
+    }
 
     &::-webkit-slider-thumb {
       -webkit-appearance: none;

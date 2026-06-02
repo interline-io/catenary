@@ -255,6 +255,24 @@
           </div>
         </cat-msg>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Disclosure"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/"
+        :keyboard="[
+          { key: 'Enter', description: 'When focus is on the header of an expandable message, toggles the visibility of the body.' },
+          { key: 'Space', description: 'When focus is on the header of an expandable message, toggles the visibility of the body.' },
+        ]"
+      >
+        <template #intro>
+          The keyboard interactions below apply when <code>expandable</code> is set; non-expandable messages are static content.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            Expandable headers carry <code>role="button"</code>, <code>tabindex="0"</code>, and <code>aria-expanded</code> tracking open state. Keydown handlers are scoped with <code>.self</code> so a focused close button (when <code>closable</code>) can still be activated with Space without the parent header swallowing the keypress.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -263,6 +281,7 @@
 import { ref, computed } from 'vue'
 import { MsgVariants } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const variants = MsgVariants
 
