@@ -178,6 +178,21 @@
           Rating: {{ rating }} (type: {{ typeof rating }})
         </p>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Radio Group"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/radio/"
+        :keyboard="[
+          { key: 'Tab / Shift+Tab', description: 'Moves focus into and out of the radio group.' },
+          { key: 'ArrowDown / ArrowRight', description: 'Moves focus to the next radio in the group, unchecks the previously focused button, and checks the newly focused one.' },
+          { key: 'ArrowUp / ArrowLeft', description: 'Moves focus to the previous radio in the group, unchecks the previously focused button, and checks the newly focused one.' },
+          { key: 'Space', description: 'Checks the focused radio if it is not already checked.' },
+        ]"
+      >
+        <template #intro>
+          <code>&lt;cat-radio&gt;</code> renders a native <code>&lt;input type="radio"&gt;</code>; group all radios that share a <code>v-model</code> inside a <code>&lt;cat-fieldset&gt;</code> so screen readers announce the group's name when focus enters it.
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -186,6 +201,7 @@
 import { ref } from 'vue'
 import { RadioVariants, RadioSizes } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const variants = RadioVariants
 const sizes = RadioSizes

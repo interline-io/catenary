@@ -141,12 +141,37 @@
           </template>
         </cat-table>
       </demo-box>
+
+      <demo-a11y
+        :references="[
+          { label: 'W3C Tutorial: Tables', url: 'https://www.w3.org/WAI/tutorials/tables/' },
+          { label: 'W3C Tutorial: Caption & Summary', url: 'https://www.w3.org/WAI/tutorials/tables/caption-summary/' },
+          { label: 'WAI-ARIA 1.2: aria-sort', url: 'https://www.w3.org/TR/wai-aria-1.2/#aria-sort' },
+        ]"
+        :keyboard="[
+          { key: 'Tab', description: 'Moves focus to each sortable column header button in turn.' },
+          { key: 'Enter / Space', description: 'When focus is on a sortable header button, toggles or sets the sort direction.' },
+        ]"
+      >
+        <template #intro>
+          Uses native HTML table semantics (<code>&lt;table&gt;</code>, <code>&lt;caption&gt;</code>, <code>&lt;th&gt;</code>, <code>aria-sort</code>) rather than a WAI-ARIA widget pattern.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            Provide an accessible name with one of: a visible <code>caption</code> prop, <code>captionHidden</code> to hide the caption visually but expose it to assistive tech, <code>aria-labelledby</code> pointing at an id whose text names the table (e.g., a surrounding tab label), or <code>aria-label</code> as a fallback. Use <code>aria-describedby</code> for longer-form context that complements the name.
+          </p>
+          <p class="mt-2">
+            Sortable column headers carry <code>aria-sort=ascending/descending/none</code> and render the label inside a <code>&lt;button class="cat-table-sort"&gt;</code> so keyboard users can change sort by pressing Enter or Space.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const basicData = [
   { name: 'Alice Johnson', age: 28, city: 'New York' },

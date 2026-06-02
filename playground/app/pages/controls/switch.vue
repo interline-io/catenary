@@ -210,6 +210,24 @@
           Theme: {{ theme }} (type: {{ typeof theme }})
         </p>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Switch"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/switch/"
+        :keyboard="[
+          { key: 'Space', description: 'When focus is on the switch, changes its state.' },
+          { key: 'Enter', description: 'When focus is on the switch, changes its state (browser-dependent for native checkbox).' },
+        ]"
+      >
+        <template #intro>
+          <code>&lt;cat-switch&gt;</code> renders a native <code>&lt;input type="checkbox"&gt;</code> styled as a toggle, so keyboard interactions follow the browser's standard checkbox handling.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            <strong>Note:</strong> the underlying input is a checkbox without an explicit <code>role="switch"</code>. Assistive tech announces it as a checkbox, not a switch. Adding the role (per the APG Switch pattern) is a planned follow-up.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -218,6 +236,7 @@
 import { ref, reactive, type Ref } from 'vue'
 import { SwitchVariants, SwitchSizes } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const variants = SwitchVariants
 const sizes = SwitchSizes
