@@ -11,6 +11,7 @@
         role="dialog"
         aria-modal="true"
         :aria-labelledby="hasTitle ? titleId : undefined"
+        :aria-label="effectiveAriaLabel"
         tabindex="-1"
         class="modal-card"
         :class="modalCardClasses"
@@ -85,6 +86,15 @@ interface Props {
    * @default 'medium'
    */
   size?: 'small' | 'medium' | 'large'
+
+  /**
+   * Accessible name for the dialog when there's no visible title. Ignored
+   * when `title` or the `#title` slot is provided (those drive
+   * `aria-labelledby` automatically). Falls back to "Dialog" if neither a
+   * title nor an `ariaLabel` is given, so the modal always has a name for
+   * assistive technology.
+   */
+  ariaLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -92,7 +102,8 @@ const props = withDefaults(defineProps<Props>(), {
   title: '',
   closable: true,
   fullScreen: false,
-  size: 'medium'
+  size: 'medium',
+  ariaLabel: undefined
 })
 
 const emit = defineEmits<{
@@ -105,6 +116,13 @@ const titleId = useId()
 let previouslyFocused: HTMLElement | null = null
 
 const hasTitle = computed(() => Boolean(props.title || slots.title))
+// When there's no visible title, fall back to the ariaLabel prop or a generic
+// "Dialog" so the dialog always has an accessible name (axe / WAI-ARIA both
+// flag unnamed dialogs).
+const effectiveAriaLabel = computed(() => {
+  if (hasTitle.value) return undefined
+  return props.ariaLabel || 'Dialog'
+})
 
 const modalCardClasses = computed(() => ({
   'cat-modal-fullscreen': props.fullScreen,
@@ -145,13 +163,6 @@ function handleKeydown (event: KeyboardEvent): void {
   if (!root) return
   const els = focusableElements()
   const active = document.activeElement as HTMLElement | null
-  // If focus has escaped the modal entirely (e.g., AT or scripted focus),
-  // pull it back to the first focusable element (or the card itself).
-  if (!active || !root.contains(active)) {
-    event.preventDefault()
-    ;(els[0] ?? root).focus()
-    return
-  }
   if (els.length === 0) {
     // No focusable children — keep focus on the card itself.
     event.preventDefault()
@@ -160,6 +171,14 @@ function handleKeydown (event: KeyboardEvent): void {
   }
   const first = els[0]!
   const last = els[els.length - 1]!
+  // If focus has escaped the modal entirely, pull it back — to the LAST
+  // focusable element for Shift+Tab (preserving expected backward direction),
+  // otherwise to the first.
+  if (!active || !root.contains(active)) {
+    event.preventDefault()
+    ;(event.shiftKey ? last : first).focus()
+    return
+  }
   if (event.shiftKey && active === first) {
     event.preventDefault()
     last.focus()
@@ -181,7 +200,13 @@ watch(() => props.modelValue, async (isActive) => {
     ;(els[0] ?? modalCardRef.value)?.focus()
   } else {
     document.documentElement.classList.remove('is-clipped')
-    previouslyFocused?.focus()
+    // The opener may have been removed from the DOM while the modal was open
+    // (e.g., it lived inside a v-if branch that re-rendered). Guard against
+    // calling focus() on a stale reference.
+    const prev = previouslyFocused
+    if (prev && prev.isConnected) {
+      prev.focus()
+    }
     previouslyFocused = null
   }
 })
