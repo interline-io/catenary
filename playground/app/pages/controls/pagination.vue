@@ -122,6 +122,26 @@
           Showing {{ (tablePage - 1) * tablePerPage + 1 }} - {{ Math.min(tablePage * tablePerPage, tableData.length) }} of {{ tableData.length }} items
         </p>
       </demo-box>
+
+      <demo-a11y
+        :references="[
+          { label: 'WAI-ARIA 1.2: aria-current', url: 'https://www.w3.org/TR/wai-aria-1.2/#aria-current' },
+          { label: 'WAI-ARIA 1.2: navigation role', url: 'https://www.w3.org/TR/wai-aria-1.2/#navigation' },
+        ]"
+        :keyboard="[
+          { key: 'Tab / Shift+Tab', description: 'Moves focus through the visible page-number and previous/next buttons.' },
+          { key: 'Enter / Space', description: 'When focus is on a page button, navigates to that page.' },
+        ]"
+      >
+        <template #intro>
+          Renders a <code>&lt;nav role="navigation" aria-label="pagination"&gt;</code> containing native <code>&lt;button&gt;</code> elements. The current page button carries <code>aria-current="page"</code> so screen readers announce it as the current location within the pagination set.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            When the current page is the first or last, the previous / next buttons are marked <code>disabled</code> (which removes them from the tab order). They also carry <code>aria-disabled</code> so assistive tech that surfaces non-focusable buttons can still announce them as disabled.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -130,6 +150,7 @@
 import { ref, computed } from 'vue'
 import { PaginationSizes } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const sizes = PaginationSizes
 

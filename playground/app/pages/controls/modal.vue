@@ -130,6 +130,24 @@
           {{ resultMessage }}
         </cat-notification>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Modal Dialog"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/"
+        :keyboard="[
+          { key: 'Escape', description: 'Closes the modal (when `closable` is true; default).' },
+          { key: 'Tab / Shift+Tab', description: 'Moves through focusable elements inside the modal in standard browser tab order.' },
+        ]"
+      >
+        <template #notes>
+          <p class="mt-3">
+            The modal renders with <code>role="dialog"</code> and <code>aria-modal="true"</code>. Background clicks dismiss the modal when <code>closable</code> is true; the Escape handler is registered at the document level for the duration the modal is open.
+          </p>
+          <p class="mt-2">
+            <strong>Known limitation:</strong> focus is not currently trapped inside the modal; pressing Tab from the last focusable element can move focus to elements behind the backdrop. The APG dialog pattern recommends wrapping Tab/Shift+Tab back into the dialog. Planned in a follow-up.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -137,6 +155,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const showBasic = ref(false)
 const showSmall = ref(false)

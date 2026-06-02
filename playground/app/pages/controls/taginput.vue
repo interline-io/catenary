@@ -243,6 +243,29 @@
           <pre>{{ JSON.stringify(form, null, 2) }}</pre>
         </div>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Combobox"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/combobox/"
+        :references="[
+          { label: 'APG: Combobox examples', url: 'https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/' },
+        ]"
+        :keyboard="[
+          { key: 'ArrowDown', description: 'When focus is on the input and the listbox is open, moves focus to the next option.' },
+          { key: 'ArrowUp', description: 'When focus is on the input and the listbox is open, moves focus to the previous option.' },
+          { key: 'Enter / Space', description: 'When focus is on an option, selects that option.' },
+          { key: 'Escape', description: 'Closes the listbox if open; otherwise clears the input text.' },
+        ]"
+      >
+        <template #notes>
+          <p class="mt-3">
+            The wrapper carries <code>role="combobox"</code> with <code>aria-expanded</code> / <code>aria-haspopup</code> / <code>aria-controls</code> pointing at the listbox. Options expose <code>role="option"</code> and <code>aria-selected</code>. The search input gets an <code>aria-label</code> defaulting to the <code>placeholder</code>, so screen readers always announce something on focus.
+          </p>
+          <p class="mt-2">
+            In <code>readonly</code> mode the listbox is removed from the DOM, so the combobox role and listbox-related ARIA attributes are omitted on the wrapper. Assistive tech sees a plain set of selected tags with no popup affordance.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -252,6 +275,7 @@ import { ref, reactive } from 'vue'
 import { TaginputVariants, TaginputSizes } from '../../../../src/controls/types'
 import TaginputAsyncDemo from '../../components/taginput-async-demo.vue'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const variants = TaginputVariants
 const sizes = TaginputSizes
