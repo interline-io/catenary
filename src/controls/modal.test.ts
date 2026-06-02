@@ -56,6 +56,40 @@ describe('cat-modal', () => {
     wrapper.unmount()
   })
 
+  it('forwards ariaDescribedby onto the dialog element', async () => {
+    const wrapper = mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: true, title: 'X', ariaDescribedby: 'modal-summary' }
+    })
+    await nextTick()
+    expect(findCard()?.getAttribute('aria-describedby')).toBe('modal-summary')
+    wrapper.unmount()
+  })
+
+  it('makes the title focusable (tabindex="-1") so it can serve as an initial focus fallback', async () => {
+    const wrapper = mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: true, title: 'X' }
+    })
+    await nextTick()
+    expect(findCard()?.querySelector('.modal-card-title')?.getAttribute('tabindex')).toBe('-1')
+    wrapper.unmount()
+  })
+
+  it('focuses the title rather than the dialog itself when there are no focusable children', async () => {
+    const wrapper = mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: false, title: 'Read-only notice', closable: false },
+      slots: { default: '<p>Static text with no focusable elements.</p>' }
+    })
+    await wrapper.setProps({ modelValue: true })
+    await nextTick()
+    await nextTick()
+    const title = findCard()?.querySelector('.modal-card-title')
+    expect(document.activeElement).toBe(title)
+    wrapper.unmount()
+  })
+
   it('emits update:modelValue=false on Escape when closable (default)', async () => {
     const wrapper = mount(CatModal, {
       attachTo: document.body,

@@ -136,15 +136,19 @@
         pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/"
         :keyboard="[
           { key: 'Escape', description: 'Closes the modal (when `closable` is true; default).' },
-          { key: 'Tab / Shift+Tab', description: 'Moves through focusable elements inside the modal in standard browser tab order.' },
+          { key: 'Tab', description: 'Moves focus to the next focusable element inside the modal. From the last element, wraps to the first.' },
+          { key: 'Shift + Tab', description: 'Moves focus to the previous focusable element. From the first element, wraps to the last.' },
         ]"
       >
         <template #notes>
           <p class="mt-3">
-            The modal renders with <code>role="dialog"</code> and <code>aria-modal="true"</code>. Background clicks dismiss the modal when <code>closable</code> is true; the Escape handler is registered at the document level for the duration the modal is open.
+            The dialog renders with <code>role="dialog"</code>, <code>aria-modal="true"</code>, and either <code>aria-labelledby</code> pointing at the title (when set) or <code>aria-label</code> (defaults to "Dialog"). Pass <code>aria-describedby</code> with the id of a body element when the dialog needs longer-form context.
           </p>
           <p class="mt-2">
-            <strong>Known limitation:</strong> focus is not currently trapped inside the modal; pressing Tab from the last focusable element can move focus to elements behind the backdrop. The APG dialog pattern recommends wrapping Tab/Shift+Tab back into the dialog. Planned in a follow-up.
+            On open, focus moves to the first focusable element inside the dialog. If the dialog has no focusable children, focus falls back to the title (preferred per APG: do not focus the dialog element itself) or the body wrapper. Tab and Shift+Tab cycle within the dialog. On close, focus returns to whatever element opened it; if that element is gone from the DOM, the restore is a safe no-op.
+          </p>
+          <p class="mt-2">
+            Background clicks dismiss the modal when <code>closable</code> is true. The Escape handler is registered at the document level for the duration the modal is open.
           </p>
         </template>
       </demo-a11y>

@@ -12,12 +12,16 @@
         aria-modal="true"
         :aria-labelledby="hasTitle ? titleId : undefined"
         :aria-label="effectiveAriaLabel"
+        :aria-describedby="ariaDescribedby"
         tabindex="-1"
         class="modal-card"
         :class="modalCardClasses"
       >
         <header class="modal-card-head">
-          <p :id="titleId" class="modal-card-title">
+          <!-- tabindex="-1" so the title can serve as the initial focus target
+               when the dialog has no focusable children, per the APG advice
+               not to focus the dialog element itself. -->
+          <p :id="titleId" class="modal-card-title" tabindex="-1">
             <slot name="title">
               {{ title }}
             </slot>
@@ -31,7 +35,7 @@
           />
         </header>
         <section class="modal-card-body">
-          <div v-if="modelValue">
+          <div v-if="modelValue" ref="bodyContentRef" tabindex="-1">
             <slot :close="close" />
             <br>
           </div>
@@ -95,6 +99,14 @@ interface Props {
    * assistive technology.
    */
   ariaLabel?: string
+
+  /**
+   * Space-separated id(s) of element(s) that further describe this dialog,
+   * applied as `aria-describedby` on the dialog container. Use for longer-form
+   * context (e.g., the id of a body paragraph that explains the dialog's
+   * purpose). Optional per the WAI-ARIA Modal Dialog pattern.
+   */
+  ariaDescribedby?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -103,7 +115,8 @@ const props = withDefaults(defineProps<Props>(), {
   closable: true,
   fullScreen: false,
   size: 'medium',
-  ariaLabel: undefined
+  ariaLabel: undefined,
+  ariaDescribedby: undefined
 })
 
 const emit = defineEmits<{
@@ -112,6 +125,7 @@ const emit = defineEmits<{
 
 const slots = useSlots()
 const modalCardRef = ref<HTMLElement | null>(null)
+const bodyContentRef = ref<HTMLElement | null>(null)
 const titleId = useId()
 let previouslyFocused: HTMLElement | null = null
 
@@ -188,6 +202,21 @@ function handleKeydown (event: KeyboardEvent): void {
   }
 }
 
+// Pick the element that should receive initial focus when the dialog opens.
+// Order matches APG guidance: focus the first interactive element if one
+// exists; otherwise focus a static element at the start of the content (the
+// title, then the body wrapper) rather than the dialog itself, which the
+// APG advises against focusing.
+function initialFocusTarget (): HTMLElement | null {
+  const els = focusableElements()
+  if (els.length > 0) return els[0]!
+  if (hasTitle.value) {
+    const titleEl = modalCardRef.value?.querySelector<HTMLElement>('.modal-card-title')
+    if (titleEl) return titleEl
+  }
+  return bodyContentRef.value ?? modalCardRef.value
+}
+
 // Toggle html clipping, move focus into the modal on open, and restore focus
 // to whatever element opened it on close.
 watch(() => props.modelValue, async (isActive) => {
@@ -196,8 +225,7 @@ watch(() => props.modelValue, async (isActive) => {
     document.documentElement.classList.add('is-clipped')
     previouslyFocused = document.activeElement as HTMLElement | null
     await nextTick()
-    const els = focusableElements()
-    ;(els[0] ?? modalCardRef.value)?.focus()
+    initialFocusTarget()?.focus()
   } else {
     document.documentElement.classList.remove('is-clipped')
     // The opener may have been removed from the DOM while the modal was open
