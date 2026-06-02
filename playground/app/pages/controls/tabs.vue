@@ -237,6 +237,31 @@
           </cat-tab-item>
         </cat-tabs>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Tabs"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/tabs/"
+        :references="[
+          { label: 'APG: Tabs with Automatic Activation', url: 'https://www.w3.org/WAI/ARIA/apg/patterns/tabs/examples/tabs-automatic/' },
+          { label: 'WCAG SC 2.1.1: Keyboard', url: 'https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html' },
+        ]"
+        :keyboard="[
+          { key: 'Tab', description: 'Moves focus into the tablist (to the active tab) or out of it to the next interactive element.' },
+          { key: 'ArrowLeft / ArrowRight', description: 'Moves focus between tabs when orientation is horizontal (the default). Wraps at the ends.' },
+          { key: 'ArrowUp / ArrowDown', description: 'Moves focus between tabs when orientation is vertical. Wraps at the ends.' },
+          { key: 'Home', description: 'Moves focus to the first tab.' },
+          { key: 'End', description: 'Moves focus to the last tab.' },
+        ]"
+      >
+        <template #notes>
+          <p class="mt-3">
+            Tabs use <strong>automatic activation</strong>: moving focus to a tab also activates it. The tab list uses a roving <code>tabindex</code> so only one tab is in the page tab order at a time. Tab panels receive <code>tabindex="0"</code> only when their content has no focusable elements of its own — otherwise they're skipped to avoid a redundant tab stop.
+          </p>
+          <p class="mt-2">
+            Provide the <code>aria-label</code> prop on <code>&lt;cat-tabs&gt;</code> when the tab list isn't already named by surrounding heading text — without it, screen readers announce each tab without group context.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -245,6 +270,7 @@
 import { reactive, ref } from 'vue'
 import { TabsSizes, TabsPositions, TabsTypes } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const sizes = TabsSizes
 const positions = TabsPositions
