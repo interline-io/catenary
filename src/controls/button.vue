@@ -12,6 +12,7 @@
         <i class="mdi mdi-loading mdi-spin" />
       </span>
       <cat-icon v-if="iconLeft && !loading" :icon="iconLeft" :size="iconSize" />
+      <cat-icon v-if="isIconOnly && !loading" :icon="icon" :size="iconSize" aria-hidden="true" />
       <span v-if="$slots.default || label">
         <slot>{{ label }}</slot>
       </span>
@@ -21,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useAttrs, useSlots, watchEffect } from 'vue'
 import type { ButtonVariant, ButtonSize } from './types'
 import CatIcon from './icon.vue'
 
@@ -40,6 +41,9 @@ import CatIcon from './icon.vue'
 defineOptions({
   inheritAttrs: false
 })
+
+const attrs = useAttrs()
+const slots = useSlots()
 
 const emit = defineEmits<{
   click: [event: MouseEvent]
@@ -107,6 +111,21 @@ interface Props {
   type?: 'button' | 'submit' | 'reset'
 
   /**
+   * Render an icon-only button. The MDI icon becomes the button's sole content
+   * (use this instead of slotting a bare `<cat-icon>`, which renders at the
+   * wrong size and inflates the button's height).
+   *
+   * Ignored when a default slot, `label`, `iconLeft`, or `iconRight` is present.
+   *
+   * Accessibility: an icon-only button has no text, so you MUST supply an
+   * accessible name via `aria-label` (or wrap it in `<cat-tooltip>` and label
+   * it). The rendered icon is marked `aria-hidden`.
+   * @example <cat-button variant="primary" icon="magnify" aria-label="Search" />
+   * @default undefined
+   */
+  icon?: string
+
+  /**
    * Icon to display on the left side of the button.
    * @default undefined
    */
@@ -134,10 +153,33 @@ const props = withDefaults(defineProps<Props>(), {
   fullwidth: false,
   rounded: false,
   type: 'button',
+  icon: undefined,
   iconLeft: undefined,
   iconRight: undefined,
   label: undefined
 })
+
+// True when `icon` should render as the button's sole content: an explicit
+// label/slot or a left/right icon take precedence over the icon-only shorthand.
+const isIconOnly = computed((): boolean =>
+  !!props.icon && !props.label && !props.iconLeft && !props.iconRight && !slots.default)
+
+// An icon-only button has no visible text, so it needs a programmatic accessible
+// name. Warn in dev if one is missing rather than ship a silently inaccessible
+// button. aria-labelledby/title are accepted as alternatives to aria-label.
+// `import.meta.env` is injected by the bundler (Vite); type it locally so the
+// library build (which doesn't pull in vite/client types) stays type-safe.
+const importMeta = import.meta as ImportMeta & { env?: { DEV?: boolean } }
+if (importMeta.env?.DEV) {
+  watchEffect(() => {
+    if (isIconOnly.value && !attrs['aria-label'] && !attrs['aria-labelledby'] && !attrs.title) {
+      console.warn(
+        '[cat-button] icon-only button is missing an accessible name. '
+        + 'Add aria-label (or aria-labelledby/title), e.g. '
+        + `<cat-button icon="${props.icon}" aria-label="…" />.`)
+    }
+  })
+}
 
 const buttonClasses = computed(() => {
   const classes: string[] = []

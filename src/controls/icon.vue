@@ -80,3 +80,24 @@ const iconClass = computed(() => {
   return classes
 })
 </script>
+
+<style lang="scss" scoped>
+/**
+ * Keep the MDI glyph from inflating its host's line box.
+ *
+ * Bulma's `.icon` is a fixed-size inline-flex box (1.5rem by default), but the
+ * MDI webfont sets its glyph (`.mdi::before`) as a baseline-aligned inline-block
+ * whose font-size we bump via `mdi-24px`/`mdi-36px`/`mdi-48px`. A large glyph
+ * baseline-aligned inside a normal control line-height produces a line box
+ * taller than the `.icon` container, which then pushes the surrounding control
+ * (e.g. an icon-only button in a `has-addons` field) above the standard control
+ * height. Laying the glyph out with flex centering and line-height 1 clamps it
+ * to its container so icons never change the height of the control they sit in.
+ */
+.icon i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+</style>

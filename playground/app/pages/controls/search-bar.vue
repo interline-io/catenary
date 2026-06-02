@@ -69,9 +69,7 @@
             </cat-select>
           </div>
           <div class="control">
-            <cat-button variant="primary">
-              <cat-icon icon="magnify" />
-            </cat-button>
+            <cat-button variant="primary" icon="magnify" aria-label="Search" />
           </div>
         </div>
       </demo-box>
