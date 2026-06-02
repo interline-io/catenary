@@ -2,7 +2,9 @@
   <label class="switch cat-switch" :class="switchClasses">
     <input
       type="checkbox"
+      role="switch"
       :checked="isChecked"
+      :aria-checked="isChecked"
       :disabled="disabled"
       @change="handleChange"
     >

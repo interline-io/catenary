@@ -6,9 +6,22 @@
            handleKeydown. -->
       <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/click-events-have-key-events -->
       <div class="modal-background" @click="handleBackgroundClick" />
-      <div class="modal-card" :class="modalCardClasses">
+      <div
+        ref="modalCardRef"
+        role="dialog"
+        aria-modal="true"
+        :aria-labelledby="hasTitle ? titleId : undefined"
+        :aria-label="effectiveAriaLabel"
+        :aria-describedby="ariaDescribedby"
+        tabindex="-1"
+        class="modal-card"
+        :class="modalCardClasses"
+      >
         <header class="modal-card-head">
-          <p class="modal-card-title">
+          <!-- tabindex="-1" so the title can serve as the initial focus target
+               when the dialog has no focusable children, per the APG advice
+               not to focus the dialog element itself. -->
+          <p :id="titleId" class="modal-card-title" tabindex="-1">
             <slot name="title">
               {{ title }}
             </slot>
@@ -22,7 +35,7 @@
           />
         </header>
         <section class="modal-card-body">
-          <div v-if="modelValue">
+          <div v-if="modelValue" ref="bodyContentRef" tabindex="-1">
             <slot :close="close" />
             <br>
           </div>
@@ -36,7 +49,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, watch, useSlots, useId, nextTick, onMounted, onBeforeUnmount } from 'vue'
 
 /**
  * Modal component using Bulma modal-card structure.
@@ -77,6 +90,23 @@ interface Props {
    * @default 'medium'
    */
   size?: 'small' | 'medium' | 'large'
+
+  /**
+   * Accessible name for the dialog when there's no visible title. Ignored
+   * when `title` or the `#title` slot is provided (those drive
+   * `aria-labelledby` automatically). Falls back to "Dialog" if neither a
+   * title nor an `ariaLabel` is given, so the modal always has a name for
+   * assistive technology.
+   */
+  ariaLabel?: string
+
+  /**
+   * Space-separated id(s) of element(s) that further describe this dialog,
+   * applied as `aria-describedby` on the dialog container. Use for longer-form
+   * context (e.g., the id of a body paragraph that explains the dialog's
+   * purpose). Optional per the WAI-ARIA Modal Dialog pattern.
+   */
+  ariaDescribedby?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -84,12 +114,29 @@ const props = withDefaults(defineProps<Props>(), {
   title: '',
   closable: true,
   fullScreen: false,
-  size: 'medium'
+  size: 'medium',
+  ariaLabel: undefined,
+  ariaDescribedby: undefined
 })
 
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
+
+const slots = useSlots()
+const modalCardRef = ref<HTMLElement | null>(null)
+const bodyContentRef = ref<HTMLElement | null>(null)
+const titleId = useId()
+let previouslyFocused: HTMLElement | null = null
+
+const hasTitle = computed(() => Boolean(props.title || slots.title))
+// When there's no visible title, fall back to the ariaLabel prop or a generic
+// "Dialog" so the dialog always has an accessible name (axe / WAI-ARIA both
+// flag unnamed dialogs).
+const effectiveAriaLabel = computed(() => {
+  if (hasTitle.value) return undefined
+  return props.ariaLabel || 'Dialog'
+})
 
 const modalCardClasses = computed(() => ({
   'cat-modal-fullscreen': props.fullScreen,
@@ -108,24 +155,90 @@ function handleBackgroundClick (): void {
   }
 }
 
+// Collect focusable descendants of the modal card. Used to seed focus on open
+// and to wrap Tab / Shift+Tab at the boundaries per the WAI-ARIA Modal Dialog
+// pattern.
+function focusableElements (): HTMLElement[] {
+  const root = modalCardRef.value
+  if (!root) return []
+  const sel = 'a[href], area[href], button, input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"]), audio[controls], video[controls], iframe, object, embed, [contenteditable]'
+  return Array.from(root.querySelectorAll<HTMLElement>(sel))
+    .filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1)
+}
+
 function handleKeydown (event: KeyboardEvent): void {
-  if (event.key === 'Escape' && props.closable && props.modelValue) {
+  if (!props.modelValue) return
+  if (event.key === 'Escape' && props.closable) {
     close()
+    return
+  }
+  if (event.key !== 'Tab') return
+  const root = modalCardRef.value
+  if (!root) return
+  const els = focusableElements()
+  const active = document.activeElement as HTMLElement | null
+  if (els.length === 0) {
+    // No focusable children — keep focus on the card itself.
+    event.preventDefault()
+    root.focus()
+    return
+  }
+  const first = els[0]!
+  const last = els[els.length - 1]!
+  // If focus has escaped the modal entirely, pull it back — to the LAST
+  // focusable element for Shift+Tab (preserving expected backward direction),
+  // otherwise to the first.
+  if (!active || !root.contains(active)) {
+    event.preventDefault()
+    ;(event.shiftKey ? last : first).focus()
+    return
+  }
+  if (event.shiftKey && active === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && active === last) {
+    event.preventDefault()
+    first.focus()
   }
 }
 
-// Add/remove html clipping when modal opens/closes
-watch(() => props.modelValue, (isActive) => {
-  if (typeof document !== 'undefined') {
-    if (isActive) {
-      document.documentElement.classList.add('is-clipped')
-    } else {
-      document.documentElement.classList.remove('is-clipped')
+// Pick the element that should receive initial focus when the dialog opens.
+// Order matches APG guidance: focus the first interactive element if one
+// exists; otherwise focus a static element at the start of the content (the
+// title, then the body wrapper) rather than the dialog itself, which the
+// APG advises against focusing.
+function initialFocusTarget (): HTMLElement | null {
+  const els = focusableElements()
+  if (els.length > 0) return els[0]!
+  if (hasTitle.value) {
+    const titleEl = modalCardRef.value?.querySelector<HTMLElement>('.modal-card-title')
+    if (titleEl) return titleEl
+  }
+  return bodyContentRef.value ?? modalCardRef.value
+}
+
+// Toggle html clipping, move focus into the modal on open, and restore focus
+// to whatever element opened it on close.
+watch(() => props.modelValue, async (isActive) => {
+  if (typeof document === 'undefined') return
+  if (isActive) {
+    document.documentElement.classList.add('is-clipped')
+    previouslyFocused = document.activeElement as HTMLElement | null
+    await nextTick()
+    initialFocusTarget()?.focus()
+  } else {
+    document.documentElement.classList.remove('is-clipped')
+    // The opener may have been removed from the DOM while the modal was open
+    // (e.g., it lived inside a v-if branch that re-rendered). Guard against
+    // calling focus() on a stale reference.
+    const prev = previouslyFocused
+    if (prev && prev.isConnected) {
+      prev.focus()
     }
+    previouslyFocused = null
   }
 })
 
-// Setup ESC key handler
 onMounted(() => {
   if (typeof document !== 'undefined') {
     document.addEventListener('keydown', handleKeydown)
