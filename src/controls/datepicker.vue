@@ -99,6 +99,7 @@
             class="cat-datepicker-days"
             role="grid"
             tabindex="-1"
+            :aria-label="visibleMonthLabel"
             @keydown="handleGridKeydown"
           >
             <button
@@ -308,6 +309,15 @@ const activeDates = computed((): Date[] => {
   if (props.modelValue == null) return []
   if (Array.isArray(props.modelValue)) return props.modelValue as Date[]
   return [props.modelValue as Date]
+})
+
+// Accessible name for the day grid. The APG date-picker example labels the
+// grid with the heading that names the currently-visible month/year; our
+// component navigates month/year via selects rather than a heading, so we
+// compose the label directly.
+const visibleMonthLabel = computed(() => {
+  const monthName = props.monthNames[focusedMonth.value] ?? ''
+  return `${monthName} ${focusedYear.value}`.trim()
 })
 
 const availableYears = computed(() => {

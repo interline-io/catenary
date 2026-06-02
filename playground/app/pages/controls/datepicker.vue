@@ -247,17 +247,25 @@
           { label: 'APG: Date Picker Dialog example', url: 'https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/' },
         ]"
         :keyboard="[
-          { key: 'Tab / Shift+Tab', description: 'Moves focus through the visible interactive elements (previous-month button, day buttons, next-month button).' },
+          { key: 'Tab / Shift+Tab', description: 'Moves focus through the previous-month button, the month and year selects, the next-month button, and the date grid.' },
+          { key: 'ArrowLeft / ArrowRight', description: 'Within the grid, moves focus to the previous / next day.' },
+          { key: 'ArrowUp / ArrowDown', description: 'Within the grid, moves focus to the same day in the previous / next week.' },
+          { key: 'Home / End', description: 'Within the grid, moves focus to the first / last day of the current week.' },
+          { key: 'PageUp / PageDown', description: 'Within the grid, moves focus to the same day in the previous / next month. Day-of-month is clamped when the target month is shorter (Jan 31 → PageDown → Feb 28).' },
+          { key: 'Shift+PageUp / Shift+PageDown', description: 'Within the grid, moves focus to the same day in the previous / next year (with the same day-of-month clamping).' },
           { key: 'Enter / Space', description: 'When focus is on a day button, selects that date.' },
           { key: 'Escape', description: 'Closes the calendar and returns focus to the input.' },
         ]"
       >
         <template #notes>
           <p class="mt-3">
-            The calendar opens as a <code>role="dialog"</code> with <code>aria-modal="false"</code> (it doesn't trap focus). Use the <code>aria-dialog-label</code> prop to customize the announcement (default: <em>Choose date</em>).
+            The calendar opens as a <code>role="dialog"</code> with <code>aria-modal="false"</code> (it doesn't trap focus, since users may want to interact with the input while the picker is open). Use the <code>aria-dialog-label</code> prop to customize the announcement (default: <em>Choose date</em>).
           </p>
           <p class="mt-2">
-            <strong>Known limitation:</strong> arrow-key navigation across the date grid (per the APG datepicker example) isn't implemented yet. Keyboard users move between days via Tab, which works but is less efficient than grid navigation. Planned in a follow-up.
+            The day grid uses <code>role="grid"</code> with one <code>role="gridcell"</code> per day. Roving <code>tabindex</code> means only one day button is in the tab order at a time (the selected day, or today). The grid's <code>aria-label</code> announces the visible month and year so screen readers can place the cursor in context.
+          </p>
+          <p class="mt-2">
+            When <code>minDate</code> / <code>maxDate</code> / <code>unselectableDates</code> would leave the natural tab stop on a disabled day, the focused day is automatically advanced to the nearest selectable day in the visible month, so the grid always has a focusable entry point.
           </p>
         </template>
       </demo-a11y>
