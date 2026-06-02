@@ -167,13 +167,14 @@ provide('sliderSetValue', setValue)
     margin: 1rem 0;
 
     // Mouse clicks shouldn't show the focus ring, but keyboard focus must
-    // (WCAG SC 2.4.7 / 1.4.11). Use :focus-visible so the native browser
-    // outline is suppressed in mouse contexts only and the custom outline
-    // takes over for keyboard interactions.
+    // (WCAG SC 2.4.7 Focus Visible). Suppress the default outline and apply
+    // a custom one only for :focus-visible (keyboard / programmatic focus).
     outline: none;
 
     &:focus-visible {
-      outline: 2px solid $link;
+      // Use Bulma's --bulma-focus-* tokens (rather than $link directly) so
+      // consumers can theme the focus color independently of the link color.
+      outline: 2px solid hsl(var(--bulma-focus-h), var(--bulma-focus-s), var(--bulma-focus-l));
       outline-offset: 4px;
       border-radius: var(--bulma-radius-rounded);
     }
