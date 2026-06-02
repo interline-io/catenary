@@ -82,9 +82,9 @@
       "unrs-resolver"
     ],
     "overrides": {
-      "postcss@<8.5.10": ">=8.5.10",
-      "js-cookie@<3.0.7": ">=3.0.7",
-      "simple-git@<3.36.0": ">=3.36.0"
+      "postcss@<8.5.10": "^8.5.10",
+      "js-cookie@<3.0.7": "^3.0.7",
+      "simple-git@<3.36.0": "^3.36.0"
     }
   }
 }
