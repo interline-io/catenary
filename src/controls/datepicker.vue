@@ -94,14 +94,26 @@
             </div>
           </div>
 
-          <div class="cat-datepicker-days">
+          <!-- Composite widget with roving tabindex: the grid itself isn't a tab
+               stop; exactly one day button inside has tabindex=0. -->
+          <!-- eslint-disable-next-line vuejs-accessibility/interactive-supports-focus -->
+          <div
+            ref="daysGridRef"
+            class="cat-datepicker-days"
+            role="grid"
+            @keydown="handleGridKeydown"
+          >
             <button
               v-for="day in calendarDays"
               :key="`${day.date.getTime()}`"
               type="button"
+              role="gridcell"
               class="cat-datepicker-day"
               :class="getDayClasses(day)"
               :disabled="!day.selectable"
+              :tabindex="isSameDay(day.date, focusedDate) ? 0 : -1"
+              :data-date="formatDate(day.date, DATE_FORMAT)"
+              :aria-selected="day.isSelected"
               @click="selectDate(day.date)"
             >
               {{ day.date.getDate() }}
@@ -118,7 +130,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends Date | Date[] = Date, S extends string | string[] = string">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import type { InputSize, InputVariant } from './types'
 import { format as formatDate, parse, isValid, isSameDay } from 'date-fns'
 import CatDropdown from './dropdown.vue'
@@ -267,12 +279,17 @@ const emit = defineEmits<{
 
 const dropdownRef = ref()
 const inputRef = ref()
+const daysGridRef = ref<HTMLElement | null>(null)
 const isActive = ref(false)
 
 // Current focused date in calendar
 const today = new Date()
 const focusedMonth = ref(today.getMonth())
 const focusedYear = ref(today.getFullYear())
+// The day currently keyboard-focused inside the grid — drives the roving
+// tabindex so only one day button is in the tab order at a time. Starts on
+// today; updates on grid keydown and when the user clicks a date.
+const focusedDate = ref<Date>(today)
 
 // Watch for month/year changes and emit events
 watch(focusedMonth, newMonth => emit('change-month', newMonth))
@@ -402,6 +419,72 @@ function emitDates (dates: Date[]) {
   emit('update:dateString', dates.map(d => formatDate(d, DATE_FORMAT)) as S)
 }
 
+// Move keyboard focus to a different day. Switches the visible month/year
+// when crossing a boundary so the focused day is rendered, then re-focuses
+// the day button after the DOM updates.
+function focusDay (date: Date): void {
+  focusedDate.value = date
+  if (date.getMonth() !== focusedMonth.value || date.getFullYear() !== focusedYear.value) {
+    focusedMonth.value = date.getMonth()
+    focusedYear.value = date.getFullYear()
+  }
+  nextTick(() => {
+    const key = formatDate(date, DATE_FORMAT)
+    const btn = daysGridRef.value?.querySelector<HTMLButtonElement>(`[data-date="${key}"]`)
+    btn?.focus()
+  })
+}
+
+// Date-grid keyboard interactions per the WAI-ARIA grid pattern as used in
+// the APG Date Picker Dialog example.
+function handleGridKeydown (event: KeyboardEvent): void {
+  const current = new Date(focusedDate.value)
+  let next: Date | null = null
+  let shouldSelect = false
+  switch (event.key) {
+    case 'ArrowRight':
+      next = new Date(current); next.setDate(next.getDate() + 1); break
+    case 'ArrowLeft':
+      next = new Date(current); next.setDate(next.getDate() - 1); break
+    case 'ArrowDown':
+      next = new Date(current); next.setDate(next.getDate() + 7); break
+    case 'ArrowUp':
+      next = new Date(current); next.setDate(next.getDate() - 7); break
+    case 'Home': {
+      const offset = (current.getDay() - props.firstDayOfWeek + 7) % 7
+      next = new Date(current); next.setDate(next.getDate() - offset); break
+    }
+    case 'End': {
+      const offset = (current.getDay() - props.firstDayOfWeek + 7) % 7
+      next = new Date(current); next.setDate(next.getDate() + (6 - offset)); break
+    }
+    case 'PageUp':
+      next = new Date(current)
+      if (event.shiftKey) next.setFullYear(next.getFullYear() - 1)
+      else next.setMonth(next.getMonth() - 1)
+      break
+    case 'PageDown':
+      next = new Date(current)
+      if (event.shiftKey) next.setFullYear(next.getFullYear() + 1)
+      else next.setMonth(next.getMonth() + 1)
+      break
+    case 'Enter':
+    case ' ':
+      // The button's native click also fires for Enter/Space — but we
+      // preventDefault on Space here so the page doesn't scroll, then call
+      // selectDate explicitly to keep behavior consistent.
+      shouldSelect = true
+      break
+  }
+  if (next) {
+    event.preventDefault()
+    focusDay(next)
+  } else if (shouldSelect) {
+    event.preventDefault()
+    selectDate(current)
+  }
+}
+
 function selectDate (date: Date) {
   if (!isDateSelectable(date)) return
 
@@ -420,6 +503,7 @@ function selectDate (date: Date) {
       close()
     }
   }
+  focusedDate.value = date
 }
 
 function handleInputChange (value: string) {
@@ -457,14 +541,27 @@ function close () {
   isActive.value = false
 }
 
-// Initialize focused date from the active selection
+// Initialize focused date from the active selection so the calendar opens
+// on the right month and the roving tabindex lands on the selected day.
 watch(activeDates, (dates) => {
   const date = dates[0]
   if (date) {
     focusedMonth.value = date.getMonth()
     focusedYear.value = date.getFullYear()
+    focusedDate.value = date
   }
 }, { immediate: true })
+
+// When the visible month/year changes via the header (prev/next buttons or
+// month/year selects), keep focusedDate inside the visible month so the grid
+// always has exactly one day button in the tab order. Preserves day-of-month
+// when possible (clamps to the last day for shorter months).
+watch([focusedMonth, focusedYear], ([m, y]) => {
+  const fd = focusedDate.value
+  if (fd.getMonth() === m && fd.getFullYear() === y) return
+  const lastDay = new Date(y, m + 1, 0).getDate()
+  focusedDate.value = new Date(y, m, Math.min(fd.getDate(), lastDay))
+})
 
 defineExpose({ close, focus: () => inputRef.value?.focus() })
 </script>
