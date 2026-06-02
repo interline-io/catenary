@@ -94,13 +94,11 @@
             </div>
           </div>
 
-          <!-- Composite widget with roving tabindex: the grid itself isn't a tab
-               stop; exactly one day button inside has tabindex=0. -->
-          <!-- eslint-disable-next-line vuejs-accessibility/interactive-supports-focus -->
           <div
             ref="daysGridRef"
             class="cat-datepicker-days"
             role="grid"
+            tabindex="-1"
             @keydown="handleGridKeydown"
           >
             <button
@@ -419,9 +417,27 @@ function emitDates (dates: Date[]) {
   emit('update:dateString', dates.map(d => formatDate(d, DATE_FORMAT)) as S)
 }
 
+// Shift a date by N months (or years), clamping the day-of-month so e.g.
+// Mar 31 + 1 month becomes Apr 30 instead of overflowing to May 1.
+// Date#setMonth doesn't clamp, so we compute the target year/month and the
+// clamped day-of-month explicitly.
+function shiftByMonths (d: Date, deltaMonths: number): Date {
+  const totalMonths = d.getFullYear() * 12 + d.getMonth() + deltaMonths
+  const targetYear = Math.floor(totalMonths / 12)
+  const targetMonth = ((totalMonths % 12) + 12) % 12
+  const lastDay = new Date(targetYear, targetMonth + 1, 0).getDate()
+  return new Date(targetYear, targetMonth, Math.min(d.getDate(), lastDay))
+}
+
+function shiftByYears (d: Date, deltaYears: number): Date {
+  return shiftByMonths(d, deltaYears * 12)
+}
+
 // Move keyboard focus to a different day. Switches the visible month/year
 // when crossing a boundary so the focused day is rendered, then re-focuses
-// the day button after the DOM updates.
+// the day button after the DOM updates. focusedDate is re-read inside
+// nextTick so any clamping done by the focusedMonth/focusedYear watcher is
+// reflected in the focus target (and the data-date key is computed fresh).
 function focusDay (date: Date): void {
   focusedDate.value = date
   if (date.getMonth() !== focusedMonth.value || date.getFullYear() !== focusedYear.value) {
@@ -429,9 +445,13 @@ function focusDay (date: Date): void {
     focusedYear.value = date.getFullYear()
   }
   nextTick(() => {
-    const key = formatDate(date, DATE_FORMAT)
+    const key = formatDate(focusedDate.value, DATE_FORMAT)
     const btn = daysGridRef.value?.querySelector<HTMLButtonElement>(`[data-date="${key}"]`)
-    btn?.focus()
+    // Skip when the resolved button is disabled — focusing a disabled element
+    // is a no-op and would leave the roving tabindex out of sync with actual
+    // focus. The nearestSelectableDate clamping in the watcher should keep
+    // focusedDate on a selectable day, but guard anyway.
+    if (btn && !btn.disabled) btn.focus()
   })
 }
 
@@ -459,14 +479,10 @@ function handleGridKeydown (event: KeyboardEvent): void {
       next = new Date(current); next.setDate(next.getDate() + (6 - offset)); break
     }
     case 'PageUp':
-      next = new Date(current)
-      if (event.shiftKey) next.setFullYear(next.getFullYear() - 1)
-      else next.setMonth(next.getMonth() - 1)
+      next = event.shiftKey ? shiftByYears(current, -1) : shiftByMonths(current, -1)
       break
     case 'PageDown':
-      next = new Date(current)
-      if (event.shiftKey) next.setFullYear(next.getFullYear() + 1)
-      else next.setMonth(next.getMonth() + 1)
+      next = event.shiftKey ? shiftByYears(current, 1) : shiftByMonths(current, 1)
       break
     case 'Enter':
     case ' ':
@@ -541,26 +557,55 @@ function close () {
   isActive.value = false
 }
 
+// Walk the visible month looking for a selectable day near `target`. If the
+// target itself is selectable, return it. Otherwise sweep forward day-by-day
+// to the end of the month, then backward to the start. Returns the original
+// date if nothing in the visible month is selectable (the grid will have no
+// tabindex=0 button in that pathological case).
+function nearestSelectableInMonth (target: Date): Date {
+  if (isDateSelectable(target)) return target
+  const y = target.getFullYear()
+  const m = target.getMonth()
+  const lastDay = new Date(y, m + 1, 0).getDate()
+  for (let day = target.getDate() + 1; day <= lastDay; day++) {
+    const d = new Date(y, m, day)
+    if (isDateSelectable(d)) return d
+  }
+  for (let day = target.getDate() - 1; day >= 1; day--) {
+    const d = new Date(y, m, day)
+    if (isDateSelectable(d)) return d
+  }
+  return target
+}
+
 // Initialize focused date from the active selection so the calendar opens
 // on the right month and the roving tabindex lands on the selected day.
+// Runs immediately so the initial render has a valid tab stop in the grid.
 watch(activeDates, (dates) => {
   const date = dates[0]
   if (date) {
     focusedMonth.value = date.getMonth()
     focusedYear.value = date.getFullYear()
-    focusedDate.value = date
+    focusedDate.value = nearestSelectableInMonth(date)
+  } else {
+    // No selection: clamp today (or the current focusedDate) onto a selectable
+    // day so the tab stop is always focusable. minDate/maxDate or whitelists
+    // can otherwise leave today unselectable and the grid with no tab stop.
+    focusedDate.value = nearestSelectableInMonth(focusedDate.value)
   }
 }, { immediate: true })
 
 // When the visible month/year changes via the header (prev/next buttons or
 // month/year selects), keep focusedDate inside the visible month so the grid
 // always has exactly one day button in the tab order. Preserves day-of-month
-// when possible (clamps to the last day for shorter months).
+// when possible (clamps to the last day for shorter months), and walks to a
+// selectable day so the tab stop is always focusable.
 watch([focusedMonth, focusedYear], ([m, y]) => {
   const fd = focusedDate.value
   if (fd.getMonth() === m && fd.getFullYear() === y) return
   const lastDay = new Date(y, m + 1, 0).getDate()
-  focusedDate.value = new Date(y, m, Math.min(fd.getDate(), lastDay))
+  const target = new Date(y, m, Math.min(fd.getDate(), lastDay))
+  focusedDate.value = nearestSelectableInMonth(target)
 })
 
 defineExpose({ close, focus: () => inputRef.value?.focus() })

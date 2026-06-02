@@ -11,4 +11,6 @@
 - **Shift + PageUp / Shift + PageDown** — move focus to the same day in the previous / next year
 - **Enter / Space** — select the focused day
 
-When focus crosses a month/year boundary the visible calendar follows along. The grid container also gains `role="grid"`, and day buttons gain `role="gridcell"` and `aria-selected` so assistive tech announces the structure correctly.
+When focus crosses a month/year boundary the visible calendar follows along. The grid container gains `role="grid"` with `tabindex="-1"` (so the container itself isn't a tab stop but is programmatically focusable), and day buttons gain `role="gridcell"` and `aria-selected` so assistive tech announces the structure correctly.
+
+Month and year shifts (PageUp/Down and Shift+PageUp/Down) clamp the day-of-month when the target is shorter — e.g., Jan 31 → PageDown → Feb 28, Feb 29 (leap year) → Shift+PageDown → Feb 28 next year. The roving tab stop is also clamped onto a selectable day so calendars with `minDate` / `maxDate` / `unselectableDates` always have a focusable entry point.
