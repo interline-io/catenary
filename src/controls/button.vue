@@ -158,8 +158,6 @@ const props = withDefaults(defineProps<Props>(), {
   label: undefined
 })
 
-// True when `icon` should render as the button's sole content: an explicit
-// label/slot or a left/right icon take precedence over the icon-only shorthand.
 const isIconOnly = computed((): boolean =>
   !!props.icon && !props.label && !props.iconLeft && !props.iconRight && !slots.default)
 
