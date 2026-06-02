@@ -112,6 +112,27 @@
           <strong>RGB({{ red }}, {{ green }}, {{ blue }})</strong>
         </div>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Slider"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/slider/"
+        :keyboard="[
+          { key: 'ArrowRight / ArrowUp', description: 'Increase the value of the slider by one step.' },
+          { key: 'ArrowLeft / ArrowDown', description: 'Decrease the value of the slider by one step.' },
+          { key: 'Home', description: 'Set the slider to the first allowed value in its range.' },
+          { key: 'End', description: 'Set the slider to the last allowed value in its range.' },
+          { key: 'PageUp / PageDown', description: 'Increase / decrease the slider by a larger amount than one step (browser default).' },
+        ]"
+      >
+        <template #intro>
+          <code>&lt;cat-slider&gt;</code> renders a native <code>&lt;input type="range"&gt;</code>, so the browser provides the full slider keyboard behavior — no custom handlers needed.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            When using <code>cat-slider-tick</code> children that provide a <code>setValue</code> injection, each tick renders as a real <code>&lt;button&gt;</code> with a focus-visible outline — keyboard users can Tab to ticks and press Enter/Space to jump to their value.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -120,6 +141,7 @@
 import { reactive, ref } from 'vue'
 import { SliderSizes, SliderVariants } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const sizes = SliderSizes
 const variants = SliderVariants

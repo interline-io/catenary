@@ -288,6 +288,23 @@
           Select a category to filter
         </p>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Button"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/button/"
+        :keyboard="[
+          { key: 'Enter / Space', description: 'When the tag is interactive (parent attaches a click listener or `isDelete` is set), activates the tag.' },
+        ]"
+      >
+        <template #intro>
+          Tags render as a native <code>&lt;button&gt;</code> only when they're actually interactive — otherwise they're a plain <code>&lt;span&gt;</code> with no tab stop and no implied behavior. The keyboard interaction below applies to the interactive case.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            Interactivity detection is reactive: if the parent adds or removes the click listener at runtime, the rendered tag re-renders between <code>&lt;span&gt;</code> and <code>&lt;button&gt;</code> accordingly. The <code>isDelete</code> shorthand always renders a <code>&lt;button aria-label="Delete"&gt;</code> with the trash icon; the <code>closable</code> slot adds an inner <code>&lt;button aria-label="Remove"&gt;</code> that stops click propagation so the outer tag and the remove button stay independently activatable.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -296,6 +313,7 @@
 import { ref } from 'vue'
 import { TagVariants, TagSizes } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const variants = TagVariants
 const sizes = TagSizes

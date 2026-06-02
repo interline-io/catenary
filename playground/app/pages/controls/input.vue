@@ -85,6 +85,29 @@
           {{ username.length }} / 20 characters
         </p>
       </demo-box>
+
+      <demo-a11y
+        :references="[
+          { label: 'W3C Tutorial: Labeling Controls', url: 'https://www.w3.org/WAI/tutorials/forms/labels/' },
+          { label: 'WCAG SC 3.3.2: Labels or Instructions', url: 'https://www.w3.org/WAI/WCAG21/Understanding/labels-or-instructions.html' },
+        ]"
+        :keyboard="[
+          { key: 'Tab / Shift+Tab', description: 'Moves focus into and out of the input.' },
+          { key: 'Enter / Space', description: 'When focus is on the clickable right icon (if `icon-right-clickable` is set), activates the icon button.' },
+        ]"
+      >
+        <template #intro>
+          Renders a native <code>&lt;input&gt;</code>, so standard browser keyboard, IME, and validation behaviors apply. Pair with <code>&lt;cat-field label="…"&gt;</code> so the label is programmatically associated via <code>&lt;label for&gt;</code>.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            When <code>icon-right-clickable</code> is set, the right icon renders as a real <code>&lt;button&gt;</code> with its own focus-visible outline. Set <code>icon-right-aria-label</code> (e.g., <code>"Search"</code>, <code>"Clear input"</code>) so screen readers announce a meaningful action name; the default is the generic <em>Action</em>.
+          </p>
+          <p class="mt-2">
+            Parents that need to focus the input programmatically can call <code>focus()</code> / <code>blur()</code> / <code>select()</code> via a template ref — these are exposed by <code>defineExpose</code>.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -93,6 +116,7 @@
 import { reactive, ref } from 'vue'
 import { InputVariants, InputSizes, InputTypes } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const variants = InputVariants
 const sizes = InputSizes

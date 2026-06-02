@@ -239,6 +239,28 @@
           Selected: {{ footerDate ? formatDateDisplay(footerDate) : 'None' }}
         </p>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Dialog (Non-Modal)"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/"
+        :references="[
+          { label: 'APG: Date Picker Dialog example', url: 'https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/' },
+        ]"
+        :keyboard="[
+          { key: 'Tab / Shift+Tab', description: 'Moves focus through the visible interactive elements (previous-month button, day buttons, next-month button).' },
+          { key: 'Enter / Space', description: 'When focus is on a day button, selects that date.' },
+          { key: 'Escape', description: 'Closes the calendar and returns focus to the input.' },
+        ]"
+      >
+        <template #notes>
+          <p class="mt-3">
+            The calendar opens as a <code>role="dialog"</code> with <code>aria-modal="false"</code> (it doesn't trap focus). Use the <code>aria-dialog-label</code> prop to customize the announcement (default: <em>Choose date</em>).
+          </p>
+          <p class="mt-2">
+            <strong>Known limitation:</strong> arrow-key navigation across the date grid (per the APG datepicker example) isn't implemented yet — keyboard users move between days via Tab, which works but is less efficient than grid navigation. Planned in a follow-up.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -246,6 +268,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 // Basic usage
 const singleDate = ref<Date>()
