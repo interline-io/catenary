@@ -57,6 +57,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, provide, useId, nextTick } from 'vue'
+import { createTypeAhead } from '../util/type-ahead'
 
 /**
  * Dropdown component using Bulma dropdown structure with WAI-ARIA keyboard support.
@@ -272,6 +273,8 @@ function onTriggerKeydown (event: KeyboardEvent) {
   }
 }
 
+const typeAhead = createTypeAhead()
+
 function onMenuKeydown (event: KeyboardEvent) {
   const items = focusableMenuItems()
   if (items.length === 0) return
@@ -281,21 +284,36 @@ function onMenuKeydown (event: KeyboardEvent) {
   if (event.key === 'ArrowDown') {
     event.preventDefault()
     focusMenuItem((currentIndex < 0 ? 0 : currentIndex + 1))
+    typeAhead.reset()
   } else if (event.key === 'ArrowUp') {
     event.preventDefault()
     focusMenuItem(currentIndex < 0 ? items.length - 1 : currentIndex - 1)
+    typeAhead.reset()
   } else if (event.key === 'Home') {
     event.preventDefault()
     focusMenuItem(0)
+    typeAhead.reset()
   } else if (event.key === 'End') {
     event.preventDefault()
     focusMenuItem(items.length - 1)
+    typeAhead.reset()
   } else if (event.key === 'Escape') {
     event.preventDefault()
+    typeAhead.reset()
     close()
   } else if (event.key === 'Tab') {
     // Per WAI-ARIA: Tab from an open menu closes it and continues focus order.
+    typeAhead.reset()
     close(false)
+  } else if (typeAhead.isTypeAheadKey(event)) {
+    // Type-ahead: jump focus to the next item whose visible text starts with
+    // the buffered characters. Per APG Listbox / Menu patterns.
+    event.preventDefault()
+    const labels = items.map(el => (el.textContent ?? '').trim())
+    const buf = typeAhead.appendChar(event.key)
+    const startFrom = currentIndex < 0 ? -1 : currentIndex
+    const matchIndex = typeAhead.findMatch(labels, buf, startFrom)
+    if (matchIndex >= 0) focusMenuItem(matchIndex)
   }
 }
 
