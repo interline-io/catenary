@@ -249,9 +249,15 @@ function open (focusIndex?: 'first' | 'last') {
   }
 }
 
+const typeAhead = createTypeAhead()
+
 function close (returnFocus = true) {
   if (!isActive.value) return
   isActive.value = false
+  // Clear any in-flight type-ahead buffer so the next open starts fresh.
+  // Without this, characters typed before the menu closed (via item click,
+  // outside click, or document Escape) leak into the next session.
+  typeAhead.reset()
   emit('close')
   if (returnFocus) {
     nextTick(() => {
@@ -272,8 +278,6 @@ function onTriggerKeydown (event: KeyboardEvent) {
     close()
   }
 }
-
-const typeAhead = createTypeAhead()
 
 function onMenuKeydown (event: KeyboardEvent) {
   const items = focusableMenuItems()

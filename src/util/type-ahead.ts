@@ -45,13 +45,20 @@ export function createTypeAhead (resetMs: number = 500): TypeAheadHandle {
   function isTypeAheadKey (event: KeyboardEvent): boolean {
     if (event.key.length !== 1) return false
     if (event.ctrlKey || event.metaKey || event.altKey) return false
-    return /\S/.test(event.key) || event.key === ' '
+    // Space is reserved: in menus and listboxes it activates the focused
+    // item (native button behavior). Excluding it here keeps Space from
+    // being swallowed as a type-ahead character.
+    if (event.key === ' ') return false
+    return /\S/.test(event.key)
   }
 
   function appendChar (ch: string): string {
     buffer += ch.toLowerCase()
     if (timer) clearTimeout(timer)
-    timer = setTimeout(() => { buffer = '' }, resetMs)
+    timer = setTimeout(() => {
+      buffer = ''
+      timer = null
+    }, resetMs)
     return buffer
   }
 

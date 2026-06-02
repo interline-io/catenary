@@ -15,7 +15,11 @@ describe('createTypeAhead', () => {
       expect(ta.isTypeAheadKey(new KeyboardEvent('keydown', { key: 'a' }))).toBe(true)
       expect(ta.isTypeAheadKey(new KeyboardEvent('keydown', { key: 'Z' }))).toBe(true)
       expect(ta.isTypeAheadKey(new KeyboardEvent('keydown', { key: '5' }))).toBe(true)
-      expect(ta.isTypeAheadKey(new KeyboardEvent('keydown', { key: ' ' }))).toBe(true)
+    })
+    it('rejects Space so it stays available to activate the focused item', () => {
+      // Per WAI-ARIA Menu / Listbox: Space activates the focused button. If
+      // type-ahead consumed Space, native button activation would break.
+      expect(ta.isTypeAheadKey(new KeyboardEvent('keydown', { key: ' ' }))).toBe(false)
     })
     it('rejects multi-character keys', () => {
       expect(ta.isTypeAheadKey(new KeyboardEvent('keydown', { key: 'ArrowDown' }))).toBe(false)
