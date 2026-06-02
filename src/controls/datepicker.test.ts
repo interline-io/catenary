@@ -32,10 +32,6 @@ describe('cat-datepicker a11y', () => {
 describe('cat-datepicker keyboard grid navigation', () => {
   // VueWrapper<any>['element'] is typed as Element which makes the generic
   // querySelector call look untyped to vue-tsc. Narrow through HTMLElement.
-  function findDayByDate (wrapper: { element: Element }, date: string): HTMLButtonElement | null {
-    return (wrapper.element as HTMLElement).querySelector<HTMLButtonElement>(`[data-date="${date}"]`)
-  }
-
   function findFocusedDay (wrapper: { element: Element }): HTMLButtonElement | null {
     return (wrapper.element as HTMLElement).querySelector<HTMLButtonElement>('.cat-datepicker-day[tabindex="0"]')
   }
@@ -141,7 +137,11 @@ describe('cat-datepicker keyboard grid navigation', () => {
     const emitted = wrapper.emitted('update:modelValue')
     expect(emitted).toBeTruthy()
     const lastValue = emitted![emitted!.length - 1]![0] as Date
-    expect(lastValue.toISOString().slice(0, 10)).toBe('2025-03-16')
+    // Use local getters rather than toISOString — the Date is constructed in
+    // local time, and toISOString shifts by the timezone offset.
+    expect(lastValue.getFullYear()).toBe(2025)
+    expect(lastValue.getMonth()).toBe(2) // March
+    expect(lastValue.getDate()).toBe(16)
 
     wrapper.unmount()
   })
@@ -164,10 +164,10 @@ describe('cat-datepicker keyboard grid navigation', () => {
     wrapper.unmount()
   })
 
-  it('skips the focus update when the resolved day button is disabled', async () => {
-    // ArrowRight into an unselectableDate should still update focusedDate
-    // (the roving tabindex moves), but focus() must not be called on the
-    // disabled button. We exercise the no-op path here.
+  it('skips past disabled days in the direction of travel on arrow keys', async () => {
+    // ArrowRight from March 15 lands on March 17 because March 16 is blocked.
+    // Without the directional skip, focus would land on the disabled button
+    // (which can't actually be focused) and break the roving tabindex.
     const wrapper = mount(CatDatepicker, {
       attachTo: document.body,
       props: {
@@ -177,11 +177,22 @@ describe('cat-datepicker keyboard grid navigation', () => {
     })
 
     await gridKeydown(wrapper, 'ArrowRight')
-    const target = findDayByDate(wrapper, '2025-03-16')
-    expect(target?.disabled).toBe(true)
-    // The roving tab stop should still have moved to the new date in the DOM —
-    // tabindex=0 is on March 16 even though focus is not on it.
-    expect(findFocusedDay(wrapper)?.getAttribute('data-date')).toBe('2025-03-16')
+    expect(findFocusedDay(wrapper)?.getAttribute('data-date')).toBe('2025-03-17')
+    wrapper.unmount()
+  })
+
+  it('groups day cells into rows under role="row" for the WAI-ARIA grid structure', () => {
+    const wrapper = mount(CatDatepicker, {
+      attachTo: document.body,
+      props: { modelValue: new Date(2025, 2, 15) }
+    })
+    const rows = (wrapper.element as HTMLElement).querySelectorAll('.cat-datepicker-days > [role="row"]')
+    // 42 day cells / 7 per row = 6 rows.
+    expect(rows.length).toBe(6)
+    rows.forEach((row) => {
+      const cells = row.querySelectorAll('[role="gridcell"]')
+      expect(cells.length).toBe(7)
+    })
     wrapper.unmount()
   })
 })

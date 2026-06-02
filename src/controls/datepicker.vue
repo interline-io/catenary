@@ -102,21 +102,31 @@
             :aria-label="visibleMonthLabel"
             @keydown="handleGridKeydown"
           >
-            <button
-              v-for="day in calendarDays"
-              :key="`${day.date.getTime()}`"
-              type="button"
-              role="gridcell"
-              class="cat-datepicker-day"
-              :class="getDayClasses(day)"
-              :disabled="!day.selectable"
-              :tabindex="isSameDay(day.date, focusedDate) ? 0 : -1"
-              :data-date="formatDate(day.date, DATE_FORMAT)"
-              :aria-selected="day.isSelected"
-              @click="selectDate(day.date)"
+            <!-- Days grouped into week rows per the WAI-ARIA grid structure
+                 (gridcells must be owned by a row). display: contents on the
+                 row keeps the existing CSS grid layout unchanged. -->
+            <div
+              v-for="(week, wi) in calendarWeeks"
+              :key="wi"
+              role="row"
+              class="cat-datepicker-row"
             >
-              {{ day.date.getDate() }}
-            </button>
+              <button
+                v-for="day in week"
+                :key="`${day.date.getTime()}`"
+                type="button"
+                role="gridcell"
+                class="cat-datepicker-day"
+                :class="getDayClasses(day)"
+                :disabled="!day.selectable"
+                :tabindex="isSameDay(day.date, focusedDate) ? 0 : -1"
+                :data-date="formatDate(day.date, DATE_FORMAT)"
+                :aria-selected="day.isSelected"
+                @click="selectDate(day.date)"
+              >
+                {{ day.date.getDate() }}
+              </button>
+            </div>
           </div>
         </div>
 
@@ -387,6 +397,16 @@ const calendarDays = computed(() => {
   return days
 })
 
+// Group calendarDays into rows of 7 for the WAI-ARIA grid row structure.
+const calendarWeeks = computed(() => {
+  const weeks: CalendarDay[][] = []
+  const days = calendarDays.value
+  for (let i = 0; i < days.length; i += 7) {
+    weeks.push(days.slice(i, i + 7))
+  }
+  return weeks
+})
+
 function isDateSelected (date: Date): boolean {
   return activeDates.value.some(d => isSameDay(d, date))
 }
@@ -441,6 +461,21 @@ function shiftByMonths (d: Date, deltaMonths: number): Date {
 
 function shiftByYears (d: Date, deltaYears: number): Date {
   return shiftByMonths(d, deltaYears * 12)
+}
+
+// Walk day-by-day from `start` in `direction` (+1 or -1) until a selectable
+// day is found, or until `maxSteps` is reached. Used by keyboard navigation
+// so arrow keys "skip" past disabled days in the direction of travel rather
+// than landing on a disabled <button> (which can't receive focus and would
+// leave the roving tabindex out of sync with actual focus).
+function nextSelectableInDirection (start: Date, direction: 1 | -1, maxSteps: number = 60): Date | null {
+  let d = new Date(start)
+  for (let i = 0; i < maxSteps; i++) {
+    if (isDateSelectable(d)) return d
+    d = new Date(d)
+    d.setDate(d.getDate() + direction)
+  }
+  return null
 }
 
 // Move keyboard focus to a different day. Switches the visible month/year
@@ -504,7 +539,12 @@ function handleGridKeydown (event: KeyboardEvent): void {
   }
   if (next) {
     event.preventDefault()
-    focusDay(next)
+    // Skip past disabled days in the direction of travel so focus lands on a
+    // selectable button. Direction is inferred from the relative date order;
+    // for Home (movement leftward in the week) the direction is -1, for End +1.
+    const direction: 1 | -1 = next.getTime() >= current.getTime() ? 1 : -1
+    const target = nextSelectableInDirection(next, direction)
+    if (target) focusDay(target)
   } else if (shouldSelect) {
     event.preventDefault()
     selectDate(current)
@@ -660,6 +700,13 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 0.25rem;
+}
+
+// Week rows exist for ARIA grid structure (role="row" around gridcells);
+// display: contents lets their children participate in the parent's grid
+// layout so the visual calendar is unchanged.
+.cat-datepicker-row {
+  display: contents;
 }
 
 .cat-datepicker-day {
