@@ -102,4 +102,49 @@ describe('cat-dropdown WAI-ARIA + keyboard', () => {
     await expectNoAxeViolations(wrapper)
     wrapper.unmount()
   })
+
+  it('type-ahead moves focus to the next item whose label starts with the typed character', async () => {
+    const { wrapper } = mountDropdown()
+    const trigger = wrapper.find('button')
+    trigger.element.focus()
+    await trigger.trigger('keydown', { key: 'ArrowDown' })
+    await nextTick()
+    const items = wrapper.findAll('.dropdown-item')
+    const menu = wrapper.find('.dropdown-menu')
+    // After opening, focus is on "One". Typing "t" should move to "Two".
+    await menu.trigger('keydown', { key: 't' })
+    expect(document.activeElement).toBe(items[1]?.element)
+    wrapper.unmount()
+  })
+
+  it('type-ahead cycles between items sharing the same starting character on repeat presses', async () => {
+    const selected = ref<string | undefined>(undefined)
+    const Host = defineComponent({
+      components: { CatDropdown, CatDropdownItem },
+      setup () {
+        return () => h(CatDropdown, {
+          'label': 'Menu',
+          'modelValue': selected.value,
+          'onUpdate:modelValue': (v: string) => { selected.value = v }
+        }, {
+          default: () => [
+            h(CatDropdownItem, { value: 'apple' }, () => 'Apple'),
+            h(CatDropdownItem, { value: 'apricot' }, () => 'Apricot'),
+            h(CatDropdownItem, { value: 'banana' }, () => 'Banana')
+          ]
+        })
+      }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    const trigger = wrapper.find('button')
+    trigger.element.focus()
+    await trigger.trigger('keydown', { key: 'ArrowDown' })
+    await nextTick()
+    const items = wrapper.findAll('.dropdown-item')
+    const menu = wrapper.find('.dropdown-menu')
+    // Focus on Apple; pressing "a" again should cycle to Apricot.
+    await menu.trigger('keydown', { key: 'a' })
+    expect(document.activeElement).toBe(items[1]?.element)
+    wrapper.unmount()
+  })
 })

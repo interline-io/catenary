@@ -251,10 +251,12 @@
           { label: 'APG: Combobox examples', url: 'https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/' },
         ]"
         :keyboard="[
-          { key: 'ArrowDown', description: 'When focus is on the input and the listbox is open, moves focus to the next option.' },
-          { key: 'ArrowUp', description: 'When focus is on the input and the listbox is open, moves focus to the previous option.' },
+          { key: 'ArrowDown', description: 'When the listbox is open, moves focus to the next option.' },
+          { key: 'ArrowUp', description: 'When the listbox is open, moves focus to the previous option.' },
+          { key: 'Home / End', description: 'When the listbox is open, moves focus to the first / last option. Only intercepted when the listbox is showing options; otherwise the keys reach the input cursor as normal.' },
           { key: 'Enter / Space', description: 'When focus is on an option, selects that option.' },
           { key: 'Escape', description: 'Closes the listbox if open; otherwise clears the input text.' },
+          { key: 'Printable characters', description: 'Filter the listbox options. The combobox input itself is the type-ahead surface per the WAI-ARIA Combobox pattern, so a separate buffered type-ahead is not used here.' },
         ]"
       >
         <template #notes>

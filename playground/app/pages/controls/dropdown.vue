@@ -344,6 +344,7 @@
           { key: 'Enter / Space', description: 'When focus is on an item, activates the item.' },
           { key: 'Escape', description: 'Closes the menu and returns focus to the trigger.' },
           { key: 'Tab', description: 'When the menu is open, closes the menu and continues the page tab sequence.' },
+          { key: 'Printable characters', description: 'Type-ahead: jumps focus to the next item whose label starts with the typed character(s). Multiple characters in quick succession extend the search (e.g., type \'ap\' to find the next item starting with \'ap\'). Space is reserved for activating the focused item.' },
         ]"
       >
         <template #notes>
