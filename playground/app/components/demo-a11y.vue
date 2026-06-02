@@ -2,7 +2,7 @@
   <demo-box label="Accessibility">
     <p>
       <template v-if="patternName && patternUrl">
-        Adheres to the
+        Modeled on the
         <a :href="patternUrl" target="_blank" rel="noopener noreferrer">
           {{ patternName }} WAI-ARIA design pattern
         </a>.<template v-if="$slots.intro">
@@ -18,7 +18,7 @@
       <li v-for="ref in references" :key="ref.url">
         <a :href="ref.url" target="_blank" rel="noopener noreferrer">{{ ref.label }}</a>
         <template v-if="ref.note">
-          — {{ ref.note }}
+          : {{ ref.note }}
         </template>
       </li>
     </ul>
@@ -39,9 +39,10 @@
         <tbody>
           <tr v-for="(row, i) in keyboard" :key="i">
             <td>
-              <kbd v-for="(k, j) in row.key.split(' / ')" :key="j">
-                <template v-if="j > 0"> / </template>{{ k }}
-              </kbd>
+              <template v-for="(k, j) in row.key.split(' / ')" :key="j">
+                <span v-if="j > 0" class="cat-demo-a11y-kbd-sep"> / </span>
+                <kbd>{{ k }}</kbd>
+              </template>
             </td>
             <td>{{ row.description }}</td>
           </tr>
@@ -54,13 +55,19 @@
 </template>
 
 <script setup lang="ts">
+import DemoBox from './demo-box.vue'
+
 /**
  * Accessibility section for a playground component page. Renders inside a
  * demo-box and shows:
- *  - Adherence statement linking to the relevant WAI-ARIA Authoring Practices pattern
+ *  - Pattern statement linking to the relevant WAI-ARIA Authoring Practices pattern
  *  - Optional list of additional references (WCAG SCs, W3C tutorials)
  *  - Keyboard interactions table
  *  - Optional free-form notes via the `notes` slot
+ *
+ * "Modeled on" wording is intentional: it accommodates components that
+ * implement most of an APG pattern but document specific deviations in their
+ * notes slot.
  *
  * @component demo-a11y
  * @internal
@@ -90,11 +97,11 @@ interface KeyboardRow {
 }
 
 defineProps<{
-  /** Name of the WAI-ARIA pattern this component adheres to (e.g., "Tabs"). */
+  /** Name of the WAI-ARIA pattern this component is modeled on (e.g., "Tabs"). */
   patternName?: string
   /** Link to the WAI-ARIA Authoring Practices pattern page. */
   patternUrl?: string
-  /** Optional additional reference links — WCAG SCs, W3C tutorials, etc. */
+  /** Optional additional reference links (WCAG SCs, W3C tutorials, etc.). */
   references?: Reference[]
   /** Optional table of keyboard interactions. */
   keyboard?: KeyboardRow[]
@@ -102,6 +109,9 @@ defineProps<{
 </script>
 
 <style lang="scss" scoped>
+@use "bulma/sass/utilities/initial-variables" as *;
+@use "bulma/sass/utilities/derived-variables" as *;
+
 .cat-demo-a11y-refs {
   list-style: disc;
   padding-left: 1.25rem;
@@ -112,8 +122,8 @@ defineProps<{
   margin-bottom: 1rem;
 
   kbd {
-    background: var(--bulma-background);
-    border: 1px solid var(--bulma-border);
+    background: $background;
+    border: 1px solid $border;
     border-radius: 3px;
     padding: 0.1rem 0.4rem;
     font-family: monospace;

@@ -104,7 +104,7 @@
             When <code>icon-right-clickable</code> is set, the right icon renders as a real <code>&lt;button&gt;</code> with its own focus-visible outline. Set <code>icon-right-aria-label</code> (e.g., <code>"Search"</code>, <code>"Clear input"</code>) so screen readers announce a meaningful action name; the default is the generic <em>Action</em>.
           </p>
           <p class="mt-2">
-            Parents that need to focus the input programmatically can call <code>focus()</code> / <code>blur()</code> / <code>select()</code> via a template ref — these are exposed by <code>defineExpose</code>.
+            Parents that need to focus the input programmatically can call <code>focus()</code> / <code>blur()</code> / <code>select()</code> via a template ref (exposed by <code>defineExpose</code>).
           </p>
         </template>
       </demo-a11y>

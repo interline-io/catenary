@@ -144,7 +144,7 @@
             The modal renders with <code>role="dialog"</code> and <code>aria-modal="true"</code>. Background clicks dismiss the modal when <code>closable</code> is true; the Escape handler is registered at the document level for the duration the modal is open.
           </p>
           <p class="mt-2">
-            <strong>Known limitation:</strong> focus is not currently trapped inside the modal — pressing Tab from the last focusable element can move focus to elements behind the backdrop. The APG dialog pattern recommends wrapping Tab/Shift+Tab back into the dialog. Planned in a follow-up.
+            <strong>Known limitation:</strong> focus is not currently trapped inside the modal; pressing Tab from the last focusable element can move focus to elements behind the backdrop. The APG dialog pattern recommends wrapping Tab/Shift+Tab back into the dialog. Planned in a follow-up.
           </p>
         </template>
       </demo-a11y>

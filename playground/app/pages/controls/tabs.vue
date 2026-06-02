@@ -255,10 +255,10 @@
       >
         <template #notes>
           <p class="mt-3">
-            Tabs use <strong>automatic activation</strong>: moving focus to a tab also activates it. The tab list uses a roving <code>tabindex</code> so only one tab is in the page tab order at a time. Tab panels receive <code>tabindex="0"</code> only when their content has no focusable elements of its own — otherwise they're skipped to avoid a redundant tab stop.
+            Tabs use <strong>automatic activation</strong>: moving focus to a tab also activates it. The tab list uses a roving <code>tabindex</code> so only one tab is in the page tab order at a time. Tab panels receive <code>tabindex="0"</code> only when their content has no focusable elements of its own; otherwise they are skipped to avoid a redundant tab stop.
           </p>
           <p class="mt-2">
-            Provide the <code>aria-label</code> prop on <code>&lt;cat-tabs&gt;</code> when the tab list isn't already named by surrounding heading text — without it, screen readers announce each tab without group context.
+            Provide the <code>aria-label</code> prop on <code>&lt;cat-tabs&gt;</code> when the tab list isn't already named by surrounding heading text. Without it, screen readers announce each tab without group context.
           </p>
         </template>
       </demo-a11y>

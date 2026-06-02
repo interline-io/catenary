@@ -196,7 +196,7 @@
         </template>
         <template #notes>
           <p class="mt-3">
-            Set the <code>label</code> prop to give the group a name — the group then renders as a <code>&lt;fieldset&gt;</code> with <code>&lt;legend&gt;</code> so screen readers announce the group's name when focus enters it. Pair with <code>hiddenLegend</code> when the name is already visible in surrounding UI. Without <code>label</code>, the group renders as a plain <code>&lt;div&gt;</code> for backward compatibility.
+            Set the <code>label</code> prop to give the group a name. The group then renders as a <code>&lt;fieldset&gt;</code> with <code>&lt;legend&gt;</code> so screen readers announce the group's name when focus enters it. Pair with <code>hiddenLegend</code> when the name is already visible in surrounding UI. Without <code>label</code>, the group renders as a plain <code>&lt;div&gt;</code> for backward compatibility.
           </p>
         </template>
       </demo-a11y>

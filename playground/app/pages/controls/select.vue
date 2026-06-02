@@ -263,7 +263,7 @@
         ]"
       >
         <template #intro>
-          Renders a native <code>&lt;select&gt;</code>, so the browser provides the full keyboard and screen-reader behavior — including the native dropdown UI and platform-specific list navigation. Pair with <code>&lt;cat-field label="…"&gt;</code> for a programmatic label association.
+          Renders a native <code>&lt;select&gt;</code>, so the browser provides the full keyboard and screen-reader behavior, including the native dropdown UI and platform-specific list navigation. Pair with <code>&lt;cat-field label="…"&gt;</code> for a programmatic label association.
         </template>
         <template #notes>
           <p class="mt-3">

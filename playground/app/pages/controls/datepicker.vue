@@ -241,7 +241,7 @@
       </demo-box>
 
       <demo-a11y
-        pattern-name="Dialog (Non-Modal)"
+        pattern-name="Dialog"
         pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/"
         :references="[
           { label: 'APG: Date Picker Dialog example', url: 'https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/' },
@@ -257,7 +257,7 @@
             The calendar opens as a <code>role="dialog"</code> with <code>aria-modal="false"</code> (it doesn't trap focus). Use the <code>aria-dialog-label</code> prop to customize the announcement (default: <em>Choose date</em>).
           </p>
           <p class="mt-2">
-            <strong>Known limitation:</strong> arrow-key navigation across the date grid (per the APG datepicker example) isn't implemented yet — keyboard users move between days via Tab, which works but is less efficient than grid navigation. Planned in a follow-up.
+            <strong>Known limitation:</strong> arrow-key navigation across the date grid (per the APG datepicker example) isn't implemented yet. Keyboard users move between days via Tab, which works but is less efficient than grid navigation. Planned in a follow-up.
           </p>
         </template>
       </demo-a11y>

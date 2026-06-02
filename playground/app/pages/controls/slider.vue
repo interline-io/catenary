@@ -125,11 +125,11 @@
         ]"
       >
         <template #intro>
-          <code>&lt;cat-slider&gt;</code> renders a native <code>&lt;input type="range"&gt;</code>, so the browser provides the full slider keyboard behavior — no custom handlers needed.
+          <code>&lt;cat-slider&gt;</code> renders a native <code>&lt;input type="range"&gt;</code>, so the browser provides the full slider keyboard behavior. No custom handlers needed.
         </template>
         <template #notes>
           <p class="mt-3">
-            When using <code>cat-slider-tick</code> children that provide a <code>setValue</code> injection, each tick renders as a real <code>&lt;button&gt;</code> with a focus-visible outline — keyboard users can Tab to ticks and press Enter/Space to jump to their value.
+            When using <code>cat-slider-tick</code> children that provide a <code>setValue</code> injection, each tick renders as a real <code>&lt;button&gt;</code> with a focus-visible outline. Keyboard users can Tab to ticks and press Enter/Space to jump to their value.
           </p>
         </template>
       </demo-a11y>

@@ -262,7 +262,7 @@
             The wrapper carries <code>role="combobox"</code> with <code>aria-expanded</code> / <code>aria-haspopup</code> / <code>aria-controls</code> pointing at the listbox. Options expose <code>role="option"</code> and <code>aria-selected</code>. The search input gets an <code>aria-label</code> defaulting to the <code>placeholder</code>, so screen readers always announce something on focus.
           </p>
           <p class="mt-2">
-            In <code>readonly</code> mode the listbox is removed from the DOM, so the combobox role and listbox-related ARIA attributes are omitted on the wrapper — assistive tech sees a plain set of selected tags with no popup affordance.
+            In <code>readonly</code> mode the listbox is removed from the DOM, so the combobox role and listbox-related ARIA attributes are omitted on the wrapper. Assistive tech sees a plain set of selected tags with no popup affordance.
           </p>
         </template>
       </demo-a11y>

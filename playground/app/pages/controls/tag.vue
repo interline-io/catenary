@@ -297,7 +297,7 @@
         ]"
       >
         <template #intro>
-          Tags render as a native <code>&lt;button&gt;</code> only when they're actually interactive — otherwise they're a plain <code>&lt;span&gt;</code> with no tab stop and no implied behavior. The keyboard interaction below applies to the interactive case.
+          Tags render as a native <code>&lt;button&gt;</code> only when they're actually interactive; otherwise they are a plain <code>&lt;span&gt;</code> with no tab stop and no implied behavior. The keyboard interaction below applies to the interactive case.
         </template>
         <template #notes>
           <p class="mt-3">
