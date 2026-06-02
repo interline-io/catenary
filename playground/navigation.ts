@@ -68,3 +68,5 @@ export const controlsGroups: NavGroup[] = [
     ]
   }
 ]
+
+export const navItems: NavItem[] = controlsGroups.flatMap(g => g.items)

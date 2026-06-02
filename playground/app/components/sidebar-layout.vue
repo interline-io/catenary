@@ -1,22 +1,7 @@
 <template>
   <div class="sidebar-layout">
-    <aside class="sidebar-nav menu">
-      <div v-for="group in groups" :key="group.title">
-        <p class="menu-label">
-          {{ group.title }}
-        </p>
-        <ul class="menu-list">
-          <li v-for="item in group.items" :key="item.path">
-            <NuxtLink
-              :to="item.path"
-              :class="{ 'is-active': route.path === item.path }"
-            >
-              <cat-icon :icon="item.icon" size="small" class="pr-2" />
-              <span>{{ item.name }}</span>
-            </NuxtLink>
-          </li>
-        </ul>
-      </div>
+    <aside class="sidebar-nav is-hidden-touch">
+      <nav-menu :groups="groups" />
     </aside>
 
     <main class="sidebar-main">
@@ -26,14 +11,12 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
 import type { NavGroup } from '../../navigation'
+import NavMenu from './nav-menu.vue'
 
 defineProps<{
   groups: NavGroup[]
 }>()
-
-const route = useRoute()
 </script>
 
 <style scoped>
