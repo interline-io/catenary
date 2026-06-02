@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs, useSlots, watchEffect } from 'vue'
+import { computed, useSlots } from 'vue'
 import type { ButtonVariant, ButtonSize } from './types'
 import CatIcon from './icon.vue'
 
@@ -42,7 +42,6 @@ defineOptions({
   inheritAttrs: false
 })
 
-const attrs = useAttrs()
 const slots = useSlots()
 
 const emit = defineEmits<{
@@ -118,8 +117,8 @@ interface Props {
    * Ignored when a default slot, `label`, `iconLeft`, or `iconRight` is present.
    *
    * Accessibility: an icon-only button has no text, so you MUST supply an
-   * accessible name via `aria-label` (or wrap it in `<cat-tooltip>` and label
-   * it). The rendered icon is marked `aria-hidden`.
+   * accessible name via `aria-label` / `aria-labelledby` (or wrap it in
+   * `<cat-tooltip>` and label it). The rendered icon is marked `aria-hidden`.
    * @example <cat-button variant="primary" icon="magnify" aria-label="Search" />
    * @default undefined
    */
@@ -163,23 +162,6 @@ const props = withDefaults(defineProps<Props>(), {
 // label/slot or a left/right icon take precedence over the icon-only shorthand.
 const isIconOnly = computed((): boolean =>
   !!props.icon && !props.label && !props.iconLeft && !props.iconRight && !slots.default)
-
-// An icon-only button has no visible text, so it needs a programmatic accessible
-// name. Warn in dev if one is missing rather than ship a silently inaccessible
-// button. aria-labelledby/title are accepted as alternatives to aria-label.
-// `import.meta.env` is injected by the bundler (Vite); type it locally so the
-// library build (which doesn't pull in vite/client types) stays type-safe.
-const importMeta = import.meta as ImportMeta & { env?: { DEV?: boolean } }
-if (importMeta.env?.DEV) {
-  watchEffect(() => {
-    if (isIconOnly.value && !attrs['aria-label'] && !attrs['aria-labelledby'] && !attrs.title) {
-      console.warn(
-        '[cat-button] icon-only button is missing an accessible name. '
-        + 'Add aria-label (or aria-labelledby/title), e.g. '
-        + `<cat-button icon="${props.icon}" aria-label="…" />.`)
-    }
-  })
-}
 
 const buttonClasses = computed(() => {
   const classes: string[] = []
