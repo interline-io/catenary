@@ -260,9 +260,12 @@ function adjustPosition () {
 }
 
 // Top-layer bubbles are position: fixed, so compute viewport coordinates
-// directly. The cross axis is clamped to the viewport; when clamping shifts
-// the bubble off the trigger's center, a CSS variable keeps the arrow
-// pointing at the trigger.
+// directly. Both axes are clamped to the viewport: the flip logic handles
+// the main axis in normal cases, but a bubble too large for either side
+// would otherwise still run off-screen (it's pointer-events: none, so
+// overlapping the trigger in that degenerate case causes no hover flicker).
+// When clamping shifts the bubble off the trigger's center, a CSS variable
+// keeps the arrow pointing at the trigger.
 const BUBBLE_OFFSET = 8 // matches $tooltip-offset
 const ARROW_INSET = 12 // keep the arrow off the bubble's rounded corners
 
@@ -275,24 +278,26 @@ function placeBubble (
   const bubble = bubbleRef.value
   if (!bubble) return
   const margin = 8
+  const maxLeft = window.innerWidth - bubbleWidth - margin
+  const maxTop = window.innerHeight - bubbleHeight - margin
   const centerX = rect.left + rect.width / 2
   const centerY = rect.top + rect.height / 2
 
   let left: number
   let top: number
   if (position === 'top' || position === 'bottom') {
-    left = clamp(centerX - bubbleWidth / 2, margin, window.innerWidth - bubbleWidth - margin)
+    left = clamp(centerX - bubbleWidth / 2, margin, maxLeft)
     top = position === 'top' ? rect.top - bubbleHeight - BUBBLE_OFFSET : rect.bottom + BUBBLE_OFFSET
     const arrowX = clamp(centerX - left, ARROW_INSET, bubbleWidth - ARROW_INSET)
     bubble.style.setProperty('--cat-tooltip-arrow-pos', `${arrowX}px`)
   } else {
-    top = clamp(centerY - bubbleHeight / 2, margin, window.innerHeight - bubbleHeight - margin)
+    top = clamp(centerY - bubbleHeight / 2, margin, maxTop)
     left = position === 'left' ? rect.left - bubbleWidth - BUBBLE_OFFSET : rect.right + BUBBLE_OFFSET
     const arrowY = clamp(centerY - top, ARROW_INSET, bubbleHeight - ARROW_INSET)
     bubble.style.setProperty('--cat-tooltip-arrow-pos', `${arrowY}px`)
   }
-  bubble.style.left = `${left}px`
-  bubble.style.top = `${top}px`
+  bubble.style.left = `${clamp(left, margin, maxLeft)}px`
+  bubble.style.top = `${clamp(top, margin, maxTop)}px`
 }
 
 function clamp (value: number, min: number, max: number): number {

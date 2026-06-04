@@ -135,22 +135,36 @@ describe('cat-tooltip', () => {
 
   describe('with Popover API support', () => {
     // jsdom doesn't implement the Popover API; stub it so the component takes
-    // the top-layer path. Support is detected per-instance at setup.
+    // the top-layer path. Support is detected per-instance at setup. Save and
+    // restore any pre-existing implementations rather than deleting, so a
+    // future jsdom with native popover support isn't clobbered for other tests.
     let showCalls = 0
     let hideCalls = 0
+    let originalShowPopover: unknown
+    let originalHidePopover: unknown
 
     beforeEach(() => {
       showCalls = 0
       hideCalls = 0
       const proto = HTMLElement.prototype as any
+      originalShowPopover = proto.showPopover
+      originalHidePopover = proto.hidePopover
       proto.showPopover = function () { showCalls += 1 }
       proto.hidePopover = function () { hideCalls += 1 }
     })
 
     afterEach(() => {
       const proto = HTMLElement.prototype as any
-      delete proto.showPopover
-      delete proto.hidePopover
+      if (originalShowPopover === undefined) {
+        delete proto.showPopover
+      } else {
+        proto.showPopover = originalShowPopover
+      }
+      if (originalHidePopover === undefined) {
+        delete proto.hidePopover
+      } else {
+        proto.hidePopover = originalHidePopover
+      }
     })
 
     it('marks the bubble popover="manual" and shows/hides it in the top layer', async () => {
