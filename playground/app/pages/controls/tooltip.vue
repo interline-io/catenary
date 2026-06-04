@@ -267,6 +267,29 @@
         </div>
       </demo-box>
 
+      <demo-box label="Inside Clipping Containers">
+        <p class="mb-3">
+          Bubbles render in the browser's top layer (Popover API), so they
+          escape <code>overflow: hidden</code>/<code>auto</code> ancestors,
+          z-index stacking, and inherited typography like Bulma's uppercase
+          <code>.menu-label</code>.
+        </p>
+        <div
+          class="p-4"
+          style="width: 280px; height: 120px; overflow: auto; border: 1px dashed #999;"
+        >
+          <p class="menu-label">
+            Scrollable panel
+            <cat-tooltip text="This tooltip is wider than its scrollable, overflow-clipped container — and renders sentence-case despite the uppercase menu-label around it.">
+              <cat-icon icon="information" size="small" />
+            </cat-tooltip>
+          </p>
+          <p>
+            A narrow <code>overflow: auto</code> box like a filter sidebar.
+          </p>
+        </div>
+      </demo-box>
+
       <demo-a11y
         pattern-name="Tooltip"
         pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/"

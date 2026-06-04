@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import CatTooltip from './tooltip.vue'
 import { expectNoAxeViolations } from '../testutil/component-helpers'
@@ -120,5 +120,72 @@ describe('cat-tooltip', () => {
     })
     await expectNoAxeViolations(wrapper)
     wrapper.unmount()
+  })
+
+  it('does not set the popover attribute when the Popover API is unsupported', () => {
+    // jsdom has no Popover API, so this is the default test environment.
+    const wrapper = mount(CatTooltip, {
+      attachTo: document.body,
+      props: { text: 'Hint' },
+      slots: { default: '<button class="button">Trigger</button>' }
+    })
+    expect(wrapper.find('[role="tooltip"]').attributes('popover')).toBeUndefined()
+    wrapper.unmount()
+  })
+
+  describe('with Popover API support', () => {
+    // jsdom doesn't implement the Popover API; stub it so the component takes
+    // the top-layer path. Support is detected per-instance at setup.
+    let showCalls = 0
+    let hideCalls = 0
+
+    beforeEach(() => {
+      showCalls = 0
+      hideCalls = 0
+      const proto = HTMLElement.prototype as any
+      proto.showPopover = function () { showCalls += 1 }
+      proto.hidePopover = function () { hideCalls += 1 }
+    })
+
+    afterEach(() => {
+      const proto = HTMLElement.prototype as any
+      delete proto.showPopover
+      delete proto.hidePopover
+    })
+
+    it('marks the bubble popover="manual" and shows/hides it in the top layer', async () => {
+      const wrapper = mount(CatTooltip, {
+        attachTo: document.body,
+        props: { text: 'Hint' },
+        slots: { default: '<button class="button">Trigger</button>' }
+      })
+      const bubble = wrapper.find('[role="tooltip"]')
+      expect(bubble.attributes('popover')).toBe('manual')
+
+      const tooltip = wrapper.find('.cat-tooltip')
+      await tooltip.trigger('mouseenter')
+      await wrapper.vm.$nextTick()
+      expect(showCalls).toBe(1)
+
+      await tooltip.trigger('mouseleave')
+      expect(hideCalls).toBe(1)
+      wrapper.unmount()
+    })
+
+    it('hides the popover on Escape', async () => {
+      const wrapper = mount(CatTooltip, {
+        attachTo: document.body,
+        props: { text: 'Hint' },
+        slots: { default: '<button class="button">Trigger</button>' }
+      })
+      const tooltip = wrapper.find('.cat-tooltip')
+      await tooltip.trigger('mouseenter')
+      await wrapper.vm.$nextTick()
+
+      await tooltip.trigger('keydown', { key: 'Escape' })
+      expect(hideCalls).toBe(1)
+      expect(tooltip.classes()).not.toContain('is-visible')
+      wrapper.unmount()
+    })
   })
 })
