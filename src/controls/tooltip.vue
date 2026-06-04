@@ -18,6 +18,7 @@
     <slot />
     <span
       :id="tooltipId"
+      ref="bubbleRef"
       class="cat-tooltip-bubble"
       role="tooltip"
     >
@@ -44,6 +45,15 @@ import { ref, computed, useId, nextTick, onMounted, onUpdated, onBeforeUnmount }
  *   wrapper); otherwise it lives on the wrapper, which is also the tab stop.
  * - If the slot content isn't natively focusable, the wrapper exposes
  *   `tabindex="0"` so the tooltip's trigger is reachable by keyboard.
+ *
+ * Rendering: in browsers with the Popover API (Baseline 2025), the bubble is
+ * shown as a `popover="manual"` element in the top layer, positioned with
+ * fixed viewport coordinates. The top layer escapes ancestor `overflow`
+ * clipping, z-index stacking, and transformed containing blocks — tooltips
+ * inside scrollable side panels are no longer cut off — while the bubble
+ * stays in the component subtree, so the aria-describedby relationship and
+ * scoped styles are untouched. Browsers without the Popover API fall back to
+ * the previous absolutely-positioned bubble.
  *
  * Tooltips per the spec should not contain interactive content — for that,
  * build a non-modal dialog (popover) instead.
@@ -73,10 +83,16 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const wrapperRef = ref<HTMLElement | null>(null)
+const bubbleRef = ref<HTMLElement | null>(null)
 const isVisible = ref(false)
 const slotIsFocusable = ref(false)
 const adjustedPosition = ref<string | null>(null)
 const tooltipId = useId()
+
+// Popover API support (Baseline 2025). Checked once; jsdom and older
+// browsers take the absolutely-positioned fallback path.
+const popoverSupported = typeof HTMLElement !== 'undefined'
+  && typeof HTMLElement.prototype.showPopover === 'function'
 
 // Slot element we've applied aria-describedby to, so we can clean it up when
 // the slot changes or the component unmounts.
@@ -135,7 +151,14 @@ function relatedTargetInside (event: FocusEvent | MouseEvent): boolean {
 
 function show () {
   isVisible.value = true
-  nextTick(adjustPosition)
+  nextTick(() => {
+    if (popoverSupported && bubbleRef.value) {
+      // Throws if the element is disconnected or already open; both are
+      // harmless races here.
+      try { bubbleRef.value.showPopover() } catch { /* noop */ }
+    }
+    adjustPosition()
+  })
 }
 
 function onMouseleave (event: MouseEvent) {
@@ -152,10 +175,18 @@ function onFocusout (event: FocusEvent) {
 function hide () {
   isVisible.value = false
   adjustedPosition.value = null
+  if (popoverSupported && bubbleRef.value) {
+    try { bubbleRef.value.hidePopover() } catch { /* noop */ }
+  }
 }
 
 onMounted(() => {
   detectFocusableSlot()
+  // Applied post-mount (not a template binding) so SSR markup matches the
+  // client on browsers without Popover API support.
+  if (popoverSupported && bubbleRef.value) {
+    bubbleRef.value.setAttribute('popover', 'manual')
+  }
 })
 
 onUpdated(() => {
@@ -174,8 +205,11 @@ function adjustPosition () {
     if (!wrapperRef.value) return
 
     const rect = wrapperRef.value.getBoundingClientRect()
-    const tooltipWidth = 300
-    const tooltipHeight = 100
+    // In popover mode the bubble is rendered (top layer), so measure its real
+    // size; the fallback path keeps the previous estimates.
+    const bubbleRect = popoverSupported ? bubbleRef.value?.getBoundingClientRect() : undefined
+    const tooltipWidth = bubbleRect?.width || 300
+    const tooltipHeight = bubbleRect?.height || 100
     const margin = 20
 
     let newPosition: 'top' | 'bottom' | 'left' | 'right' = props.position
@@ -218,7 +252,56 @@ function adjustPosition () {
     if (newPosition !== props.position) {
       adjustedPosition.value = newPosition
     }
+
+    if (popoverSupported) {
+      placeBubble(newPosition, rect, tooltipWidth, tooltipHeight)
+    }
   })
+}
+
+// Top-layer bubbles are position: fixed, so compute viewport coordinates
+// directly. Both axes are clamped to the viewport: the flip logic handles
+// the main axis in normal cases, but a bubble too large for either side
+// would otherwise still run off-screen (it's pointer-events: none, so
+// overlapping the trigger in that degenerate case causes no hover flicker).
+// When clamping shifts the bubble off the trigger's center, a CSS variable
+// keeps the arrow pointing at the trigger.
+const BUBBLE_OFFSET = 8 // matches $tooltip-offset
+const ARROW_INSET = 12 // keep the arrow off the bubble's rounded corners
+
+function placeBubble (
+  position: 'top' | 'bottom' | 'left' | 'right',
+  rect: DOMRect,
+  bubbleWidth: number,
+  bubbleHeight: number,
+) {
+  const bubble = bubbleRef.value
+  if (!bubble) return
+  const margin = 8
+  const maxLeft = window.innerWidth - bubbleWidth - margin
+  const maxTop = window.innerHeight - bubbleHeight - margin
+  const centerX = rect.left + rect.width / 2
+  const centerY = rect.top + rect.height / 2
+
+  let left: number
+  let top: number
+  if (position === 'top' || position === 'bottom') {
+    left = clamp(centerX - bubbleWidth / 2, margin, maxLeft)
+    top = position === 'top' ? rect.top - bubbleHeight - BUBBLE_OFFSET : rect.bottom + BUBBLE_OFFSET
+    const arrowX = clamp(centerX - left, ARROW_INSET, bubbleWidth - ARROW_INSET)
+    bubble.style.setProperty('--cat-tooltip-arrow-pos', `${arrowX}px`)
+  } else {
+    top = clamp(centerY - bubbleHeight / 2, margin, maxTop)
+    left = position === 'left' ? rect.left - bubbleWidth - BUBBLE_OFFSET : rect.right + BUBBLE_OFFSET
+    const arrowY = clamp(centerY - top, ARROW_INSET, bubbleHeight - ARROW_INSET)
+    bubble.style.setProperty('--cat-tooltip-arrow-pos', `${arrowY}px`)
+  }
+  bubble.style.left = `${clamp(left, margin, maxLeft)}px`
+  bubble.style.top = `${clamp(top, margin, maxTop)}px`
+}
+
+function clamp (value: number, min: number, max: number): number {
+  return Math.min(Math.max(value, min), Math.max(min, max))
 }
 </script>
 
@@ -228,7 +311,6 @@ function adjustPosition () {
 
 $tooltip-bg: rgba($black, 0.9);
 $tooltip-arrow-size: 6px;
-$tooltip-arrow-offset: 2px;
 $tooltip-offset: 8px;
 
 .cat-tooltip {
@@ -258,93 +340,113 @@ $tooltip-offset: 8px;
     visibility: hidden;
     transition: opacity 0.2s, visibility 0.2s;
     z-index: 1000;
-  }
+    // Self-contained typography: a real element inherits from its context
+    // (e.g. Bulma's uppercase .menu-label), so reset everything that would
+    // make tooltips render differently depending on where they're placed.
+    font-weight: $weight-normal;
+    text-transform: none;
+    letter-spacing: normal;
+    text-align: left;
+    font-style: normal;
 
-  &::before {
-    content: '';
-    position: absolute;
-    border: $tooltip-arrow-size solid transparent;
-    pointer-events: none;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.2s, visibility 0.2s;
-    z-index: 1000;
-  }
-
-  &.is-visible {
-    .cat-tooltip-bubble,
+    // Arrow rides on the bubble so it escapes clipping together with it.
+    // --cat-tooltip-arrow-pos keeps it pointing at the trigger when the
+    // top-layer bubble is clamped to the viewport edge.
     &::before {
-      opacity: 1;
-      visibility: visible;
+      content: '';
+      position: absolute;
+      border: $tooltip-arrow-size solid transparent;
+      pointer-events: none;
     }
   }
 
+  &.is-visible .cat-tooltip-bubble {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  // Top-layer rendering (Popover API): fixed coordinates are set inline by
+  // the component; reset the UA popover centering and keep the arrow
+  // (positioned outside the bubble box) unclipped.
+  .cat-tooltip-bubble[popover] {
+    position: fixed;
+    margin: 0;
+    inset: auto;
+    border: 0;
+    overflow: visible;
+    transition: opacity 0.2s, visibility 0.2s, display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+  }
+
   &.is-tooltip-top {
-    .cat-tooltip-bubble {
+    .cat-tooltip-bubble:not([popover]) {
       bottom: 100%;
       left: 50%;
       transform: translateX(-50%);
       margin-bottom: $tooltip-offset;
     }
 
-    &::before {
-      bottom: 100%;
-      left: 50%;
+    .cat-tooltip-bubble::before {
+      top: 100%;
+      left: var(--cat-tooltip-arrow-pos, 50%);
       transform: translateX(-50%);
-      margin-bottom: $tooltip-arrow-offset;
       border-top-color: $tooltip-bg;
     }
   }
 
   &.is-tooltip-bottom {
-    .cat-tooltip-bubble {
+    .cat-tooltip-bubble:not([popover]) {
       top: 100%;
       left: 50%;
       transform: translateX(-50%);
       margin-top: $tooltip-offset;
     }
 
-    &::before {
-      top: 100%;
-      left: 50%;
+    .cat-tooltip-bubble::before {
+      bottom: 100%;
+      left: var(--cat-tooltip-arrow-pos, 50%);
       transform: translateX(-50%);
-      margin-top: $tooltip-arrow-offset;
       border-bottom-color: $tooltip-bg;
     }
   }
 
   &.is-tooltip-left {
-    .cat-tooltip-bubble {
+    .cat-tooltip-bubble:not([popover]) {
       right: 100%;
       top: 50%;
       transform: translateY(-50%);
       margin-right: $tooltip-offset;
     }
 
-    &::before {
-      right: 100%;
-      top: 50%;
+    .cat-tooltip-bubble::before {
+      left: 100%;
+      top: var(--cat-tooltip-arrow-pos, 50%);
       transform: translateY(-50%);
-      margin-right: $tooltip-arrow-offset;
       border-left-color: $tooltip-bg;
     }
   }
 
   &.is-tooltip-right {
-    .cat-tooltip-bubble {
+    .cat-tooltip-bubble:not([popover]) {
       left: 100%;
       top: 50%;
       transform: translateY(-50%);
       margin-left: $tooltip-offset;
     }
 
-    &::before {
-      left: 100%;
-      top: 50%;
+    .cat-tooltip-bubble::before {
+      right: 100%;
+      top: var(--cat-tooltip-arrow-pos, 50%);
       transform: translateY(-50%);
-      margin-left: $tooltip-arrow-offset;
       border-right-color: $tooltip-bg;
     }
+  }
+}
+
+// Fade-in from the top layer: the bubble goes display:none → block when
+// shown via showPopover(), so the opacity transition needs a starting style.
+@starting-style {
+  .cat-tooltip.is-visible .cat-tooltip-bubble[popover] {
+    opacity: 0;
   }
 }
 </style>
