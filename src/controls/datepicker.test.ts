@@ -196,3 +196,44 @@ describe('cat-datepicker keyboard grid navigation', () => {
     wrapper.unmount()
   })
 })
+
+// Open state lives in the wrapping cat-dropdown; the datepicker must drive it
+// through dropdown.close(), not the dropdown's selection model-value. These
+// guard against regressing to a calendar that won't dismiss on selection.
+describe('cat-datepicker close on select', () => {
+  function dropdownOpen (wrapper: { find: (s: string) => { classes: () => string[] } }): boolean {
+    return wrapper.find('.dropdown.cat-dropdown').classes().includes('is-active')
+  }
+
+  it('closes the calendar after selecting a date (closeOnSelect default)', async () => {
+    const wrapper = mount(CatDatepicker, {
+      attachTo: document.body,
+      props: { modelValue: new Date(2025, 2, 15) }
+    })
+
+    await wrapper.find('.dropdown-trigger').trigger('click')
+    expect(dropdownOpen(wrapper)).toBe(true)
+
+    await wrapper.find('.cat-datepicker-day[data-date="2025-03-20"]').trigger('click')
+    await nextTick()
+    expect(dropdownOpen(wrapper)).toBe(false)
+
+    wrapper.unmount()
+  })
+
+  it('keeps the calendar open on selection when closeOnSelect is false', async () => {
+    const wrapper = mount(CatDatepicker, {
+      attachTo: document.body,
+      props: { modelValue: new Date(2025, 2, 15), closeOnSelect: false }
+    })
+
+    await wrapper.find('.dropdown-trigger').trigger('click')
+    expect(dropdownOpen(wrapper)).toBe(true)
+
+    await wrapper.find('.cat-datepicker-day[data-date="2025-03-20"]').trigger('click')
+    await nextTick()
+    expect(dropdownOpen(wrapper)).toBe(true)
+
+    wrapper.unmount()
+  })
+})

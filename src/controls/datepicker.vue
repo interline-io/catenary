@@ -2,7 +2,6 @@
   <div class="control cat-control">
     <cat-dropdown
       ref="dropdownRef"
-      v-model:model-value="isActive as any"
       :position="position"
       class="cat-datepicker-dropdown"
     >
@@ -289,7 +288,6 @@ const emit = defineEmits<{
 const dropdownRef = ref()
 const inputRef = ref()
 const daysGridRef = ref<HTMLElement | null>(null)
-const isActive = ref(false)
 
 // Current focused date in calendar
 const today = new Date()
@@ -604,7 +602,11 @@ function nextMonth () {
 }
 
 function close () {
-  isActive.value = false
+  // The open state lives in cat-dropdown (its own `isActive`); drive it through
+  // the exposed close() rather than the dropdown's selection model-value, which
+  // does not control visibility. Without this, closeOnSelect can't actually
+  // close the calendar.
+  dropdownRef.value?.close()
 }
 
 // Walk the visible month looking for a selectable day near `target`. If the
