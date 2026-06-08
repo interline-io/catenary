@@ -1,7 +1,7 @@
 <template>
   <div class="control cat-control">
     <cat-dropdown
-      ref="dropdownRef"
+      v-model:open="isActive"
       :position="position"
       class="cat-datepicker-dropdown"
     >
@@ -285,9 +285,10 @@ const emit = defineEmits<{
   'change-year': [year: number]
 }>()
 
-const dropdownRef = ref()
 const inputRef = ref()
 const daysGridRef = ref<HTMLElement | null>(null)
+// Calendar open state, two-way bound to cat-dropdown via v-model:open.
+const isActive = ref(false)
 
 // Current focused date in calendar
 const today = new Date()
@@ -602,11 +603,8 @@ function nextMonth () {
 }
 
 function close () {
-  // The open state lives in cat-dropdown (its own `isActive`); drive it through
-  // the exposed close() rather than the dropdown's selection model-value, which
-  // does not control visibility. Without this, closeOnSelect can't actually
-  // close the calendar.
-  dropdownRef.value?.close()
+  // Two-way bound to cat-dropdown via v-model:open, so this closes the calendar.
+  isActive.value = false
 }
 
 // Walk the visible month looking for a selectable day near `target`. If the
@@ -630,22 +628,31 @@ function nearestSelectableInMonth (target: Date): Date {
   return target
 }
 
-// Initialize focused date from the active selection so the calendar opens
-// on the right month and the roving tabindex lands on the selected day.
-// Runs immediately so the initial render has a valid tab stop in the grid.
-watch(activeDates, (dates) => {
-  const date = dates[0]
+// Point the visible month and the roving tab stop at the active selection so
+// the calendar shows the right month with the selected day focusable. With no
+// selection, clamp today (or the current focusedDate) onto a selectable day so
+// the tab stop is always focusable — minDate/maxDate or whitelists can
+// otherwise leave today unselectable and the grid with no tab stop.
+function seedFocusFromSelection () {
+  const date = activeDates.value[0]
   if (date) {
     focusedMonth.value = date.getMonth()
     focusedYear.value = date.getFullYear()
     focusedDate.value = nearestSelectableInMonth(date)
   } else {
-    // No selection: clamp today (or the current focusedDate) onto a selectable
-    // day so the tab stop is always focusable. minDate/maxDate or whitelists
-    // can otherwise leave today unselectable and the grid with no tab stop.
     focusedDate.value = nearestSelectableInMonth(focusedDate.value)
   }
-}, { immediate: true })
+}
+
+// Runs immediately so the initial render has a valid tab stop in the grid.
+watch(activeDates, seedFocusFromSelection, { immediate: true })
+
+// Re-seed whenever the calendar opens, so paging to another month and closing
+// without selecting doesn't leave it on a stale month — it always reopens on
+// the selected date.
+watch(isActive, (open) => {
+  if (open) { seedFocusFromSelection() }
+})
 
 // When the visible month/year changes via the header (prev/next buttons or
 // month/year selects), keep focusedDate inside the visible month so the grid

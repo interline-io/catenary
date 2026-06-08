@@ -183,7 +183,12 @@ const emit = defineEmits<{
 const dropdownRef = ref<HTMLElement | null>(null)
 const triggerButtonRef = ref<HTMLButtonElement | null>(null)
 const menuRef = ref<HTMLElement | null>(null)
-const isActive = ref(false)
+// Open state, exposed as `v-model:open` so a parent can both control and
+// observe it (e.g. cat-datepicker closing on selection). With no binding it
+// behaves as a plain local ref — defineModel falls back to its default — so
+// existing uncontrolled usage is unchanged. The `open`/`close` events and the
+// exposed open()/close()/toggle() remain for backward compatibility.
+const isActive = defineModel<boolean>('open', { default: false })
 const menuId = useId()
 
 function focusableTrigger (): HTMLElement | null {

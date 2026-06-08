@@ -148,3 +148,50 @@ describe('cat-dropdown WAI-ARIA + keyboard', () => {
     wrapper.unmount()
   })
 })
+
+describe('cat-dropdown v-model:open', () => {
+  function mountWithOpen () {
+    const open = ref(false)
+    const Host = defineComponent({
+      components: { CatDropdown, CatDropdownItem },
+      setup () {
+        return () => h(CatDropdown, {
+          'label': 'Menu',
+          'open': open.value,
+          'onUpdate:open': (v: boolean) => { open.value = v }
+        }, {
+          default: () => [h(CatDropdownItem, { value: 'one' }, () => 'One')]
+        })
+      }
+    })
+    return { wrapper: mount(Host, { attachTo: document.body }), open }
+  }
+
+  it('reflects open state and lets a parent control it', async () => {
+    const { wrapper, open } = mountWithOpen()
+    const root = wrapper.find('.dropdown.cat-dropdown')
+    expect(open.value).toBe(false)
+    expect(root.classes()).not.toContain('is-active')
+
+    // Trigger click opens and pushes state up via update:open.
+    await wrapper.find('button').trigger('click')
+    expect(open.value).toBe(true)
+    expect(root.classes()).toContain('is-active')
+
+    // Parent-driven close propagates back down.
+    open.value = false
+    await nextTick()
+    expect(root.classes()).not.toContain('is-active')
+
+    wrapper.unmount()
+  })
+
+  it('pushes Escape-to-close up through v-model:open', async () => {
+    const { wrapper, open } = mountWithOpen()
+    await wrapper.find('button').trigger('click')
+    expect(open.value).toBe(true)
+    await wrapper.find('.dropdown-menu').trigger('keydown', { key: 'Escape' })
+    expect(open.value).toBe(false)
+    wrapper.unmount()
+  })
+})
