@@ -5,6 +5,8 @@
       :class="buttonClasses"
       :disabled="disabled || loading"
       :type="type"
+      :aria-label="ariaLabel"
+      :title="title"
       v-bind="$attrs"
       @click="handleClick"
     >
@@ -140,6 +142,21 @@ interface Props {
    * Button label text (alternative to using default slot).
    */
   label?: string
+
+  /**
+   * Accessible name, bound as `aria-label` on the native button element.
+   * Required for icon-only buttons, which render no text. Declared as a
+   * prop (rather than relying on attribute fallthrough) so consumers with
+   * `strictTemplates` enabled can pass `aria-label` without a type error.
+   */
+  ariaLabel?: string
+
+  /**
+   * Advisory text, bound as `title` on the native button element (shown as
+   * the browser's native tooltip). Declared as a prop for the same
+   * `strictTemplates` reason as `ariaLabel`.
+   */
+  title?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -155,7 +172,9 @@ const props = withDefaults(defineProps<Props>(), {
   icon: undefined,
   iconLeft: undefined,
   iconRight: undefined,
-  label: undefined
+  label: undefined,
+  ariaLabel: undefined,
+  title: undefined
 })
 
 const isIconOnly = computed((): boolean =>
