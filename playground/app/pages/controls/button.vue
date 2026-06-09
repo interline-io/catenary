@@ -57,20 +57,22 @@
       </demo-box>
 
       <demo-box label="Icon Only">
+        <!-- Icon-only buttons render no text, so each needs an explicit
+             accessible name via aria-label (a declared prop). -->
         <div class="buttons">
-          <cat-button variant="primary">
+          <cat-button variant="primary" aria-label="Favorite">
             <cat-icon icon="heart" />
           </cat-button>
-          <cat-button variant="info">
+          <cat-button variant="info" aria-label="Share">
             <cat-icon icon="share" />
           </cat-button>
-          <cat-button variant="success">
+          <cat-button variant="success" aria-label="Confirm">
             <cat-icon icon="check" />
           </cat-button>
-          <cat-button variant="warning">
+          <cat-button variant="warning" aria-label="Warnings">
             <cat-icon icon="alert" />
           </cat-button>
-          <cat-button variant="danger">
+          <cat-button variant="danger" aria-label="Close" title="Close">
             <cat-icon icon="close" />
           </cat-button>
         </div>
@@ -145,6 +147,7 @@
         :references="[
           { label: 'WCAG SC 1.4.11: Non-text Contrast', url: 'https://www.w3.org/WAI/WCAG21/Understanding/non-text-contrast.html', note: 'focus indicators must have 3:1 contrast against the adjacent background' },
           { label: 'WCAG SC 2.4.7: Focus Visible', url: 'https://www.w3.org/WAI/WCAG22/Understanding/focus-visible.html' },
+          { label: 'WCAG SC 4.1.2: Name, Role, Value', url: 'https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html', note: 'icon-only buttons need an accessible name' },
         ]"
         :keyboard="[
           { key: 'Space', description: 'Activates the button.' },
@@ -154,6 +157,9 @@
         <template #notes>
           <p class="mt-3">
             <code>&lt;cat-button&gt;</code> renders as a native <code>&lt;button&gt;</code>, so all standard browser keyboard, focus, and form behaviors apply. Bulma's default focus ring is overridden with a <code>:focus-visible</code> outline that meets WCAG SC 1.4.11 (3:1 contrast) on the colored variants. Mouse clicks don't trigger the focus outline (only keyboard / programmatic focus does).
+          </p>
+          <p class="mt-3">
+            Icon-only buttons render no text, so they need an explicit accessible name: pass <code>aria-label</code> (declared as a prop, so it typechecks under <code>strictTemplates</code>). Use the <code>title</code> prop for an advisory native tooltip when helpful.
           </p>
         </template>
       </demo-a11y>

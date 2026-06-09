@@ -139,4 +139,26 @@ describe('CatButton', () => {
     expect(wrapper.text()).toContain('Search')
     expect(wrapper.find('button .icon').exists()).toBe(false)
   })
+
+  it('binds ariaLabel and title props onto the native button', () => {
+    // Declared as props (not just attribute fallthrough) so consumers with
+    // strictTemplates enabled can pass them without a type error.
+    const wrapper = mountComponent(CatButton, {
+      props: { icon: 'close', ariaLabel: 'Remove end date', title: 'Remove end date (query a single day)' }
+    })
+
+    const button = wrapper.find('button')
+    expect(button.attributes('aria-label')).toBe('Remove end date')
+    expect(button.attributes('title')).toBe('Remove end date (query a single day)')
+  })
+
+  it('omits aria-label and title attributes when the props are unset', () => {
+    const wrapper = mountComponent(CatButton, {
+      slots: { default: 'Save' }
+    })
+
+    const button = wrapper.find('button')
+    expect(button.attributes('aria-label')).toBeUndefined()
+    expect(button.attributes('title')).toBeUndefined()
+  })
 })
