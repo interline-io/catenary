@@ -1,5 +1,19 @@
 # @interline-io/catenary
 
+## 0.4.0
+
+### Minor Changes
+
+- [#27](https://github.com/interline-io/catenary/pull/27) [`cf74942`](https://github.com/interline-io/catenary/commit/cf749428bae3ee357b6b30108b84da85f4bb8d30) Thanks [@drewda](https://github.com/drewda)! - `cat-dropdown` — add `v-model:open` for controlling and observing the menu's open state. Exposed as a named model via `defineModel('open')`, so the existing default `v-model` (selection) and the `open`/`close` events and `open()`/`close()`/`toggle()` methods are unchanged; with no binding the dropdown stays uncontrolled exactly as before. This gives consumers a declarative way to drive open state (e.g. `cat-datepicker` now closes the calendar through `v-model:open` instead of reaching for the open state via the selection model).
+
+### Patch Changes
+
+- [#27](https://github.com/interline-io/catenary/pull/27) [`cf74942`](https://github.com/interline-io/catenary/commit/cf749428bae3ee357b6b30108b84da85f4bb8d30) Thanks [@drewda](https://github.com/drewda)! - `cat-datepicker` — close the calendar on date selection, and reopen on the selected date's month. The open state was driven through the wrapping `cat-dropdown`'s selection `model-value`, which does not control visibility — so `closeOnSelect` never actually dismissed the calendar (it only closed via outside-click / Escape). The datepicker now binds the dropdown's open state with `v-model:open`, fixing close-on-select for any consumer relying on `closeOnSelect`, and re-seeds the visible month from the current selection each time the calendar opens (so paging away and closing without selecting no longer leaves it on a stale month).
+
+- [#29](https://github.com/interline-io/catenary/pull/29) [`7d83db1`](https://github.com/interline-io/catenary/commit/7d83db1c9efb20f65fa594e0f2b12f34c653c3d8) Thanks [@drewda](https://github.com/drewda)! - `cat-button` — declare `ariaLabel` and `title` as props, bound onto the native `<button>` element.
+
+  Both already worked at runtime via attribute fallthrough, but consumers with `strictTemplates` enabled got a type error when passing `aria-label` / `title` — including the documented icon-only usage, where an accessible name is required. Declaring them as props makes `<cat-button icon="close" aria-label="…" title="…" />` typecheck. Other attributes continue to fall through unchanged.
+
 ## 0.3.0
 
 ### Minor Changes
