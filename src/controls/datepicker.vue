@@ -155,32 +155,41 @@
                   </div>
                 </div>
 
+                <!-- Each cell wraps a plain button rather than carrying
+                     role="gridcell" on the button itself: VoiceOver reads a
+                     gridcell's content separately from its accessible name,
+                     which produced double announcements ("June 15, 2026 15")
+                     or, with the content aria-hidden, "June 15, 2026, blank".
+                     A button inside the cell announces by its aria-label
+                     alone. aria-selected lives on the gridcell per the grid
+                     pattern. -->
                 <div
                   v-for="(week, wi) in calendarWeeks"
                   :key="wi"
                   role="row"
                   class="cat-datepicker-row"
                 >
-                  <button
+                  <div
                     v-for="day in week"
                     :key="`${day.date.getTime()}`"
-                    type="button"
                     role="gridcell"
-                    class="cat-datepicker-day"
-                    :class="getDayClasses(day)"
-                    :disabled="!day.selectable"
-                    :tabindex="isSameDay(day.date, focusedDate) ? 0 : -1"
-                    :data-date="formatDate(day.date, DATE_FORMAT)"
-                    :aria-label="dayAriaLabel(day)"
+                    class="cat-datepicker-cell"
                     :aria-selected="day.isSelected"
-                    :aria-current="day.isToday ? 'date' : undefined"
-                    @click="selectDate(day.date)"
                   >
-                    <!-- Hidden from assistive technology: the full-date
-                         aria-label already names the cell, and VoiceOver
-                         otherwise announces both ("June 15, 2026 15"). -->
-                    <span aria-hidden="true">{{ day.date.getDate() }}</span>
-                  </button>
+                    <button
+                      type="button"
+                      class="cat-datepicker-day"
+                      :class="getDayClasses(day)"
+                      :disabled="!day.selectable"
+                      :tabindex="isSameDay(day.date, focusedDate) ? 0 : -1"
+                      :data-date="formatDate(day.date, DATE_FORMAT)"
+                      :aria-label="dayAriaLabel(day)"
+                      :aria-current="day.isToday ? 'date' : undefined"
+                      @click="selectDate(day.date)"
+                    >
+                      {{ day.date.getDate() }}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -982,7 +991,12 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
   padding: 0.5rem 0;
 }
 
+.cat-datepicker-cell {
+  display: flex;
+}
+
 .cat-datepicker-day {
+  flex: 1;
   aspect-ratio: 1;
   border: 1px solid var(--bulma-grey-lighter);
   border-radius: var(--bulma-radius);
