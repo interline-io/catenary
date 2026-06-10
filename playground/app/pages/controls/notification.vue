@@ -117,14 +117,19 @@
         <cat-button variant="primary" @click="submitForm">
           Submit
         </cat-button>
-        <cat-notification v-if="formStatus === 'success'" variant="success" light class="mt-3">
+        <cat-notification v-if="formStatus === 'success'" variant="success" light role="status" class="mt-3">
           <cat-icon icon="check-circle" />
           Form submitted successfully! Check your email for confirmation.
         </cat-notification>
-        <cat-notification v-if="formStatus === 'error'" variant="danger" light class="mt-3">
+        <cat-notification v-if="formStatus === 'error'" variant="danger" light role="alert" class="mt-3">
           <cat-icon icon="alert-circle" />
           Failed to submit form. Please try again.
         </cat-notification>
+        <p class="is-size-7 has-text-grey mt-2">
+          These notifications appear dynamically, so they carry the
+          <code>role</code> prop: <code>alert</code> for the error,
+          <code>status</code> for the confirmation.
+        </p>
       </demo-box>
 
       <demo-box label="Example: Loading State" example>
@@ -152,6 +157,30 @@
           </ul>
         </cat-notification>
       </demo-box>
+
+      <demo-a11y
+        :references="[
+          { label: 'APG: Alert pattern', url: 'https://www.w3.org/WAI/ARIA/apg/patterns/alert/' },
+          { label: 'MDN: ARIA status role', url: 'https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/status_role' },
+          { label: 'MDN: ARIA alert role', url: 'https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/alert_role' },
+        ]"
+        :keyboard="[
+          { key: 'Tab', description: 'Moves focus to the close button when closeable is set.' },
+          { key: 'Enter / Space', description: 'When focus is on the close button, dismisses the notification.' },
+        ]"
+      >
+        <template #intro>
+          The close button is a real <code>&lt;button type="button"&gt;</code> with an accessible name from the <code>aria-close-label</code> prop (default <em>Dismiss notification</em>), so it no longer announces as an unnamed button or submits an enclosing form.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            Notifications shown dynamically (toasts, form feedback, query results) should set the <code>role</code> prop so screen readers announce them: <code>alert</code> for errors that must interrupt, <code>status</code> for everything else. Static notifications that are part of the page when it loads should omit <code>role</code>; announcing them on load is noise.
+          </p>
+          <p class="mt-2">
+            Reliability caveat: <code>role="alert"</code> is designed to announce when the element is inserted, and does so consistently. <code>role="status"</code> announces most reliably when the live region already exists and its text changes; if a status notification inserted with its content is not announced in some screen readers, render the notification element ahead of time and fill in the message, or keep a persistent container.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -160,6 +189,7 @@
 import { ref, computed } from 'vue'
 import { NotificationVariants } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const variants = NotificationVariants
 
