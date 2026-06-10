@@ -10,6 +10,8 @@
       :placeholder="placeholder"
       :disabled="disabled"
       :readonly="readonly || static"
+      :aria-label="ariaLabel"
+      :aria-describedby="ariaDescribedby"
       :maxlength="maxlength"
       :min="min"
       :max="max"
@@ -73,6 +75,10 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
   /** Make input readonly. @default false */
   readonly?: boolean
+  /** Accessible label for the input, for use when there is no associated visible label. */
+  ariaLabel?: string
+  /** id of an element describing the input (bound as aria-describedby), e.g. a format hint. */
+  ariaDescribedby?: string
   /** Show loading state. @default false */
   loading?: boolean
   /** Use rounded style. @default false */
@@ -105,6 +111,8 @@ const props = withDefaults(defineProps<{
   variant: undefined,
   disabled: false,
   readonly: false,
+  ariaLabel: undefined,
+  ariaDescribedby: undefined,
   loading: false,
   rounded: false,
   static: false,

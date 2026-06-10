@@ -5,7 +5,9 @@
         Datepicker Component
       </h1>
       <p class="subtitle">
-        Calendar-based date selection component with customizable options.
+        Date selection via a typeable text input paired with a calendar dialog.
+        Type a date and press Enter (or leave the field), or open the calendar
+        with the toggle button.
       </p>
 
       <demo-box label="Basic Usage">
@@ -43,6 +45,20 @@
             {{ d }}
           </li>
         </ul>
+      </demo-box>
+
+      <demo-box label="Display Format (date-format)">
+        <cat-datepicker
+          v-model:model-value="formatDate"
+          date-format="MM/dd/yyyy"
+        />
+        <p class="mt-3">
+          Selected: {{ formatDate ? formatDateDisplay(formatDate) : 'None' }}
+        </p>
+        <p class="is-size-7 has-text-grey">
+          The input displays and parses typed dates using <code>date-format</code>;
+          the <code>date-string</code> model stays YYYY-MM-DD.
+        </p>
       </demo-box>
 
       <demo-box label="Multiple Date Selection">
@@ -188,6 +204,7 @@
           v-model:model-value="iconDate"
           placeholder="Custom icons"
           icon="calendar-star"
+          icon-toggle="calendar-month"
           icon-right="close"
           :icon-right-clickable="true"
           icon-prev="arrow-left-circle"
@@ -247,25 +264,30 @@
           { label: 'APG: Date Picker Dialog example', url: 'https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/examples/datepicker-dialog/' },
         ]"
         :keyboard="[
-          { key: 'Tab / Shift+Tab', description: 'Moves focus through the previous-month button, the month and year selects, the next-month button, and the date grid.' },
+          { key: 'Enter (in the input)', description: 'Commits a typed date. Text that does not parse reverts to the current selection (committing also happens when focus leaves the input).' },
+          { key: 'Enter / Space (on the toggle button)', description: 'Opens the calendar dialog and moves focus to the selected date (or the nearest selectable day).' },
+          { key: 'Tab / Shift+Tab', description: 'Within the dialog, moves focus through the previous-month button, the month and year selects, the next-month button, and the date grid. Tabbing out of the dialog closes it.' },
           { key: 'ArrowLeft / ArrowRight', description: 'Within the grid, moves focus to the previous / next day.' },
           { key: 'ArrowUp / ArrowDown', description: 'Within the grid, moves focus to the same day in the previous / next week.' },
           { key: 'Home / End', description: 'Within the grid, moves focus to the first / last day of the current week.' },
           { key: 'PageUp / PageDown', description: 'Within the grid, moves focus to the same day in the previous / next month. Day-of-month is clamped when the target month is shorter (Jan 31 → PageDown → Feb 28).' },
           { key: 'Shift+PageUp / Shift+PageDown', description: 'Within the grid, moves focus to the same day in the previous / next year (with the same day-of-month clamping).' },
           { key: 'Enter / Space', description: 'When focus is on a day button, selects that date.' },
-          { key: 'Escape', description: 'Closes the calendar and returns focus to the input.' },
+          { key: 'Escape', description: 'Closes the calendar and returns focus to the toggle button (or leaves focus in the input when typing).' },
         ]"
       >
         <template #notes>
           <p class="mt-3">
-            The calendar opens as a <code>role="dialog"</code> with <code>aria-modal="false"</code> (it doesn't trap focus, since users may want to interact with the input while the picker is open). Use the <code>aria-dialog-label</code> prop to customize the announcement (default: <em>Choose date</em>).
+            The trigger pairs a typeable text input with a toggle button carrying <code>aria-haspopup="dialog"</code>, <code>aria-expanded</code>, and <code>aria-controls</code>, so assistive technology can discover and operate the calendar popup. The input is described by a visually-hidden date format hint (e.g. <em>Date format: YYYY-MM-DD</em>), and a visually-hidden <code>role="status"</code> region announces typed commits (<em>Date set to ...</em>) and invalid-text reverts (<em>Invalid date, reverted to ...</em>). The toggle button's accessible name includes the current selection. Use the <code>aria-label</code> prop to name the input when the datepicker is not paired with a visible <code>cat-field</code> label.
           </p>
           <p class="mt-2">
-            The day grid uses <code>role="grid"</code> with one <code>role="gridcell"</code> per day. Roving <code>tabindex</code> means only one day button is in the tab order at a time (the selected day, or today). The grid's <code>aria-label</code> announces the visible month and year so screen readers can place the cursor in context.
+            The calendar opens as a <code>role="dialog"</code> with <code>aria-modal="false"</code> (it doesn't trap focus, since users may want to interact with the input while the picker is open). The dialog is the popup's outermost semantic; it is not nested inside a <code>role="menu"</code> container. Use the <code>aria-dialog-label</code> prop to customize the announcement (default: <em>Choose date</em>).
           </p>
           <p class="mt-2">
-            When <code>minDate</code> / <code>maxDate</code> / <code>unselectableDates</code> would leave the natural tab stop on a disabled day, the focused day is automatically advanced to the nearest selectable day in the visible month, so the grid always has a focusable entry point.
+            The day grid uses <code>role="grid"</code> with a column-header row naming the weekdays and one <code>role="gridcell"</code> button per day, each labeled with its full date (e.g. <em>June 15, 2026</em>), with <code>aria-current="date"</code> on today. Roving <code>tabindex</code> means only one day button is in the tab order at a time (the selected day, or today). The grid's <code>aria-label</code> announces the visible month and year, a polite live region announces month changes from the prev/next buttons and PageUp/PageDown, and the month/year selects carry their own labels and unique ids.
+          </p>
+          <p class="mt-2">
+            When <code>minDate</code> / <code>maxDate</code> / <code>unselectableDates</code> would leave the natural tab stop on a disabled day, the focused day is automatically advanced to the nearest selectable day in the visible month, so the grid always has a focusable entry point. Typed dates are deliberately <em>not</em> restricted by these constraints; they are emitted as-is so the consumer can show its own validation messaging.
           </p>
         </template>
       </demo-a11y>
@@ -284,6 +306,9 @@ const singleDate = ref<Date>()
 // String mode
 const stringDate = ref('')
 const stringDates = ref<string[]>([])
+
+// Display format
+const formatDate = ref<Date>()
 
 // Multiple selection
 const multipleDates = ref<Date[]>([])

@@ -56,8 +56,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount, provide, useId, nextTick } from 'vue'
+import { ref, computed, provide, useId, nextTick } from 'vue'
 import { createTypeAhead } from '../util/type-ahead'
+import { useDismissablePopup } from '../util/dismissable-popup'
 
 /**
  * Dropdown component using Bulma dropdown structure with WAI-ARIA keyboard support.
@@ -360,26 +361,11 @@ function handleItemClick (value: any) {
   }
 }
 
-function handleClickOutside (event: MouseEvent) {
-  if (isActive.value && dropdownRef.value && !dropdownRef.value.contains(event.target as Node)) {
-    close(false)
-  }
-}
-
-function handleEscape (event: KeyboardEvent) {
-  if (event.key === 'Escape' && isActive.value) {
-    close()
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('click', handleClickOutside)
-  document.addEventListener('keydown', handleEscape)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('click', handleClickOutside)
-  document.removeEventListener('keydown', handleEscape)
+useDismissablePopup({
+  rootRef: dropdownRef,
+  isOpen: () => isActive.value,
+  onClickOutside: () => close(false),
+  onEscape: () => close()
 })
 
 // Provide context to child dropdown items
