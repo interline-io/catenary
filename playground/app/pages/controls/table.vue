@@ -161,7 +161,10 @@
             Provide an accessible name with one of: a visible <code>caption</code> prop, <code>captionHidden</code> to hide the caption visually but expose it to assistive tech, <code>aria-labelledby</code> pointing at an id whose text names the table (e.g., a surrounding tab label), or <code>aria-label</code> as a fallback. Use <code>aria-describedby</code> for longer-form context that complements the name.
           </p>
           <p class="mt-2">
-            Sortable column headers carry <code>aria-sort=ascending/descending/none</code> and render the label inside a <code>&lt;button class="cat-table-sort"&gt;</code> so keyboard users can change sort by pressing Enter or Space.
+            Sortable column headers carry <code>scope="col"</code> and <code>aria-sort=ascending/descending/none</code>, and render the label inside a <code>&lt;button class="cat-table-sort"&gt;</code> so keyboard users can change sort by pressing Enter or Space.
+          </p>
+          <p class="mt-2">
+            If you override the <code>#header</code> slot, the default header markup is replaced, so you must reproduce these semantics yourself: render <code>&lt;th scope="col" :aria-sort="ariaSort(column)"&gt;</code> for each sortable column using the <code>ariaSort</code> slot prop (the slot also exposes <code>columns</code>, <code>sort</code>, <code>sortField</code>, and <code>sortDirection</code>). Row-header cells in body rows should use <code>&lt;th scope="row"&gt;</code>.
           </p>
         </template>
       </demo-a11y>
