@@ -34,7 +34,17 @@
             @click="close"
           />
         </header>
-        <section class="modal-card-body">
+        <!-- When the body can scroll, it becomes a focusable named region so
+             keyboard users can scroll it (Safari does not make scroll
+             containers focusable automatically). -->
+        <section
+          ref="bodySectionRef"
+          class="modal-card-body"
+          :tabindex="bodyOverflows ? 0 : undefined"
+          :role="bodyOverflows ? 'region' : undefined"
+          :aria-labelledby="bodyOverflows && hasTitle ? titleId : undefined"
+          :aria-label="bodyOverflows && !hasTitle ? effectiveAriaLabel : undefined"
+        >
           <div v-if="modelValue" ref="bodyContentRef" tabindex="-1">
             <slot :close="close" />
             <br>
@@ -50,6 +60,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, useSlots, useId, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { pushDismissLayer, removeDismissLayer, type DismissLayer } from '../util/dismiss-stack'
 
 /**
  * Modal component using Bulma modal-card structure.
@@ -126,6 +137,9 @@ const emit = defineEmits<{
 const slots = useSlots()
 const modalCardRef = ref<HTMLElement | null>(null)
 const bodyContentRef = ref<HTMLElement | null>(null)
+const bodySectionRef = ref<HTMLElement | null>(null)
+const bodyOverflows = ref(false)
+let bodyResizeObserver: ResizeObserver | null = null
 const titleId = useId()
 let previouslyFocused: HTMLElement | null = null
 
@@ -164,14 +178,16 @@ function focusableElements (): HTMLElement[] {
   const sel = 'a[href], area[href], button, input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"]), audio[controls], video[controls], iframe, object, embed, [contenteditable]'
   return Array.from(root.querySelectorAll<HTMLElement>(sel))
     .filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1)
+    // Hidden candidates (display:none etc.) cannot receive focus; including
+    // them dead-ends the Tab wrap. checkVisibility is a pass-through where
+    // the API is absent (older jsdom).
+    .filter(el => (el as HTMLElement & { checkVisibility?: () => boolean }).checkVisibility?.() !== false)
 }
 
+// Tab containment only; Escape dismissal goes through the shared dismiss
+// stack so a popup open inside the modal closes first.
 function handleKeydown (event: KeyboardEvent): void {
   if (!props.modelValue) return
-  if (event.key === 'Escape' && props.closable) {
-    close()
-    return
-  }
   if (event.key !== 'Tab') return
   const root = modalCardRef.value
   if (!root) return
@@ -217,31 +233,72 @@ function initialFocusTarget (): HTMLElement | null {
   return bodyContentRef.value ?? modalCardRef.value
 }
 
+// A non-closable modal still pushes a layer: it must swallow Escape rather
+// than let the press fall through and dismiss a surface beneath it.
+const dismissLayer: DismissLayer = {
+  onEscape: () => {
+    if (props.closable) {
+      close()
+    }
+  }
+}
+
+function updateBodyOverflow (): void {
+  const el = bodySectionRef.value
+  bodyOverflows.value = !!el && el.scrollHeight > el.clientHeight
+}
+
+// Open/close side effects live in named functions (not only the watch)
+// because a modal mounted with modelValue already true never fires the watch.
+async function openSideEffects (): Promise<void> {
+  if (typeof document === 'undefined') return
+  document.documentElement.classList.add('is-clipped')
+  previouslyFocused = document.activeElement as HTMLElement | null
+  pushDismissLayer(dismissLayer)
+  await nextTick()
+  updateBodyOverflow()
+  if (typeof ResizeObserver !== 'undefined' && bodySectionRef.value) {
+    bodyResizeObserver = new ResizeObserver(updateBodyOverflow)
+    bodyResizeObserver.observe(bodySectionRef.value)
+    if (bodyContentRef.value) {
+      bodyResizeObserver.observe(bodyContentRef.value)
+    }
+  }
+  initialFocusTarget()?.focus()
+}
+
+function closeSideEffects (): void {
+  if (typeof document === 'undefined') return
+  document.documentElement.classList.remove('is-clipped')
+  removeDismissLayer(dismissLayer)
+  bodyResizeObserver?.disconnect()
+  bodyResizeObserver = null
+  // The opener may have been removed from the DOM while the modal was open
+  // (e.g., it lived inside a v-if branch that re-rendered). Guard against
+  // calling focus() on a stale reference.
+  const prev = previouslyFocused
+  if (prev && prev.isConnected) {
+    prev.focus()
+  }
+  previouslyFocused = null
+}
+
 // Toggle html clipping, move focus into the modal on open, and restore focus
 // to whatever element opened it on close.
-watch(() => props.modelValue, async (isActive) => {
-  if (typeof document === 'undefined') return
+watch(() => props.modelValue, (isActive) => {
   if (isActive) {
-    document.documentElement.classList.add('is-clipped')
-    previouslyFocused = document.activeElement as HTMLElement | null
-    await nextTick()
-    initialFocusTarget()?.focus()
+    void openSideEffects()
   } else {
-    document.documentElement.classList.remove('is-clipped')
-    // The opener may have been removed from the DOM while the modal was open
-    // (e.g., it lived inside a v-if branch that re-rendered). Guard against
-    // calling focus() on a stale reference.
-    const prev = previouslyFocused
-    if (prev && prev.isConnected) {
-      prev.focus()
-    }
-    previouslyFocused = null
+    closeSideEffects()
   }
 })
 
 onMounted(() => {
   if (typeof document !== 'undefined') {
     document.addEventListener('keydown', handleKeydown)
+  }
+  if (props.modelValue) {
+    void openSideEffects()
   }
 })
 
@@ -250,6 +307,9 @@ onBeforeUnmount(() => {
     document.removeEventListener('keydown', handleKeydown)
     document.documentElement.classList.remove('is-clipped')
   }
+  removeDismissLayer(dismissLayer)
+  bodyResizeObserver?.disconnect()
+  bodyResizeObserver = null
 })
 </script>
 

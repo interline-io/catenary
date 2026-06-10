@@ -148,7 +148,10 @@
             On open, focus moves to the first focusable element inside the dialog. If the dialog has no focusable children, focus falls back to the title (preferred per APG: do not focus the dialog element itself) or the body wrapper. Tab and Shift+Tab cycle within the dialog. On close, focus returns to whatever element opened it; if that element is gone from the DOM, the restore is a safe no-op.
           </p>
           <p class="mt-2">
-            Background clicks dismiss the modal when <code>closable</code> is true. The Escape handler is registered at the document level for the duration the modal is open.
+            Background clicks dismiss the modal when <code>closable</code> is true. Escape dismissal goes through a shared LIFO stack, so a popup opened inside the modal (a <code>cat-dropdown</code> menu or <code>cat-datepicker</code> calendar) closes on the first Escape and the modal on the second, rather than both at once. A non-closable modal still consumes Escape so it cannot dismiss a surface beneath it.
+          </p>
+          <p class="mt-2">
+            When the body content is taller than the dialog, the scrollable body becomes a focusable region in the Tab order so keyboard users can scroll it.
           </p>
         </template>
       </demo-a11y>
