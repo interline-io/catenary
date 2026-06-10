@@ -44,6 +44,35 @@
           Selected: {{ fileTree.getSel().sel }} / {{ fileTree.getSel().sel + fileTree.getSel().unsel }}
         </p>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Disclosure"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/"
+        :references="[
+          { label: 'MDN: ARIA tree role', url: 'https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/tree_role', note: 'including the warning about when not to use it' },
+          { label: 'MDN: ARIA treeitem role', url: 'https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Reference/Roles/treeitem_role' },
+        ]"
+        :keyboard="[
+          { key: 'Tab / Shift+Tab', description: 'Moves focus through the visible disclosure buttons and checkboxes in document order. Collapsed branches remove their descendants from the tab order.' },
+          { key: 'Enter / Space', description: 'When focus is on a disclosure button, expands or collapses that branch.' },
+          { key: 'Space', description: 'When focus is on a node checkbox, toggles that node\'s selection (and its descendants, per the tree selection model).' },
+        ]"
+      >
+        <template #intro>
+          Each branch renders a native disclosure <code>&lt;button&gt;</code> named after its node, with <code>aria-expanded</code> conveying open or closed state, and a native checkbox for selection. Children are wrapped in <code>role="group"</code> labeled with the parent node's name, so the hierarchy is exposed programmatically rather than only by visual indentation.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            This component deliberately does not use <code>role="tree"</code> / <code>role="treeitem"</code>. Those roles obligate the full native-application keyboard model (arrow-key navigation with a roving tabindex, Right/Left to expand and collapse, type-ahead), and MDN warns against adopting them without implementing all of it: screen readers announce a tree and users expect arrow keys to work. At this component's typical scale, conventional Tab navigation through native buttons and checkboxes is more predictable.
+          </p>
+          <p class="mt-2">
+            If the component grows to handle large trees where Tab-stepping every node becomes burdensome, the right upgrade is the complete APG Tree View pattern (roles plus the whole keyboard model, <code>aria-level</code> / <code>aria-setsize</code> / <code>aria-posinset</code> for any virtualized nodes, and type-ahead), not the roles alone.
+          </p>
+          <p class="mt-2">
+            The disclosure buttons intentionally omit <code>aria-controls</code>: the children container is conditionally rendered, so the reference would dangle while collapsed. The group immediately follows its button in DOM order.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -52,6 +81,7 @@
 import { reactive } from 'vue'
 import { TreeNode } from '../../../../src/util/tree'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 function selectBasicTree (state: boolean, key: string) {
   basicTree.toggleUnselected(state, key)
