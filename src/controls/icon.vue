@@ -1,9 +1,10 @@
 <template>
   <!-- Icons are decorative by default and hidden from assistive technology;
-       passing ariaLabel marks the icon as meaningful (role="img" with that
-       name). The @click here only re-emits to allow parent components to
-       attach listeners; consumers must wrap clickable icons in a <button>
-       (see how cat-button uses cat-icon for icon-only buttons). -->
+       passing aria-label (the ariaLabel prop) marks the icon as meaningful
+       (role="img" with that name). The @click here only re-emits to allow
+       parent components to attach listeners; consumers must wrap clickable
+       icons in a <button> (see how cat-button uses cat-icon for icon-only
+       buttons). -->
   <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/click-events-have-key-events -->
   <span
     class="icon"
@@ -27,9 +28,9 @@ import { computed } from 'vue'
  * aria-hidden="true" so screen readers skip it (icon-font glyphs sit in a
  * private-use codepoint range that some screen readers otherwise voice as
  * garbage). When an icon conveys information that no adjacent text does
- * (a status glyph, a warning marker), pass `ariaLabel` to render it as
- * role="img" with that accessible name. For icon-only buttons, the name
- * belongs on the button, not the icon.
+ * (a status glyph, a warning marker), pass `aria-label` (the `ariaLabel`
+ * prop) to render it as role="img" with that accessible name. For icon-only
+ * buttons, the name belongs on the button, not the icon.
  *
  * @component cat-icon
  * @example
