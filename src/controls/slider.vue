@@ -75,6 +75,8 @@ interface Props {
    * @values primary, link, info, success, warning, danger
    */
   variant?: SliderVariant
+  /** id of an element describing the control (bound as aria-describedby), merged with a wrapping cat-field's message id. */
+  ariaDescribedby?: string
 
   /**
    * Whether the slider is disabled.
@@ -96,6 +98,7 @@ const props = withDefaults(defineProps<Props>(), {
   step: 1,
   size: undefined,
   variant: undefined,
+  ariaDescribedby: undefined,
   disabled: false,
   tooltip: false
 })
@@ -110,7 +113,7 @@ const emit = defineEmits<{
 const fieldDescribedby = inject(FieldDescribedbyKey, undefined)
 const fieldVariant = inject(FieldVariantKey, undefined)
 const mergedDescribedby = computed(() => {
-  const parts = [undefined, fieldDescribedby?.value].filter(Boolean)
+  const parts = [props.ariaDescribedby, fieldDescribedby?.value].filter(Boolean)
   return parts.length > 0 ? parts.join(' ') : undefined
 })
 const ariaInvalid = computed(() => {

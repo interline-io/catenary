@@ -55,6 +55,8 @@ const props = withDefaults(defineProps<{
   size?: SelectSize
   /** Select color variant. */
   variant?: SelectVariant
+  /** id of an element describing the control (bound as aria-describedby), merged with a wrapping cat-field's message id. */
+  ariaDescribedby?: string
   /** Disable the select. @default false */
   disabled?: boolean
   /** Make the select full width. @default false */
@@ -75,6 +77,7 @@ const props = withDefaults(defineProps<{
   ariaLabel: undefined,
   size: undefined,
   variant: undefined,
+  ariaDescribedby: undefined,
   disabled: false,
   fullwidth: false,
   rounded: false,
@@ -94,7 +97,7 @@ const emit = defineEmits<{
 const fieldDescribedby = inject(FieldDescribedbyKey, undefined)
 const fieldVariant = inject(FieldVariantKey, undefined)
 const mergedDescribedby = computed(() => {
-  const parts = [undefined, fieldDescribedby?.value].filter(Boolean)
+  const parts = [props.ariaDescribedby, fieldDescribedby?.value].filter(Boolean)
   return parts.length > 0 ? parts.join(' ') : undefined
 })
 const ariaInvalid = computed(() => {
