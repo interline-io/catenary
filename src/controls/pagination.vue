@@ -4,7 +4,7 @@
       type="button"
       class="pagination-previous"
       :disabled="isFirst"
-      :aria-disabled="isFirst"
+      :aria-label="ariaPreviousLabel"
       @click="changePage(current - 1)"
     >
       <cat-icon icon="chevron-left" />
@@ -13,7 +13,7 @@
       type="button"
       class="pagination-next"
       :disabled="isLast"
-      :aria-disabled="isLast"
+      :aria-label="ariaNextLabel"
       @click="changePage(current + 1)"
     >
       <cat-icon icon="chevron-right" />
@@ -21,12 +21,17 @@
     <ul class="pagination-list">
       <!-- First page -->
       <li v-if="hasFirst">
-        <button type="button" class="pagination-link" @click="changePage(1)">
+        <button
+          type="button"
+          class="pagination-link"
+          aria-label="Page 1"
+          @click="changePage(1)"
+        >
           1
         </button>
       </li>
       <li v-if="hasFirstEllipsis">
-        <span class="pagination-ellipsis">&hellip;</span>
+        <span class="pagination-ellipsis" aria-hidden="true">&hellip;</span>
       </li>
 
       <!-- Pages in range -->
@@ -35,6 +40,7 @@
           type="button"
           class="pagination-link"
           :class="{ 'is-current': page === current }"
+          :aria-label="`Page ${page}`"
           :aria-current="page === current ? 'page' : undefined"
           @click="changePage(page)"
         >
@@ -44,10 +50,15 @@
 
       <!-- Last page -->
       <li v-if="hasLastEllipsis">
-        <span class="pagination-ellipsis">&hellip;</span>
+        <span class="pagination-ellipsis" aria-hidden="true">&hellip;</span>
       </li>
       <li v-if="hasLast">
-        <button type="button" class="pagination-link" @click="changePage(pageCount)">
+        <button
+          type="button"
+          class="pagination-link"
+          :aria-label="`Page ${pageCount}`"
+          @click="changePage(pageCount)"
+        >
           {{ pageCount }}
         </button>
       </li>
@@ -115,6 +126,18 @@ interface Props {
    * @default false
    */
   rounded?: boolean
+
+  /**
+   * Accessible label for the previous-page button (icon-only).
+   * @default 'Previous page'
+   */
+  ariaPreviousLabel?: string
+
+  /**
+   * Accessible label for the next-page button (icon-only).
+   * @default 'Next page'
+   */
+  ariaNextLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -123,7 +146,9 @@ const props = withDefaults(defineProps<Props>(), {
   size: undefined,
   rangeBefore: 1,
   rangeAfter: 1,
-  rounded: false
+  rounded: false,
+  ariaPreviousLabel: 'Previous page',
+  ariaNextLabel: 'Next page'
 })
 
 const current = defineModel<number>('current', { default: 1 })

@@ -138,7 +138,10 @@
         </template>
         <template #notes>
           <p class="mt-3">
-            When the current page is the first or last, the previous / next buttons are marked <code>disabled</code> (which removes them from the tab order). They also carry <code>aria-disabled</code> so assistive tech that surfaces non-focusable buttons can still announce them as disabled.
+            Every page button is labeled <code>Page N</code>, which screen readers combine with <code>aria-current</code> as e.g. <em>Page 7, current page</em>. The icon-only previous / next buttons are named via the <code>aria-previous-label</code> / <code>aria-next-label</code> props (defaults: <em>Previous page</em> / <em>Next page</em>), and the decorative ellipsis separators are hidden from assistive technology.
+          </p>
+          <p class="mt-2">
+            When the current page is the first or last, the previous / next buttons are marked <code>disabled</code>, which removes them from the tab order and announces them as dimmed/unavailable.
           </p>
         </template>
       </demo-a11y>
