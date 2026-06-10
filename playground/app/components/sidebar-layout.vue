@@ -4,7 +4,8 @@
       <nav-menu :groups="groups" />
     </aside>
 
-    <main class="sidebar-main">
+    <!-- tabindex=-1 lets the skip link move focus here in every browser. -->
+    <main id="main-content" class="sidebar-main" tabindex="-1">
       <slot />
     </main>
   </div>

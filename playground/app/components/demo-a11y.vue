@@ -24,9 +24,9 @@
     </ul>
 
     <template v-if="keyboard && keyboard.length">
-      <h4 class="title is-6 mt-4 mb-2">
+      <h3 class="title is-6 mt-4 mb-2">
         Keyboard interactions
-      </h4>
+      </h3>
       <table class="table is-narrow is-fullwidth cat-demo-a11y-keys">
         <thead>
           <tr>
