@@ -3,6 +3,11 @@
     <div style="display: none;">
       <slot name="columns" />
     </div>
+    <!-- Announces sort changes: JAWS reads the aria-sort flip on the header,
+         but NVDA and TalkBack stay silent without a live region. Rendered
+         from mount because live regions inserted at announcement time are
+         unreliable. -->
+    <span class="is-sr-only" role="status">{{ statusMessage }}</span>
     <table
       class="table cat-table"
       :class="tableClasses"
@@ -76,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, provide, useSlots } from 'vue'
+import { ref, computed, provide, useSlots, nextTick } from 'vue'
 
 const slots = useSlots()
 
@@ -260,10 +265,21 @@ function getHeaderClasses (column: Column) {
   return classes
 }
 
-function getAriaSort (column: Column): 'ascending' | 'descending' | 'none' | undefined {
-  if (!column.sortable) return undefined
-  if (sortField.value !== column.field) return 'none'
+// Omitted (not "none") on unsorted columns: aria-sort belongs on at most one
+// header at a time, and the field guidance (MDN, Roselli) is to drop the
+// attribute rather than emit the "none" value.
+function getAriaSort (column: Column): 'ascending' | 'descending' | undefined {
+  if (!column.sortable || sortField.value !== column.field) return undefined
   return sortDirection.value === 'asc' ? 'ascending' : 'descending'
+}
+
+const statusMessage = ref('')
+function announceStatus (message: string) {
+  // Clear first so repeating the same message still triggers an announcement.
+  statusMessage.value = ''
+  nextTick(() => {
+    statusMessage.value = message
+  })
 }
 
 function handleSort (field: string) {
@@ -273,6 +289,8 @@ function handleSort (field: string) {
     sortField.value = field
     sortDirection.value = 'asc'
   }
+  const label = columns.value.find(c => c.field === field)?.label || field
+  announceStatus(`Sorted by ${label}, ${sortDirection.value === 'asc' ? 'ascending' : 'descending'}`)
 }
 
 function registerColumn (column: Column) {

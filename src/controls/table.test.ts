@@ -70,7 +70,7 @@ describe('cat-table accessibility', () => {
     const wrapper = await mountTable({ defaultSort: ['id', 'asc'] })
     const headers = wrapper.findAll('th')
     expect(headers[0]?.attributes('aria-sort')).toBe('ascending')
-    expect(headers[1]?.attributes('aria-sort')).toBe('none')
+    expect(headers[1]?.attributes('aria-sort')).toBeUndefined()
     expect(headers[0]?.attributes('scope')).toBe('col')
     expect(headers[1]?.attributes('scope')).toBe('col')
 
@@ -83,7 +83,7 @@ describe('cat-table accessibility', () => {
 
     await sortButtons[1]?.trigger('click')
     expect(headers[1]?.attributes('aria-sort')).toBe('ascending')
-    expect(headers[0]?.attributes('aria-sort')).toBe('none')
+    expect(headers[0]?.attributes('aria-sort')).toBeUndefined()
     wrapper.unmount()
   })
 
@@ -140,11 +140,11 @@ describe('cat-table accessibility', () => {
     const headers = wrapper.findAll('th')
     expect(headers[0]?.attributes('aria-sort')).toBe('ascending')
     expect(headers[0]?.attributes('data-sort-state')).toBe('asc')
-    expect(headers[1]?.attributes('aria-sort')).toBe('none')
+    expect(headers[1]?.attributes('aria-sort')).toBeUndefined()
 
     // Sorting through the slot's sort() callback updates the slot props.
     await headers[1]?.find('button').trigger('click')
-    expect(headers[0]?.attributes('aria-sort')).toBe('none')
+    expect(headers[0]?.attributes('aria-sort')).toBeUndefined()
     expect(headers[1]?.attributes('aria-sort')).toBe('ascending')
     expect(headers[1]?.attributes('data-sort-state')).toBe('asc')
 
@@ -159,6 +159,26 @@ describe('cat-table accessibility', () => {
   it('has no axe violations with a caption', async () => {
     const wrapper = await mountTable({ caption: 'Sample table' })
     await expectNoAxeViolations(wrapper)
+    wrapper.unmount()
+  })
+})
+
+describe('cat-table sort announcements', () => {
+  it('announces sort changes through a status region and omits aria-sort on unsorted columns', async () => {
+    const wrapper = await mountTable()
+    const status = wrapper.find('[role="status"]')
+    expect(status.text()).toBe('')
+
+    await wrapper.findAll('button.cat-table-sort')[0]!.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(status.text()).toBe('Sorted by ID, ascending')
+    const headers = wrapper.findAll('th')
+    expect(headers[0]?.attributes('aria-sort')).toBe('ascending')
+    expect(headers[1]?.attributes('aria-sort')).toBeUndefined()
+
+    await wrapper.findAll('button.cat-table-sort')[0]!.trigger('click')
+    await wrapper.vm.$nextTick()
+    expect(status.text()).toBe('Sorted by ID, descending')
     wrapper.unmount()
   })
 })
