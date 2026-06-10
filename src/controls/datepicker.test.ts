@@ -482,6 +482,25 @@ describe('cat-datepicker a11y', () => {
   })
 })
 
+describe('cat-datepicker addon slot', () => {
+  it('renders addon content inside the input addon group, after the toggle', () => {
+    const wrapper = mount(CatDatepicker, {
+      attachTo: document.body,
+      slots: { addon: '<div class="control"><button type="button" class="my-clear">Clear</button></div>' }
+    })
+    const field = wrapper.find('.cat-datepicker-field')
+    const clear = field.find('.my-clear')
+    expect(clear.exists()).toBe(true)
+    // The toggle keeps its position before the addon content.
+    const children = Array.from(field.element.children)
+    const toggleIndex = children.findIndex(el => el.querySelector('.cat-datepicker-toggle'))
+    const clearIndex = children.findIndex(el => el.querySelector('.my-clear'))
+    expect(toggleIndex).toBeGreaterThanOrEqual(0)
+    expect(clearIndex).toBe(toggleIndex + 1)
+    wrapper.unmount()
+  })
+})
+
 describe('cat-datepicker close on select', () => {
   it('closes the calendar after selecting a date (closeOnSelect default)', async () => {
     const wrapper = mount(CatDatepicker, {

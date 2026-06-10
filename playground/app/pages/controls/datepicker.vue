@@ -216,6 +216,22 @@
         </p>
       </demo-box>
 
+      <demo-box label="Addon Slot (attached clear button)">
+        <cat-datepicker v-model:model-value="addonDate">
+          <template #addon>
+            <cat-button
+              icon="close"
+              :disabled="!addonDate"
+              v-bind="{ ariaLabel: 'Clear date' }"
+              @click="addonDate = undefined"
+            />
+          </template>
+        </cat-datepicker>
+        <p class="mt-3">
+          Selected: {{ addonDate ? formatDateDisplay(addonDate) : 'None' }}
+        </p>
+      </demo-box>
+
       <demo-box label="Dropdown Position">
         <div class="columns">
           <div class="column">
@@ -349,6 +365,9 @@ const readonlyDate = ref<Date>(new Date())
 
 // Custom icons
 const iconDate = ref<Date>()
+
+// Addon slot
+const addonDate = ref<Date>()
 
 // Position
 const positionDate1 = ref<Date>()

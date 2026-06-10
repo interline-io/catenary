@@ -56,6 +56,10 @@
               </span>
             </button>
           </div>
+          <!-- Extra controls attached to the date input's addon group, e.g. a
+               clear button. Slot content must be Bulma addon-shaped (a
+               .control wrapping a .button); cat-button renders exactly that. -->
+          <slot name="addon" />
         </div>
       </div>
 
@@ -236,6 +240,10 @@ const DATE_FORMAT = 'yyyy-MM-dd'
  * Supports two model bindings:
  * - `v-model` for Date / Date[] values
  * - `v-model:date-string` for YYYY-MM-DD string / string[] values
+ *
+ * The #addon slot appends additional controls to the input's Bulma addon
+ * group (after the calendar toggle button), e.g. a clear button:
+ * <cat-datepicker v-model="date"><template #addon><cat-button icon="close" aria-label="Clear date" @click="clear" /></template></cat-datepicker>
  *
  * @component cat-datepicker
  * @example
