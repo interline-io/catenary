@@ -5,8 +5,9 @@
       :class="selectClasses"
     >
       <select
-        :id="fieldId"
+        :id="id ?? fieldId"
         ref="selectRef"
+        :aria-label="ariaLabel"
         :value="modelValue"
         :disabled="disabled || readonly"
         :multiple="multiple"
@@ -44,6 +45,10 @@ const fieldId = inject(FieldIdKey, undefined)
 const props = withDefaults(defineProps<{
   /** The selected value (v-model). For multiple select, use an array. */
   modelValue?: T
+  /** Explicit id for the native select. Overrides the id injected by a wrapping cat-field. Use this when a composite control contains multiple selects so ids stay unique. */
+  id?: string
+  /** Accessible label for the select, for use when there is no associated visible label. */
+  ariaLabel?: string
   /** Select size variant. @default undefined (normal size) */
   size?: SelectSize
   /** Select color variant. */
@@ -64,6 +69,8 @@ const props = withDefaults(defineProps<{
   multiple?: boolean
 }>(), {
   modelValue: undefined,
+  id: undefined,
+  ariaLabel: undefined,
   size: undefined,
   variant: undefined,
   disabled: false,
