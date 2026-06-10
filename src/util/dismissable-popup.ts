@@ -28,7 +28,12 @@ export function useDismissablePopup (options: DismissablePopupOptions): void {
   function handleDocumentClick (event: MouseEvent) {
     if (!options.isOpen()) return
     const root = options.rootRef.value
-    if (root && !root.contains(event.target as Node)) {
+    const target = event.target
+    // contains() throws on non-Node EventTargets, which synthetic or
+    // programmatic events can produce; with no Node we can't tell inside
+    // from outside, so do nothing rather than guess.
+    if (!root || !(target instanceof Node)) return
+    if (!root.contains(target)) {
       options.onClickOutside()
     }
   }

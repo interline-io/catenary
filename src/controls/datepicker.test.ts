@@ -432,12 +432,16 @@ describe('cat-datepicker keyboard grid navigation', () => {
   })
 
   it('marks today with aria-current="date"', () => {
+    // Capture timestamps on both sides of mount so the assertion tolerates a
+    // date rollover at local midnight between mount and the expectation.
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const before = new Date()
     const wrapper = mount(CatDatepicker, { attachTo: document.body })
+    const after = new Date()
+
     const todayCells = wrapper.findAll('[aria-current="date"]')
     expect(todayCells.length).toBe(1)
-    const now = new Date()
-    const expected = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-    expect(todayCells[0]!.attributes('data-date')).toBe(expected)
+    expect([fmt(before), fmt(after)]).toContain(todayCells[0]!.attributes('data-date'))
     wrapper.unmount()
   })
 
