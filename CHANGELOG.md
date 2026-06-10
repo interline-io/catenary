@@ -1,5 +1,11 @@
 # @interline-io/catenary
 
+## 0.6.0
+
+### Minor Changes
+
+- [#41](https://github.com/interline-io/catenary/pull/41) [`b53a896`](https://github.com/interline-io/catenary/commit/b53a89647a3c2d6a92ddfb07634e2dc2393cf229) Thanks [@drewda](https://github.com/drewda)! - `cat-datepicker` gains an `#addon` slot that appends extra controls to the input's Bulma addon group, after the calendar toggle button. Use it to attach actions like a clear button so they render as part of the field instead of floating beside it: `<template #addon><cat-button icon="close" aria-label="Clear date" /></template>`. Slot content should be addon-shaped (a `.control` wrapping a `.button`); `cat-button` renders exactly that.
+
 ## 0.5.0
 
 ### Minor Changes
