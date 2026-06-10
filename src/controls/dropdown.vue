@@ -344,12 +344,14 @@ function onTriggerKeydown (event: KeyboardEvent) {
 // entirely, e.g. Tab from a still-focused trigger while the menu is open.
 // Without this the menu lingers with aria-expanded="true", and a later
 // document-level Escape would yank focus back to the trigger. Only act on a
-// non-null relatedTarget: null means focus left the document (window blur),
-// which the outside-click handler already covers.
+// Node relatedTarget: null means focus left the document (window blur),
+// which the outside-click handler already covers, and contains() throws on
+// non-Node EventTargets from synthetic events.
 function onFocusOut (event: FocusEvent) {
   if (!isActive.value) return
-  const next = event.relatedTarget as Node | null
-  if (next && dropdownRef.value && !dropdownRef.value.contains(next)) {
+  const next = event.relatedTarget
+  if (!(next instanceof Node)) return
+  if (dropdownRef.value && !dropdownRef.value.contains(next)) {
     close(false)
   }
 }
