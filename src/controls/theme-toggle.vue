@@ -3,7 +3,7 @@
     :variant="isDark ? 'dark' : 'light'"
     @click="toggleTheme"
   >
-    <span class="icon">
+    <span class="icon" aria-hidden="true">
       <i :class="`mdi mdi-${isDark ? 'weather-night' : 'weather-sunny'}`" />
     </span>
     <span>{{ isDark ? 'Dark' : 'Light' }} Mode</span>

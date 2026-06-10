@@ -347,6 +347,22 @@
         </div>
       </demo-box>
 
+      <demo-box label="Meaningful Icons (aria-label)">
+        <p class="mb-3">
+          Icons are decorative by default and hidden from screen readers. When an
+          icon conveys information that no adjacent text does, give it an
+          <code>aria-label</code> to announce it as an image:
+        </p>
+        <p>
+          <cat-icon icon="alert" variant="warning" aria-label="Warning" />
+          <span class="ml-2">Service alert on this route</span>
+        </p>
+        <p class="mt-2">
+          <cat-icon icon="check-circle" variant="success" aria-label="Completed" />
+          <span class="ml-2">Import finished</span>
+        </p>
+      </demo-box>
+
       <!-- Icon Reference -->
       <demo-box label="Icon Reference">
         <div class="notification is-info is-light">
@@ -364,10 +380,26 @@
           </p>
         </div>
       </demo-box>
+      <demo-a11y
+        :references="[
+          { label: 'W3C: Images Tutorial, decorative images', url: 'https://www.w3.org/WAI/tutorials/images/decorative/' },
+          { label: 'W3C: Images Tutorial, informative images', url: 'https://www.w3.org/WAI/tutorials/images/informative/' },
+        ]"
+      >
+        <template #intro>
+          Icons render with <code>aria-hidden="true"</code> by default: icon-font glyphs sit in a private-use codepoint range that some screen readers otherwise voice as garbage, and an icon next to text usually just repeats the text. Passing <code>aria-label</code> switches the icon to <code>role="img"</code> with that accessible name, for icons that carry meaning on their own (status markers, warnings).
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            For icon-only buttons, put the accessible name on the button, not the icon (e.g. <code>&lt;cat-button icon="close" aria-label="Close" /&gt;</code>). For state conveyed by an icon (a checkmark on a selected item), expose the state with ARIA attributes like <code>aria-selected</code> rather than labeling the glyph.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
 
 <script setup lang="ts">
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 </script>

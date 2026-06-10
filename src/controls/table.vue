@@ -31,7 +31,9 @@
                 @click="handleSort(column.field)"
               >
                 {{ column.label }}
-                <span class="cat-sort-icon">
+                <!-- Sort state is exposed via aria-sort on the header cell;
+                     the glyph is decorative. -->
+                <span class="cat-sort-icon" aria-hidden="true">
                   <i v-if="sortField === column.field" :class="sortIcon" />
                   <i v-else class="mdi mdi-sort" />
                 </span>

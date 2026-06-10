@@ -17,7 +17,7 @@
         <slot />
       </select>
     </div>
-    <span v-if="icon" class="icon is-left">
+    <span v-if="icon" class="icon is-left" aria-hidden="true">
       <i :class="`mdi mdi-${icon}`" />
     </span>
   </div>
