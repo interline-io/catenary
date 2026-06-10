@@ -1,5 +1,120 @@
 # @interline-io/catenary
 
+## 0.5.0
+
+### Minor Changes
+
+- [#30](https://github.com/interline-io/catenary/pull/30) [`6696c58`](https://github.com/interline-io/catenary/commit/6696c583c4b0e6733896cf216c7e4e0a1fc13226) Thanks [@drewda](https://github.com/drewda)! - `cat-datepicker` rebuilt as a standalone WAI-ARIA date picker dialog, fixing screen reader access. Accessibility testing found the picker effectively unusable with a screen reader: the calendar rendered inside the wrapping `cat-dropdown`'s `role="menu"` container (invalid ARIA composition that breaks screen reader navigation modes), the input exposed no popup semantics, the month/year selects had no accessible names and duplicated the wrapping `cat-field`'s input id, and manual typing was unsupported. The component no longer wraps `cat-dropdown`; it follows the APG date picker dialog pattern directly.
+
+  New trigger structure and typed entry:
+
+  - The input is typeable and pairs with an attached calendar toggle button (Bulma `has-addons`) carrying `aria-haspopup="dialog"`, `aria-expanded`, and `aria-controls`. The toggle button's accessible name includes the current selection (`Choose date, 2026-06-15`), configurable via the new `ariaToggleLabel` prop.
+  - Typed dates commit on Enter or when focus leaves the input; text that does not parse reverts to the current selection. A visually-hidden `role="status"` region announces commits (`Date set to ...`) and reverts (`Invalid date, reverted to ...`), configurable via the new `ariaDateSetLabel` and `ariaDateInvalidLabel` props. A visually-hidden format hint (`Date format: YYYY-MM-DD`) is bound to the input via `aria-describedby`, and the placeholder defaults to the format.
+  - Typed dates are deliberately not restricted by `minDate`/`maxDate`/`unselectableDates`; they are emitted as-is so consumers can show their own validation messaging. The constraints still restrict calendar selection.
+  - The `dateFormat` prop is now honored for display and typed parsing (it was previously ignored; display was always `yyyy-MM-dd`). The `date-string` model remains `yyyy-MM-dd` regardless of `dateFormat`.
+  - In `multiple` mode, the input accepts a comma-separated list and commits only if every part parses.
+  - New `ariaLabel` prop names the input when the datepicker is not paired with a visible `cat-field` label.
+
+  Calendar dialog fixes:
+
+  - The popup container no longer carries `role="menu"`; the `role="dialog"` calendar is the outermost popup semantic.
+  - The month/year selects get unique ids (previously they inherited the wrapping `cat-field`'s id, duplicating the input's id) and the `ariaSelectMonthLabel`/`ariaSelectYearLabel` props are now actually bound (they previously existed but were unused).
+  - The day grid gains a `role="columnheader"` row (weekday headers now rotate with `firstDayOfWeek`; previously they stayed Sunday-first and misaligned), real row elements instead of `display: contents` (which strips semantics in some browsers), a full-date `aria-label` on every day button (`June 15, 2026`), and `aria-current="date"` on today. Each `role="gridcell"` is a wrapper around a plain button (VoiceOver reads a gridcell's content separately from its name, so role-on-the-button double-announced the day), with `aria-selected` on the cell. A polite live region announces month/year changes from the prev/next buttons and PageUp/PageDown. New `dayNamesLong` prop supplies the announced header names.
+  - Focus management per the APG dialog pattern: opening moves focus to the selected day (or nearest selectable day), Escape and date selection return focus to the toggle button, tabbing out of the dialog closes it, and outside clicks close without stealing focus. The year select includes the focused year even when a typed selection falls outside `yearsRange`.
+
+  Removed (both were documented but nonfunctional): the `openOnFocus` prop (never implemented; the input no longer toggles the calendar on click or focus, only the button opens it) and the `focus`/`blur` emits (never fired). The default left input icon also changes from `calendar` to none, since the toggle button now carries the calendar icon (pass `icon="calendar"` to restore it); the toggle icon is configurable via the new `iconToggle` prop.
+
+  `cat-dropdown` is unchanged in behavior; its outside-click and document-Escape handling moved to a shared internal `useDismissablePopup` composable that the datepicker also uses.
+
+  ### CSS impact
+
+  Existing `<cat-datepicker>` templates keep working, but the rendered trigger markup changed. Grep your consumer for these patterns:
+
+  - The input now sits inside `.cat-datepicker-field` (a `field has-addons` div) within `.dropdown-trigger`, next to a new `.cat-datepicker-toggle` button. Selectors assuming the input was the only child of `.dropdown-trigger` need updating, and layouts sized to the bare input now include the attached button.
+  - The `.dropdown` root carries `.cat-datepicker-dropdown` but no longer `.cat-dropdown`; selectors like `.cat-dropdown.cat-datepicker-dropdown` won't match.
+  - The weekday header row (`.cat-datepicker-weekdays`) moved inside `.cat-datepicker-days`, week rows (`.cat-datepicker-row`) are now `display: grid` instead of `display: contents`, and each day button sits inside a `.cat-datepicker-cell` wrapper div.
+
+- [#30](https://github.com/interline-io/catenary/pull/30) [`6696c58`](https://github.com/interline-io/catenary/commit/6696c583c4b0e6733896cf216c7e4e0a1fc13226) Thanks [@drewda](https://github.com/drewda)! - `cat-dropdown` custom-trigger ARIA and APG keyboard focus. Previously the popup semantics (`aria-haspopup`, `aria-controls`, `aria-expanded`) were bound only on the default trigger button, so every consumer-supplied `#trigger` slot shipped with no indication a popup exists or whether it is open. Keyboard focus behavior also fell short of the APG menu-button and listbox-button patterns.
+
+  - New `triggerAttrs` slot prop on `#trigger` exposing the popup semantics; custom triggers spread it onto their focusable element: `<template #trigger="{ triggerAttrs }"><cat-button v-bind="triggerAttrs">`. The default button now consumes the same object.
+  - Enter and Space on the trigger toggle the menu, and opening moves focus to the first item (or the selected option in listbox mode) per the APG patterns. Typing fields inside a custom trigger keep their normal Enter/Space behavior. Previously the published keyboard documentation claimed this focus move but the implementation left focus on the trigger.
+  - Opening a `selectable` listbox with the keyboard (Enter, Space, ArrowDown) focuses the option with `aria-selected="true"` instead of always the first option, so users keep their place when reopening.
+  - When keyboard focus leaves the component while the menu is open (e.g. Tab from the trigger), the menu now closes without moving focus. Previously it lingered open with `aria-expanded="true"`, and a later document-level Escape would yank focus back to the trigger.
+  - Playground demos updated: the custom-trigger demos spread `triggerAttrs`, and the bare non-focusable `<a class="navbar-item">` trigger (unreachable by keyboard) is now a real button.
+
+- [#35](https://github.com/interline-io/catenary/pull/35) [`bdb18cf`](https://github.com/interline-io/catenary/commit/bdb18cff6a7c21f6a7bf9cbd2a6ca99e4cd9de65) Thanks [@drewda](https://github.com/drewda)! - `cat-taginput` rebuilt on the ARIA 1.2 combobox pattern, fixing screen reader and keyboard access. Accessibility testing of a consumer app found the widget hard to operate: Tab abandoned the highlighted option without selecting it, and the deprecated ARIA 1.0 wrapper-combobox markup hid the popup state from screen readers.
+
+  Combobox semantics:
+
+  - `role="combobox"`, `aria-expanded`, `aria-haspopup`, `aria-controls`, and the new `aria-autocomplete="list"` now live on the input itself (ARIA 1.2 pattern); the wrapper div carries no role. Screen readers compute popup state from the focused element, so users now hear expanded/collapsed changes.
+  - Options are no longer focusable and have no per-option keyboard handlers: the input is the single focus point and `aria-activedescendant` conveys the highlight. Previously every option sat in the Tab order, and tabbing to one triggered the input blur that closed the dropdown underneath it.
+  - The `role="listbox"` moved onto the options container, so the header slot and empty message are no longer invalid listbox children.
+  - A stale highlight is reset when filtering shrinks the list below the highlighted index; `aria-activedescendant` no longer points at a removed option.
+  - The input now injects `FieldIdKey`, so a wrapping labeled `cat-field` actually names it; `aria-label` (new `ariaLabel` prop, falling back to the placeholder) applies only when no field label is present, instead of always overriding it.
+
+  Keyboard and focus:
+
+  - Tab selects the highlighted option, closes the listbox, and lets focus move on. Previously Tab silently discarded the highlight, which testers read as the widget being broken.
+  - Reaching `maxTags` no longer disables the input (disabling the focused element dropped keyboard focus to the page body and removed the only way to Backspace-remove a tag). The limit is enforced in selection instead, the option list empties, and the existing placeholder swap and live counter convey the state.
+  - Removing a tag via its remove button moves focus to the same-position remaining remove button (or the input) instead of dropping it to the page body.
+  - Escape is consumed while it has something to dismiss (open listbox, then typed text, which it now clears); only a spent Escape reaches an enclosing dialog.
+
+  Announcements: a visually hidden `role="status"` region reports `Added X` on selection and free-text commit, `Removed X` on any removal (Backspace removal was previously completely silent), and `No results` when filtering empties the list.
+
+### Patch Changes
+
+- [#39](https://github.com/interline-io/catenary/pull/39) [`0883392`](https://github.com/interline-io/catenary/commit/0883392aad9656702b26d670ce36a80b77d6dc7d) Thanks [@drewda](https://github.com/drewda)! - `cat-field` help/validation messages are now announced. The message rendered below a field was visible but never programmatically associated with the wrapped control, so screen reader users focusing the input never heard why a value was invalid.
+
+  - The help `<p>` gets a stable id, and `cat-field` provides it (new `FieldDescribedbyKey`) together with its validation variant (new `FieldVariantKey`).
+  - `cat-input`, `cat-textarea`, `cat-select`, and `cat-slider` merge the field message id into their `aria-describedby` alongside their own `ariaDescribedby` prop (newly declared on textarea, select, and slider) and render `aria-invalid="true"` when the field's variant, or their own `variant` prop, is `danger`.
+  - Composite controls that already pass `ariaDescribedby` to `cat-input` (such as the datepicker's format hint) get both ids merged automatically.
+
+- [#34](https://github.com/interline-io/catenary/pull/34) [`7a61abe`](https://github.com/interline-io/catenary/commit/7a61abefa66d4f3158864e799e3d79299cabd884) Thanks [@drewda](https://github.com/drewda)! - `cat-icon` decorative-by-default semantics, plus a sweep of unhidden glyphs. Icons were documented as decorative but the rendered span was not actually hidden from assistive technology; icon-font glyphs sit in a private-use codepoint range that some screen readers voice as garbage.
+
+  - `cat-icon` now renders `aria-hidden="true"` by default. A new `ariaLabel` prop marks an icon as meaningful: it renders `role="img"` with that accessible name instead of being hidden. Use it only when the icon conveys information not present in adjacent text; icon-only buttons should keep their name on the button.
+  - Decorative glyphs rendered directly by other components are now hidden as well: the `cat-button` loading spinner, the `cat-select` left icon, the `cat-table` sort glyphs (sort state is already exposed via `aria-sort` on the header cell), and the `cat-theme-toggle` weather icon.
+  - `cat-button` now exposes its loading state to assistive technology, since the spinner glyph alone never did: the button carries `aria-busy="true"` while loading, plus visually hidden text (new `ariaLoadingLabel` prop, default `Loading`) that joins the accessible name.
+  - New `icon.test.ts` covers both modes plus axe checks, and the playground icon page documents the decorative/meaningful distinction.
+
+- [#30](https://github.com/interline-io/catenary/pull/30) [`6696c58`](https://github.com/interline-io/catenary/commit/6696c583c4b0e6733896cf216c7e4e0a1fc13226) Thanks [@drewda](https://github.com/drewda)! - `cat-input` and `cat-select` gain explicitly declared accessibility props, following the `cat-button` precedent of declaring ARIA attributes as props so `strictTemplates` consumers typecheck:
+
+  - `cat-input`: `ariaLabel` (accessible name when there is no associated visible label) and `ariaDescribedby` (id of a describing element, e.g. a format hint).
+  - `cat-select`: `ariaLabel` (same purpose) and `id` (explicit id for the native select, overriding the id injected by a wrapping `cat-field`; use when a composite control contains multiple selects so ids stay unique).
+
+- [#40](https://github.com/interline-io/catenary/pull/40) [`e38e808`](https://github.com/interline-io/catenary/commit/e38e808cb513126840844716fe931869ab3aa9ec) Thanks [@drewda](https://github.com/drewda)! - `cat-notification` accessibility. The close button was an icon-only Bulma delete with no accessible name (announced as just "button", an axe failure) and no `type="button"` (submitting forms when nested in one), and dynamically shown notifications were never announced.
+
+  - The close button gains `type="button"` and an accessible name via the new `ariaCloseLabel` prop (default `Dismiss notification`).
+  - New `role` prop (`status` or `alert`) renders the notification as a live region for dynamically shown messages such as toasts; `alert` is for errors that should interrupt, `status` for everything else. Omit for static page content.
+  - New `notification.test.ts` with an axe check.
+
+- [#31](https://github.com/interline-io/catenary/pull/31) [`9e6f3d5`](https://github.com/interline-io/catenary/commit/9e6f3d5d8fa9294e2073bd7d499e1b8f3958cea3) Thanks [@drewda](https://github.com/drewda)! - `cat-pagination` accessible names. The previous/next buttons were icon-only with no text alternative, so screen readers announced them as just "button" (an axe `button-name` failure), and page buttons announced as bare numbers with no context.
+
+  - New `ariaPreviousLabel`/`ariaNextLabel` props (defaults `Previous page`/`Next page`) bound as `aria-label` on the previous/next buttons. The redundant `aria-disabled` is dropped; the native `disabled` attribute already conveys the state.
+  - Every page button gets `aria-label="Page N"`, which screen readers combine with the existing `aria-current="page"` as e.g. "Page 7, current page".
+  - The decorative ellipsis separators are hidden from assistive technology.
+  - New `pagination.test.ts` covers the names, `aria-current` uniqueness, boundary disabled states, and an axe check.
+
+- [#36](https://github.com/interline-io/catenary/pull/36) [`ec9aa78`](https://github.com/interline-io/catenary/commit/ec9aa78690132a114894fb1227d67ae4deeda709) Thanks [@drewda](https://github.com/drewda)! - `cat-table` header accessibility. Custom headers via the `#header` slot replaced the default `<th>` markup but could not reproduce its `aria-sort` exposure: the slot only passed `columns` and `sort`, so consumers silently lost sort-state announcements to assistive technology.
+
+  - The `#header` slot now also exposes `sortField`, `sortDirection`, and an `ariaSort(column)` helper; custom headers should render `<th scope="col" :aria-sort="ariaSort(column)">` for each sortable column.
+  - The default header cells now carry an explicit `scope="col"`, removing ambiguity for older assistive technology heuristics and keeping associations correct if body rows contain their own `<th scope="row">` cells.
+  - New tests cover `scope="col"` on default headers, sort-state slot props in a custom header (including an axe check), and the `aria-hidden` sort icon.
+  - Sort changes are announced through a visually hidden `role="status"` region ("Sorted by Name, ascending"): JAWS reads the `aria-sort` flip on the header, but NVDA and TalkBack stay silent without a live region. Unsorted columns now omit `aria-sort` entirely instead of emitting `aria-sort="none"`, per current field guidance.
+
+- [#37](https://github.com/interline-io/catenary/pull/37) [`aad9619`](https://github.com/interline-io/catenary/commit/aad961981e734c4c42eccc513fa463f896ec2727) Thanks [@drewda](https://github.com/drewda)! - `cat-tabs` / `cat-tab-item` accessibility fixes.
+
+  - Roving tabindex now falls back to the first tab when `modelValue` matches no registered tab (stale value, or the active tab-item removed via `v-if`), so the tablist never drops out of the page tab order.
+  - `orientation="vertical"` now changes the visual layout too: the tablist stacks in a column and the active-tab rule moves to the right edge, matching the existing `aria-orientation` and ArrowUp/ArrowDown key handling. Toggle and toggle-rounded types get vertical border-radius adjustments.
+  - New `ariaLabelledby` prop on `cat-tabs` binds `aria-labelledby` on the `role="tablist"` element, so a visible heading can name the tab list. Previously only `ariaLabel` was supported and a passed-through `aria-labelledby` attribute landed on the wrapper div instead of the tablist.
+  - `cat-tab-item` focusable-child detection now ignores disabled buttons, inputs, selects, and textareas (and hidden inputs); a panel whose only interactive content is disabled keeps `tabindex="0"` so keyboard users can still reach it.
+  - Playground tabs demos now label every tablist via `aria-label` or `aria-labelledby`, and include a vertical orientation example.
+
+- [#38](https://github.com/interline-io/catenary/pull/38) [`47cb666`](https://github.com/interline-io/catenary/commit/47cb666dc92525a3271b4b75a195d257134050cc) Thanks [@drewda](https://github.com/drewda)! - `cat-tree-control` accessibility. Expand/collapse buttons previously all shared the same state-bearing label ("Expand"/"Collapse"), so screen readers heard an undifferentiated list of identical buttons, and the label duplicated the state already conveyed by `aria-expanded`. Tree nesting was also expressed only by visual indentation.
+
+  - Each disclosure button now uses the node name (falling back to the node key) as a constant `aria-label`/`title`; `aria-expanded` continues to convey open/closed state, per APG disclosure guidance.
+  - Children are wrapped in `role="group"` with an `aria-label` naming the parent node, so screen readers announce entry into and exit from each subtree. The wrapper is only rendered when the node actually has children.
+  - New `tree-control.test.ts` covers the accessible names, `aria-expanded` toggling, group semantics, collapsed-state DOM removal, select event emission, and axe checks.
+
 ## 0.4.0
 
 ### Minor Changes
