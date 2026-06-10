@@ -883,7 +883,17 @@ function seedFocusFromSelection () {
 }
 
 // Runs immediately so the initial render has a valid tab stop in the grid.
-watch(activeDates, seedFocusFromSelection, { immediate: true })
+// Skipped while the calendar is open: a selection made from the open grid
+// must not re-seed the visible month (in multiple mode, re-seeding jumps the
+// calendar back to the first selected date's month, unmounting the focused
+// day button and dropping keyboard focus to the page body). selectDate
+// already moves the roving tab stop, and the isActive watcher re-seeds on
+// the next open.
+watch(activeDates, () => {
+  if (!isActive.value) {
+    seedFocusFromSelection()
+  }
+}, { immediate: true })
 
 // Re-seed whenever the calendar opens, so paging to another month and closing
 // without selecting doesn't leave it on a stale month. Then move focus into

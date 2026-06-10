@@ -363,6 +363,31 @@ describe('cat-datepicker keyboard grid navigation', () => {
     wrapper.unmount()
   })
 
+  it('keeps the visible month and focused day when a selection is added in multiple mode', async () => {
+    // Selecting a second date used to re-seed the calendar to the FIRST
+    // selected date's month, unmounting the focused day button and dropping
+    // keyboard focus to the page body while the dialog was still open.
+    const wrapper = mount(CatDatepicker, {
+      attachTo: document.body,
+      props: { multiple: true, closeOnSelect: false, modelValue: [new Date(2025, 2, 15)] }
+    })
+
+    await wrapper.find('.cat-datepicker-toggle').trigger('click')
+    await nextTick()
+    await gridKeydown(wrapper, 'PageDown') // April 15, focused
+    await gridKeydown(wrapper, 'Enter') // select it
+
+    // Simulate the parent committing the new selection back into the model.
+    await wrapper.setProps({ modelValue: [new Date(2025, 2, 15), new Date(2025, 3, 15)] })
+    await nextTick()
+
+    expect(wrapper.find('.cat-datepicker-days').attributes('aria-label')).toBe('April 2025')
+    expect(findFocusedDay(wrapper)?.getAttribute('data-date')).toBe('2025-04-15')
+    expect((document.activeElement as HTMLElement)?.getAttribute('data-date')).toBe('2025-04-15')
+
+    wrapper.unmount()
+  })
+
   it('skips past disabled days in the direction of travel on arrow keys', async () => {
     // ArrowRight from March 15 lands on March 17 because March 16 is blocked.
     // Without the directional skip, focus would land on the disabled button
