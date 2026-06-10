@@ -7,8 +7,8 @@
         type="button"
         class="expand-button"
         :class="expanded ? 'expand-button-down' : 'expand-button-right'"
-        :title="expanded ? 'Collapse' : 'Expand'"
-        :aria-label="expanded ? 'Collapse' : 'Expand'"
+        :title="nodeLabel"
+        :aria-label="nodeLabel"
         :aria-expanded="expanded"
         @click="toggleExpand"
       />
@@ -23,7 +23,11 @@
         </span>
       </cat-checkbox>
     </div>
-    <div v-if="expanded">
+    <div
+      v-if="expanded && hasChildren"
+      role="group"
+      :aria-label="nodeLabel"
+    >
       <div
         v-for="g of node.children"
         :key="g.key"
@@ -69,6 +73,9 @@ const emit = defineEmits<Emits>()
 
 const expanded = ref(props.maxDeep > 0)
 const hasChildren = computed(() => Object.keys(props.node?.children || {}).length > 0)
+// Constant accessible name for the disclosure button; aria-expanded conveys state.
+// TreeNode.name is optional, so fall back to key (always set).
+const nodeLabel = computed(() => props.node?.name || props.node?.key || '')
 
 function select (v: boolean | undefined, key: string): void {
   if (v !== undefined) {
