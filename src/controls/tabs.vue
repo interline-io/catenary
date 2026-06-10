@@ -326,6 +326,15 @@ watch(() => props.modelValue, () => {
 .cat-tabs.is-vertical .cat-tablist {
   flex-direction: column;
   align-items: stretch;
+  // The horizontal tablist wraps; with a vertical main axis, wrapping would
+  // spill tabs into extra columns whenever the container height is short.
+  flex-wrap: nowrap;
+}
+
+// is-fullwidth grows tabs along the main axis, which in a column layout
+// means height; neutralize so expanded does not produce giant vertical tabs.
+.cat-tabs.is-vertical.is-fullwidth .cat-tab {
+  flex-grow: 0;
 }
 
 .cat-tabs.is-vertical .cat-tab {
@@ -360,8 +369,19 @@ watch(() => props.modelValue, () => {
   .cat-tab:last-child { border-radius: 0 0 4px 4px; }
 }
 
+// Vertical rounding puts the pill ends on top and bottom, so the extra
+// padding belongs there too; reset the horizontal first/last padding that
+// the base toggle-rounded rules add for the row layout.
 .cat-tabs.is-vertical.is-toggle-rounded {
-  .cat-tab:first-child { border-radius: 290486px 290486px 0 0; padding-left: 1em; }
-  .cat-tab:last-child { border-radius: 0 0 290486px 290486px; padding-right: 1em; }
+  .cat-tab:first-child {
+    border-radius: 290486px 290486px 0 0;
+    padding-left: 1em;
+    padding-top: 0.75em;
+  }
+  .cat-tab:last-child {
+    border-radius: 0 0 290486px 290486px;
+    padding-right: 1em;
+    padding-bottom: 0.75em;
+  }
 }
 </style>
