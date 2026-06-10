@@ -139,14 +139,19 @@
                 @keydown="handleGridKeydown"
               >
                 <div role="row" class="cat-datepicker-weekdays">
+                  <!-- The short name is hidden from assistive technology and
+                       the full name is visually hidden, so sighted users see
+                       "Su" while screen readers announce "Sunday" (without
+                       reading both). Real text content rather than aria-label
+                       keeps the header's name discernible per axe. -->
                   <div
                     v-for="day in weekdayHeaders"
                     :key="day.short"
                     role="columnheader"
                     class="cat-datepicker-weekday"
-                    :aria-label="day.long"
                   >
-                    {{ day.short }}
+                    <span aria-hidden="true">{{ day.short }}</span>
+                    <span class="is-sr-only">{{ day.long }}</span>
                   </div>
                 </div>
 
@@ -171,7 +176,10 @@
                     :aria-current="day.isToday ? 'date' : undefined"
                     @click="selectDate(day.date)"
                   >
-                    {{ day.date.getDate() }}
+                    <!-- Hidden from assistive technology: the full-date
+                         aria-label already names the cell, and VoiceOver
+                         otherwise announces both ("June 15, 2026 15"). -->
+                    <span aria-hidden="true">{{ day.date.getDate() }}</span>
                   </button>
                 </div>
               </div>
