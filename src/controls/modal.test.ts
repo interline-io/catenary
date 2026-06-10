@@ -2,6 +2,9 @@ import { describe, it, expect, beforeEach } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { nextTick, defineComponent, ref } from 'vue'
 import CatModal from './modal.vue'
+import CatDropdown from './dropdown.vue'
+import CatDropdownItem from './dropdown-item.vue'
+import { axe } from '../testutil/axe'
 
 beforeEach(() => {
   // Modal teleports to document.body; clean it up between tests so each one
@@ -230,6 +233,124 @@ describe('cat-modal', () => {
     document.dispatchEvent(tab)
     expect(document.activeElement).toBe(last)
     expect(tab.defaultPrevented).toBe(true)
+    wrapper.unmount()
+  })
+})
+
+describe('cat-modal layered Escape dismissal', () => {
+  function pressEscape () {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }))
+    return nextTick()
+  }
+
+  it('closes an open popup inside the modal first, then the modal', async () => {
+    const Host = defineComponent({
+      components: { CatModal, CatDropdown, CatDropdownItem },
+      setup () {
+        const open = ref(true)
+        return { open }
+      },
+      template: `
+        <cat-modal v-model="open" title="Pick">
+          <cat-dropdown label="Menu">
+            <cat-dropdown-item value="a">A</cat-dropdown-item>
+          </cat-dropdown>
+        </cat-modal>
+      `
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    await nextTick()
+    const trigger = document.body.querySelector<HTMLElement>('.dropdown-trigger button')!
+    trigger.click()
+    await nextTick()
+    expect(document.body.querySelector('.cat-dropdown')?.classList.contains('is-active')).toBe(true)
+
+    // First Escape: only the dropdown closes.
+    await pressEscape()
+    expect(document.body.querySelector('.cat-dropdown')?.classList.contains('is-active')).toBe(false)
+    expect((wrapper.vm as any).open).toBe(true)
+
+    // Second Escape: the modal closes.
+    await pressEscape()
+    expect((wrapper.vm as any).open).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('a non-closable modal swallows Escape instead of passing it on', async () => {
+    const wrapper = mount(CatModal, {
+      attachTo: document.body,
+      props: { 'modelValue': true, 'closable': false, 'title': 'Stay', 'onUpdate:modelValue': () => {} }
+    })
+    await nextTick()
+    await pressEscape()
+    expect(wrapper.emitted('update:modelValue')).toBeFalsy()
+    wrapper.unmount()
+  })
+})
+
+describe('cat-modal open-state behaviors', () => {
+  it('runs open side effects when mounted with modelValue already true', async () => {
+    const wrapper = mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: true, title: 'Already open' },
+      slots: { default: '<button type="button" class="inside">Go</button>' }
+    })
+    await nextTick()
+    await nextTick()
+    expect(document.documentElement.classList.contains('is-clipped')).toBe(true)
+    expect(findCard()?.contains(document.activeElement)).toBe(true)
+    wrapper.unmount()
+  })
+
+  it.skipIf(typeof HTMLElement.prototype.checkVisibility !== 'function')(
+    'skips hidden focusable candidates in the focus trap', async () => {
+      const wrapper = mount(CatModal, {
+        attachTo: document.body,
+        props: { modelValue: true, title: 'Trap' },
+        slots: { default: '<button type="button" class="visible-btn">A</button><button type="button" style="display:none" class="hidden-btn">B</button>' }
+      })
+      await nextTick()
+      await nextTick()
+      // Tab from the close button (last visible) wraps to the first visible
+      // element instead of dead-ending on the hidden button.
+      const card = findCard()!
+      const closeBtn = card.querySelector<HTMLElement>('button.delete')!
+      closeBtn.focus()
+      card.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }))
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Tab', bubbles: true, cancelable: true }))
+      expect(document.activeElement?.classList.contains('hidden-btn')).toBe(false)
+      wrapper.unmount()
+    })
+
+  it('makes an overflowing body a focusable named region', async () => {
+    const wrapper = mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: false, title: 'Long content' }
+    })
+    const section = document.body.querySelector<HTMLElement>('.modal-card-body')!
+    // jsdom has no layout; simulate an overflowing body.
+    Object.defineProperty(section, 'scrollHeight', { value: 600, configurable: true })
+    Object.defineProperty(section, 'clientHeight', { value: 300, configurable: true })
+
+    await wrapper.setProps({ modelValue: true })
+    await nextTick()
+    await nextTick()
+    expect(section.getAttribute('tabindex')).toBe('0')
+    expect(section.getAttribute('role')).toBe('region')
+    expect(section.getAttribute('aria-labelledby')).toBeTruthy()
+    wrapper.unmount()
+  })
+
+  it('has no axe violations while open', async () => {
+    const wrapper = mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: true, title: 'Audit me' },
+      slots: { default: '<button type="button">Inside</button>' }
+    })
+    await nextTick()
+    await nextTick()
+    const results = await axe(document.body)
+    expect(results.violations).toEqual([])
     wrapper.unmount()
   })
 })
