@@ -17,10 +17,24 @@
       </caption>
       <thead v-if="hasHeader">
         <tr>
-          <slot name="header" :columns="columns" :sort="handleSort">
+          <!--
+            Custom headers replace the default <th> markup below; to keep sort
+            state exposed to assistive technology they must render
+            <th scope="col" :aria-sort="ariaSort(column)"> for each sortable
+            column, using the ariaSort slot prop.
+          -->
+          <slot
+            name="header"
+            :columns="columns"
+            :sort="handleSort"
+            :sort-field="sortField"
+            :sort-direction="sortDirection"
+            :aria-sort="getAriaSort"
+          >
             <th
               v-for="column in columns"
               :key="column.field"
+              scope="col"
               :class="getHeaderClasses(column)"
               :aria-sort="getAriaSort(column)"
             >
