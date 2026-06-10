@@ -557,11 +557,16 @@ watch(filteredOptions, (opts) => {
 })
 
 // Announce empty filter results; the listbox simply not rendering is
-// invisible to screen reader users.
-watch([isOpen, filteredOptions], ([open, opts]) => {
-  if (open && searchText.value && opts.length === 0 && !isMaxReached.value) {
+// invisible to screen reader users. Announce only on the transition into
+// the empty state: re-announcing on every keystroke while the list stays
+// empty would be disruptive.
+const inNoResultsState = ref(false)
+watch([isOpen, filteredOptions, searchText], () => {
+  const empty = isOpen.value && !!searchText.value && filteredOptions.value.length === 0 && !isMaxReached.value
+  if (empty && !inNoResultsState.value) {
     announceStatus('No results')
   }
+  inNoResultsState.value = empty
 })
 
 // Expose focus method

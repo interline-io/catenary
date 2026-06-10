@@ -314,6 +314,34 @@ describe('CatTaginput keyboard selection and focus retention', () => {
     expect(status.text()).toBe('Added Apple')
   })
 
+  it('announces empty results once per transition, not per keystroke', async () => {
+    const wrapper = mountComponent(CatTaginput, {
+      props: { modelValue: [], options: fruitOptions }
+    })
+    const input = wrapper.find('input')
+    const status = wrapper.find('[role="status"]')
+
+    await input.setValue('zz')
+    await nextTick()
+    await nextTick()
+    expect(status.text()).toBe('No results')
+
+    // Still empty: typing more must not re-trigger the announcement cycle
+    // (announceStatus clears the region before re-setting; a re-trigger
+    // would be observable as an empty region on the intermediate tick).
+    await input.setValue('zzz')
+    await nextTick()
+    expect(status.text()).toBe('No results')
+
+    // Recovering and emptying again is a new transition and announces again.
+    await input.setValue('app')
+    await nextTick()
+    await input.setValue('appzz')
+    await nextTick()
+    await nextTick()
+    expect(status.text()).toBe('No results')
+  })
+
   it('announces Backspace tag removal', async () => {
     const wrapper = mountComponent(CatTaginput, {
       props: { modelValue: ['apple'], options: fruitOptions }
