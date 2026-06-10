@@ -50,3 +50,4 @@ coverage
 
 # OSX
 .DS_Store
+.claude/worktrees/
