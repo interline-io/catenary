@@ -131,6 +131,41 @@
         </cat-notification>
       </demo-box>
 
+      <demo-box label="Example: Layered Escape (popups inside a modal)" example>
+        <p class="mb-3">
+          Open the modal, then open the dropdown or the date picker inside it.
+          Pressing <kbd>Escape</kbd> closes only that popup; the modal stays
+          open. A second <kbd>Escape</kbd> closes the modal. The form state you
+          were entering is preserved through the first Escape.
+        </p>
+        <cat-button variant="primary" @click="showLayered = true">
+          Open Modal with Popups
+        </cat-button>
+        <cat-modal v-model="showLayered" title="Schedule a trip">
+          <cat-field label="Service day">
+            <cat-dropdown v-model="layeredData.day" selectable :label="layeredData.day || 'Choose a day'">
+              <cat-dropdown-item v-for="day in weekdays" :key="day" :value="day">
+                {{ day }}
+              </cat-dropdown-item>
+            </cat-dropdown>
+          </cat-field>
+          <cat-field label="Date">
+            <cat-datepicker v-model="layeredData.date" />
+          </cat-field>
+          <template #footer>
+            <div class="buttons">
+              <cat-button variant="primary" @click="showLayered = false">
+                Done
+              </cat-button>
+            </div>
+          </template>
+        </cat-modal>
+        <p class="mt-3 has-text-grey">
+          Selected: {{ layeredData.day || 'no day' }},
+          {{ layeredData.date ? layeredData.date.toLocaleDateString() : 'no date' }}
+        </p>
+      </demo-box>
+
       <demo-a11y
         pattern-name="Modal Dialog"
         pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/dialog-modal/"
@@ -172,7 +207,11 @@ const showFullscreen = ref(false)
 const showFooter = ref(false)
 const showNoClose = ref(false)
 const showForm = ref(false)
+const showLayered = ref(false)
 const resultMessage = ref('')
+
+const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+const layeredData = ref<{ day: string, date: Date | undefined }>({ day: '', date: undefined })
 
 const formData = ref({
   name: '',
