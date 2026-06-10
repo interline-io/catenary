@@ -1,6 +1,12 @@
 <template>
-  <div class="notification" :class="notificationClasses">
-    <button v-if="closeable" class="delete" @click="handleClose" />
+  <div class="notification" :class="notificationClasses" :role="role">
+    <button
+      v-if="closeable"
+      type="button"
+      class="delete"
+      :aria-label="ariaCloseLabel"
+      @click="handleClose"
+    />
     <slot>{{ message }}</slot>
   </div>
 </template>
@@ -44,13 +50,30 @@ interface Props {
    * @default false
    */
   light?: boolean
+
+  /**
+   * ARIA live-region role. Set 'status' (polite) or 'alert' (assertive,
+   * errors only) when the notification is shown dynamically, so screen
+   * readers announce it; the element must be present, or the role applied,
+   * before the message appears. Omit for static page content.
+   */
+  role?: 'status' | 'alert'
+
+  /**
+   * Accessible name for the close button, which renders as an icon-only
+   * Bulma delete button.
+   * @default 'Dismiss notification'
+   */
+  ariaCloseLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   variant: 'light',
   message: undefined,
   closeable: false,
-  light: false
+  light: false,
+  role: undefined,
+  ariaCloseLabel: 'Dismiss notification'
 })
 
 /**
