@@ -33,11 +33,8 @@
       <demo-box label="Example: File Browser" example>
         <cat-tree-control :node="fileTree" @select="selectFileTree" />
         <div class="mt-3">
-          <cat-button size="small" variant="primary" outlined @click="selectAllFiles">
-            Select All
-          </cat-button>
-          <cat-button size="small" outlined class="ml-2" @click="deselectAllFiles">
-            Deselect All
+          <cat-button size="small" variant="primary" outlined @click="toggleAllFiles">
+            {{ fileAllSelected ? 'Deselect All' : 'Select All' }}
           </cat-button>
         </div>
         <p class="has-text-grey mt-3">
@@ -78,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { computed, reactive } from 'vue'
 import { TreeNode } from '../../../../src/util/tree'
 import DemoBox from '../../components/demo-box.vue'
 import DemoA11y from '../../components/demo-a11y.vue'
@@ -209,11 +206,15 @@ const fileTree = reactive(new TreeNode({
   }
 }).selectAll()) as TreeNode
 
-function selectAllFiles () {
-  fileTree.selectAll()
-}
+// Single toggle: offering Select All when everything is already selected is
+// dead UI. Partial selection completes the selection first.
+const fileAllSelected = computed(() => fileTree.getSel().unsel === 0)
 
-function deselectAllFiles () {
-  fileTree.unselectAll()
+function toggleAllFiles () {
+  if (fileAllSelected.value) {
+    fileTree.unselectAll()
+  } else {
+    fileTree.selectAll()
+  }
 }
 </script>
