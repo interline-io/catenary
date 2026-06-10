@@ -311,7 +311,7 @@ describe('CatTaginput keyboard selection and focus retention', () => {
     await triggerKeyboard(wrapper, 'ArrowDown', 'input')
     await triggerKeyboard(wrapper, 'Enter', 'input')
     await nextTick()
-    expect(status.text()).toBe('Added Apple')
+    expect(status.text()).toBe('Added Apple. Selected: Apple.')
   })
 
   it('announces empty results once per transition, not per keystroke', async () => {
@@ -348,7 +348,7 @@ describe('CatTaginput keyboard selection and focus retention', () => {
     })
     await triggerKeyboard(wrapper, 'Backspace', 'input')
     await nextTick()
-    expect(wrapper.find('[role="status"]').text()).toBe('Removed Apple')
+    expect(wrapper.find('[role="status"]').text()).toBe('Removed Apple. None selected.')
   })
 
   it('moves focus to a remaining remove button after removing a tag by button', async () => {
@@ -366,5 +366,31 @@ describe('CatTaginput keyboard selection and focus retention', () => {
     const active = document.activeElement as HTMLElement
     expect(active?.classList.contains('is-delete')).toBe(true)
     wrapper.unmount()
+  })
+})
+
+describe('CatTaginput usage hint', () => {
+  it('describes the input with the usage hint (merged with the counter when present)', () => {
+    const wrapper = mountComponent(CatTaginput, {
+      props: { modelValue: ['apple'], options: fruitOptions, maxTags: 3 }
+    })
+    const input = wrapper.find('input')
+    const ids = (input.attributes('aria-describedby') || '').split(' ')
+    expect(ids.length).toBe(2)
+    const hint = wrapper.find(`[id="${ids[0]}"]`)
+    expect(hint.text()).toContain('Enter or Tab')
+    expect(wrapper.find(`[id="${ids[1]}"]`).text()).toContain('1 / 3 selected')
+  })
+
+  it('announces the resulting selection when adding to an existing one', async () => {
+    const wrapper = mountComponent(CatTaginput, {
+      props: { 'modelValue': ['apple'], 'options': fruitOptions, 'openOnFocus': true, 'onUpdate:modelValue': () => {} }
+    })
+    const input = wrapper.find('input')
+    await input.trigger('focus')
+    await triggerKeyboard(wrapper, 'ArrowDown', 'input')
+    await triggerKeyboard(wrapper, 'Enter', 'input')
+    await nextTick()
+    expect(wrapper.find('[role="status"]').text()).toBe('Added Banana. Selected: Apple, Banana.')
   })
 })

@@ -8,6 +8,7 @@
     :class="containerClasses"
   >
     <span class="is-sr-only" role="status">{{ statusMessage }}</span>
+    <span v-if="!readonly" :id="usageHintId" class="is-sr-only">{{ ariaUsageHint }}</span>
     <!-- Selected tags (above input) -->
     <div class="cat-taginput-tags" role="list" aria-label="Selected tags">
       <template v-if="selectedTags.length > 0">
@@ -76,7 +77,7 @@
           :aria-expanded="showDropdown"
           :aria-controls="listboxId"
           :aria-activedescendant="highlightedIndex >= 0 ? `${componentId}-option-${highlightedIndex}` : undefined"
-          :aria-describedby="maxTags !== undefined ? counterId : undefined"
+          :aria-describedby="inputDescribedby"
           @focus="handleFocus"
           @blur="handleBlur"
           @keydown="handleKeydown"
@@ -140,7 +141,7 @@
 <script setup lang="ts" generic="T extends string | number = string">
 import { computed, ref, watch, useSlots, useId, inject, nextTick } from 'vue'
 import type { TaginputVariant, TaginputSize, TagOption as TagOptionBase } from './types'
-import { FieldIdKey } from './types'
+import { FieldIdKey, FieldDescribedbyKey } from './types'
 
 /**
  * Tag input component with autocomplete dropdown.
@@ -197,6 +198,8 @@ const props = withDefaults(defineProps<{
   separators?: string[]
   /** Accessible name for the input, for use when the taginput is not paired with a visible cat-field label. */
   ariaLabel?: string
+  /** Visually hidden usage hint describing the input (bound via aria-describedby), since the multi-select interaction is not self-evident: the field clears after each selection. */
+  ariaUsageHint?: string
 }>(), {
   options: () => [],
   placeholder: '',
@@ -214,7 +217,8 @@ const props = withDefaults(defineProps<{
   maxTags: undefined,
   allowNew: false,
   separators: () => [','],
-  ariaLabel: undefined
+  ariaLabel: undefined,
+  ariaUsageHint: 'Type to search. Use the up and down arrows to browse results, and Enter or Tab to add the highlighted result. Selected items are listed before the field as removable buttons.'
 })
 
 const emit = defineEmits<{
@@ -244,9 +248,31 @@ const counterId = `${componentId}-counter`
 // readonly taginputs render only the tag list.
 const fieldId = inject(FieldIdKey, undefined)
 
+// The usage hint, the max-tags counter, and a wrapping cat-field's help
+// message all describe the input.
+const usageHintId = `${componentId}-hint`
+const fieldDescribedby = inject(FieldDescribedbyKey, undefined)
+const inputDescribedby = computed(() => {
+  const parts = [
+    usageHintId,
+    props.maxTags !== undefined ? counterId : undefined,
+    fieldDescribedby?.value
+  ].filter(Boolean)
+  return parts.join(' ')
+})
+
 // Screen reader status feedback for tag additions and removals (Backspace
 // removal is otherwise completely silent) and for empty filter results.
 const statusMessage = ref('')
+
+// The input clears after each selection, so the announcement restates the
+// resulting selection; the delta alone leaves users unsure what is held.
+// Computed from the post-change labels passed by the caller, because the
+// selectedTags computed only updates after the parent round-trips v-model.
+function selectionSummary (labels: string[]): string {
+  return labels.length === 0 ? 'None selected.' : `Selected: ${labels.join(', ')}.`
+}
+
 function announceStatus (message: string) {
   // Clear first so repeating the same message still triggers an announcement.
   statusMessage.value = ''
@@ -490,9 +516,10 @@ function addNewTag () {
     return true
   }
   const option: TagOption = { value: text as T, label: text }
+  const nextLabels = [...selectedTags.value.map(t => t.label), option.label]
   modelValue.value = [...modelValue.value, text as T]
   emit('select', option)
-  announceStatus(`Added ${option.label}`)
+  announceStatus(`Added ${option.label}. ${selectionSummary(nextLabels)}`)
   searchText.value = ''
   highlightedIndex.value = -1
   inputRef.value?.focus()
@@ -505,9 +532,10 @@ function selectOption (option: TagOption) {
   // here instead.
   if (isMaxReached.value && !modelValue.value.includes(option.value)) return
   if (!modelValue.value.includes(option.value)) {
+    const nextLabels = [...selectedTags.value.map(t => t.label), option.label]
     modelValue.value = [...modelValue.value, option.value]
     emit('select', option)
-    announceStatus(`Added ${option.label}`)
+    announceStatus(`Added ${option.label}. ${selectionSummary(nextLabels)}`)
   }
   searchText.value = ''
   highlightedIndex.value = -1
@@ -523,9 +551,10 @@ function removeTag (tag: TagOption) {
   // Backspace-in-input path leaves focus in the input untouched.
   const active = document.activeElement
   const hadButtonFocus = !!active && removeButtonRefs.value.includes(active as HTMLButtonElement)
+  const nextLabels = selectedTags.value.filter(t => t.value !== tag.value).map(t => t.label)
   modelValue.value = modelValue.value.filter(v => v !== tag.value)
   emit('remove', tag)
-  announceStatus(`Removed ${tag.label}`)
+  announceStatus(`Removed ${tag.label}. ${selectionSummary(nextLabels)}`)
   if (hadButtonFocus) {
     nextTick(() => {
       const buttons = removeButtonRefs.value.filter((b): b is HTMLButtonElement => !!b && b.isConnected)
