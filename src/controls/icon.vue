@@ -1,10 +1,18 @@
 <template>
-  <!-- Icons are decorative-by-default. The @click here only re-emits to allow
-       parent components to attach listeners; consumers must wrap clickable
-       icons in a <button> (see how cat-button uses cat-icon for icon-only
-       buttons). -->
+  <!-- Icons are decorative by default and hidden from assistive technology;
+       passing ariaLabel marks the icon as meaningful (role="img" with that
+       name). The @click here only re-emits to allow parent components to
+       attach listeners; consumers must wrap clickable icons in a <button>
+       (see how cat-button uses cat-icon for icon-only buttons). -->
   <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/click-events-have-key-events -->
-  <span class="icon" :class="[sizeClass, variantClass]" @click="handleClick">
+  <span
+    class="icon"
+    :class="[sizeClass, variantClass]"
+    :role="ariaLabel ? 'img' : undefined"
+    :aria-label="ariaLabel"
+    :aria-hidden="ariaLabel ? undefined : 'true'"
+    @click="handleClick"
+  >
     <i :class="iconClass" />
   </span>
 </template>
@@ -15,10 +23,18 @@ import { computed } from 'vue'
 /**
  * Icon component using Material Design Icons (MDI) with Bulma's icon container.
  *
+ * Icons are decorative by default: the rendered span carries
+ * aria-hidden="true" so screen readers skip it (icon-font glyphs sit in a
+ * private-use codepoint range that some screen readers otherwise voice as
+ * garbage). When an icon conveys information that no adjacent text does
+ * (a status glyph, a warning marker), pass `ariaLabel` to render it as
+ * role="img" with that accessible name. For icon-only buttons, the name
+ * belongs on the button, not the icon.
+ *
  * @component cat-icon
  * @example
  * <cat-icon icon="check" />
- * <cat-icon icon="close" size="small" @click="handleClick" />
+ * <cat-icon icon="alert" aria-label="Warning" />
  * <cat-icon icon="loading" size="large" />
  */
 
@@ -48,6 +64,14 @@ interface Props {
    * Used to apply has-text-{variant} class.
    */
   variant?: 'primary' | 'link' | 'info' | 'success' | 'warning' | 'danger' | 'dark' | 'text' | 'white'
+
+  /**
+   * Accessible name for a meaningful icon. When set, the icon renders as
+   * role="img" with this name instead of being hidden from assistive
+   * technology. Use only when the icon conveys information not present in
+   * adjacent text.
+   */
+  ariaLabel?: string
 }
 
 const props = defineProps<Props>()

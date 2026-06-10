@@ -10,11 +10,11 @@
       v-bind="$attrs"
       @click="handleClick"
     >
-      <span v-if="loading" class="icon is-small">
+      <span v-if="loading" class="icon is-small" aria-hidden="true">
         <i class="mdi mdi-loading mdi-spin" />
       </span>
       <cat-icon v-if="iconLeft && !loading" :icon="iconLeft" :size="iconSize" />
-      <cat-icon v-if="isIconOnly && !loading" :icon="icon" :size="iconSize" aria-hidden="true" />
+      <cat-icon v-if="isIconOnly && !loading" :icon="icon" :size="iconSize" />
       <span v-if="$slots.default || label">
         <slot>{{ label }}</slot>
       </span>
