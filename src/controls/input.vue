@@ -11,7 +11,8 @@
       :disabled="disabled"
       :readonly="readonly || static"
       :aria-label="ariaLabel"
-      :aria-describedby="ariaDescribedby"
+      :aria-describedby="mergedDescribedby"
+      :aria-invalid="ariaInvalid"
       :maxlength="maxlength"
       :min="min"
       :max="max"
@@ -44,7 +45,7 @@
 <script setup lang="ts" generic="T extends string | number = string">
 import { computed, inject, ref } from 'vue'
 import type { InputVariant, InputSize } from './types'
-import { FieldIdKey } from './types'
+import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
 const fieldId = inject(FieldIdKey, undefined)
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -131,6 +132,19 @@ const emit = defineEmits<{
   'update:modelValue': [value: T]
   'icon-right-click': [event: MouseEvent]
 }>()
+
+// Merge the wrapping cat-field's help-message id (if any) with the
+// component's own ariaDescribedby, and reflect a danger validation state
+// (the field's or this component's own variant) as aria-invalid.
+const fieldDescribedby = inject(FieldDescribedbyKey, undefined)
+const fieldVariant = inject(FieldVariantKey, undefined)
+const mergedDescribedby = computed(() => {
+  const parts = [props.ariaDescribedby, fieldDescribedby?.value].filter(Boolean)
+  return parts.length > 0 ? parts.join(' ') : undefined
+})
+const ariaInvalid = computed(() => {
+  return (props.variant === 'danger' || fieldVariant?.value === 'danger') ? 'true' : undefined
+})
 
 const controlClasses = computed(() => {
   const classes: string[] = []

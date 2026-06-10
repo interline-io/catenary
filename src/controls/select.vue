@@ -8,6 +8,8 @@
         :id="id ?? fieldId"
         ref="selectRef"
         :aria-label="ariaLabel"
+        :aria-describedby="mergedDescribedby"
+        :aria-invalid="ariaInvalid"
         :value="modelValue"
         :disabled="disabled || readonly"
         :multiple="multiple"
@@ -26,7 +28,7 @@
 <script setup lang="ts" generic="T extends string | null | string[] = string | null">
 import { computed, ref, watch, onMounted, nextTick, inject } from 'vue'
 import type { SelectVariant, SelectSize } from './types'
-import { FieldIdKey } from './types'
+import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
 const fieldId = inject(FieldIdKey, undefined)
 
@@ -85,6 +87,19 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: T]
 }>()
+
+// Merge the wrapping cat-field's help-message id (if any) with the
+// component's own ariaDescribedby, and reflect a danger validation state
+// (the field's or this component's own variant) as aria-invalid.
+const fieldDescribedby = inject(FieldDescribedbyKey, undefined)
+const fieldVariant = inject(FieldVariantKey, undefined)
+const mergedDescribedby = computed(() => {
+  const parts = [undefined, fieldDescribedby?.value].filter(Boolean)
+  return parts.length > 0 ? parts.join(' ') : undefined
+})
+const ariaInvalid = computed(() => {
+  return (props.variant === 'danger' || fieldVariant?.value === 'danger') ? 'true' : undefined
+})
 
 const selectRef = ref<HTMLSelectElement | null>(null)
 

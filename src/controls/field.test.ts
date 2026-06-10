@@ -55,3 +55,49 @@ describe('cat-field fieldId uniqueness', () => {
     expect(new Set(ids).size).toBe(25)
   })
 })
+
+describe('cat-field message association', () => {
+  function mountFieldWithInput (fieldProps: Record<string, any> = {}, inputProps: Record<string, any> = {}) {
+    const Harness = defineComponent({
+      components: { CatField, CatInput },
+      setup () {
+        return () => h(CatField, { label: 'Start date', ...fieldProps }, () => h(CatInput, { modelValue: '', ...inputProps }))
+      }
+    })
+    return mount(Harness)
+  }
+
+  it('associates the help message with the control via aria-describedby', () => {
+    const wrapper = mountFieldWithInput({ message: 'Dates must be within the archive range' })
+    const input = wrapper.find('input')
+    const describedby = input.attributes('aria-describedby')
+    expect(describedby).toBeTruthy()
+    const help = wrapper.find(`[id="${describedby}"]`)
+    expect(help.text()).toBe('Dates must be within the archive range')
+  })
+
+  it('omits aria-describedby when there is no message', () => {
+    const wrapper = mountFieldWithInput()
+    expect(wrapper.find('input').attributes('aria-describedby')).toBeUndefined()
+  })
+
+  it('merges the field message with the control\'s own ariaDescribedby', () => {
+    const wrapper = mountFieldWithInput({ message: 'Out of range' }, { ariaDescribedby: 'format-hint' })
+    const describedby = wrapper.find('input').attributes('aria-describedby')
+    expect(describedby?.split(' ')).toContain('format-hint')
+    expect(describedby?.split(' ').length).toBe(2)
+  })
+
+  it('marks the control aria-invalid when the field variant is danger', () => {
+    const wrapper = mountFieldWithInput({ message: 'Bad value', variant: 'danger' })
+    expect(wrapper.find('input').attributes('aria-invalid')).toBe('true')
+
+    const ok = mountFieldWithInput({ message: 'All good', variant: 'success' })
+    expect(ok.find('input').attributes('aria-invalid')).toBeUndefined()
+  })
+
+  it('marks the control aria-invalid from its own danger variant', () => {
+    const wrapper = mountFieldWithInput({}, { variant: 'danger' })
+    expect(wrapper.find('input').attributes('aria-invalid')).toBe('true')
+  })
+})

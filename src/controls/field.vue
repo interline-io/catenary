@@ -16,7 +16,7 @@
     <div v-if="horizontal" class="field-body">
       <div class="field" :class="{ 'has-addons': addons }">
         <slot />
-        <p v-if="message || $slots.message" class="help" :class="messageClass">
+        <p v-if="message || $slots.message" :id="messageId" class="help" :class="messageClass">
           <slot name="message">
             {{ message }}
           </slot>
@@ -32,7 +32,7 @@
       <template v-else>
         <slot />
       </template>
-      <p v-if="message || $slots.message" class="help" :class="messageClass">
+      <p v-if="message || $slots.message" :id="messageId" class="help" :class="messageClass">
         <slot name="message">
           {{ message }}
         </slot>
@@ -43,7 +43,7 @@
 
 <script setup lang="ts">
 import { computed, useId, useSlots, provide } from 'vue'
-import { FieldIdKey } from './types'
+import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
 const slots = useSlots()
 const fieldId = useId()
@@ -122,6 +122,15 @@ const props = withDefaults(defineProps<Props>(), {
   variant: undefined,
   labelSize: 'normal'
 })
+
+// Wire the help/validation message and validation state to the wrapped
+// control: the message <p> gets a stable id that controls merge into their
+// aria-describedby, and a danger variant renders as aria-invalid on the
+// control. Both are provided as computeds (provide must run unconditionally
+// in setup) that resolve to undefined when there is nothing to convey.
+const messageId = `${fieldId}-help`
+provide(FieldDescribedbyKey, computed(() => (props.message || slots.message) ? messageId : undefined))
+provide(FieldVariantKey, computed(() => props.variant))
 
 // Check if label exists via prop or slot
 const hasLabel = computed(() => !!(props.label || slots.label))

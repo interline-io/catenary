@@ -3,6 +3,8 @@
     <input
       :id="fieldId"
       ref="sliderRef"
+      :aria-describedby="mergedDescribedby"
+      :aria-invalid="ariaInvalid"
       type="range"
       class="cat-slider"
       :class="sliderClasses"
@@ -34,7 +36,7 @@
 <script setup lang="ts">
 import { ref, computed, useSlots, provide, inject } from 'vue'
 import type { SliderSize, SliderVariant } from './types'
-import { FieldIdKey } from './types'
+import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
 const fieldId = inject(FieldIdKey, undefined)
 
@@ -101,6 +103,19 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:modelValue': [value: number]
 }>()
+
+// Merge the wrapping cat-field's help-message id (if any) with the
+// component's own ariaDescribedby, and reflect a danger validation state
+// (the field's or this component's own variant) as aria-invalid.
+const fieldDescribedby = inject(FieldDescribedbyKey, undefined)
+const fieldVariant = inject(FieldVariantKey, undefined)
+const mergedDescribedby = computed(() => {
+  const parts = [undefined, fieldDescribedby?.value].filter(Boolean)
+  return parts.length > 0 ? parts.join(' ') : undefined
+})
+const ariaInvalid = computed(() => {
+  return (props.variant === 'danger' || fieldVariant?.value === 'danger') ? 'true' : undefined
+})
 
 const slots = useSlots()
 const sliderRef = ref<HTMLInputElement>()
