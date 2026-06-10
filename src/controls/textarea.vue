@@ -3,6 +3,8 @@
     <textarea
       :id="fieldId"
       ref="textareaRef"
+      :aria-describedby="mergedDescribedby"
+      :aria-invalid="ariaInvalid"
       class="textarea"
       :class="textareaClasses"
       :value="modelValue"
@@ -22,7 +24,7 @@
 <script setup lang="ts">
 import { computed, inject, ref } from 'vue'
 import type { TextareaVariant, TextareaSize } from './types'
-import { FieldIdKey } from './types'
+import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
 const fieldId = inject(FieldIdKey, undefined)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
@@ -50,6 +52,8 @@ interface Props {
    * @values primary, link, info, success, warning, danger, white, light, dark
    */
   variant?: TextareaVariant
+  /** id of an element describing the control (bound as aria-describedby), merged with a wrapping cat-field's message id. */
+  ariaDescribedby?: string
 
   /**
    * Whether the textarea is disabled.
@@ -115,6 +119,7 @@ const props = withDefaults(defineProps<Props>(), {
   placeholder: undefined,
   size: undefined,
   variant: undefined,
+  ariaDescribedby: undefined,
   disabled: false,
   readonly: false,
   loading: false,
@@ -130,6 +135,19 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:modelValue': [value: string]
 }>()
+
+// Merge the wrapping cat-field's help-message id (if any) with the
+// component's own ariaDescribedby, and reflect a danger validation state
+// (the field's or this component's own variant) as aria-invalid.
+const fieldDescribedby = inject(FieldDescribedbyKey, undefined)
+const fieldVariant = inject(FieldVariantKey, undefined)
+const mergedDescribedby = computed(() => {
+  const parts = [props.ariaDescribedby, fieldDescribedby?.value].filter(Boolean)
+  return parts.length > 0 ? parts.join(' ') : undefined
+})
+const ariaInvalid = computed(() => {
+  return (props.variant === 'danger' || fieldVariant?.value === 'danger') ? 'true' : undefined
+})
 
 const controlClasses = computed(() => {
   const classes: string[] = []

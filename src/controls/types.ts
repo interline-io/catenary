@@ -4,7 +4,7 @@
  */
 
 // Core variants and sizes that most components support
-import type { InjectionKey } from 'vue'
+import type { ComputedRef, InjectionKey } from 'vue'
 
 export const CoreVariants = ['primary', 'link', 'info', 'success', 'warning', 'danger'] as const
 export type CoreVariant = typeof CoreVariants[number]
@@ -131,6 +131,19 @@ export interface TagOptionBase<T extends string | number = string> {
  */
 export type TagOption<T extends string | number = string> = TagOptionBase<T> & Record<string, unknown>
 export const FieldIdKey: InjectionKey<string> = Symbol('fieldId')
+
+/**
+ * Injection key provided by cat-field: the id of its help/validation message
+ * when one is rendered, undefined otherwise. Wrapped controls merge it into
+ * their aria-describedby so the message is announced on focus.
+ */
+export const FieldDescribedbyKey: InjectionKey<ComputedRef<string | undefined>> = Symbol('fieldDescribedby')
+
+/**
+ * Injection key provided by cat-field: its validation variant. Wrapped
+ * controls render aria-invalid="true" when it is 'danger'.
+ */
+export const FieldVariantKey: InjectionKey<ComputedRef<'success' | 'warning' | 'danger' | 'info' | undefined>> = Symbol('fieldVariant')
 
 /**
  * Injection key for a route map used by cat-link.
