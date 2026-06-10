@@ -76,6 +76,23 @@ describe('CatButton', () => {
     testBulmaClasses(wrapper.find('button'), ['button', 'is-loading'])
   })
 
+  it('exposes the loading state to assistive technology', () => {
+    const wrapper = mountComponent(CatButton, {
+      props: { loading: true },
+      slots: { default: 'Save' }
+    })
+
+    const button = wrapper.find('button')
+    expect(button.attributes('aria-busy')).toBe('true')
+    expect(wrapper.find('.is-sr-only').text()).toBe('Loading')
+    // The spinner glyph itself stays hidden; the text carries the state.
+    expect(wrapper.find('.mdi-loading').element.closest('[aria-hidden="true"]')).not.toBeNull()
+
+    const notLoading = mountComponent(CatButton, { slots: { default: 'Save' } })
+    expect(notLoading.find('button').attributes('aria-busy')).toBeUndefined()
+    expect(notLoading.find('.is-sr-only').exists()).toBe(false)
+  })
+
   it('handles disabled state', () => {
     const wrapper = mountComponent(CatButton, {
       props: { disabled: true },

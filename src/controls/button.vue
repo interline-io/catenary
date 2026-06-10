@@ -6,6 +6,7 @@
       :disabled="disabled || loading"
       :type="type"
       :aria-label="ariaLabel"
+      :aria-busy="loading || undefined"
       :title="title"
       v-bind="$attrs"
       @click="handleClick"
@@ -13,6 +14,11 @@
       <span v-if="loading" class="icon is-small" aria-hidden="true">
         <i class="mdi mdi-loading mdi-spin" />
       </span>
+      <!-- The spinner glyph has no text alternative, so expose the loading
+           state as text. Joins the visible label in the accessible name
+           (e.g. "Loading Save"); buttons named via aria-label keep that name
+           and rely on aria-busy. -->
+      <span v-if="loading" class="is-sr-only">{{ ariaLoadingLabel }}</span>
       <cat-icon v-if="iconLeft && !loading" :icon="iconLeft" :size="iconSize" />
       <cat-icon v-if="isIconOnly && !loading" :icon="icon" :size="iconSize" />
       <span v-if="$slots.default || label">
@@ -157,6 +163,13 @@ interface Props {
    * `strictTemplates` reason as `ariaLabel`.
    */
   title?: string
+
+  /**
+   * Visually hidden text exposed while `loading` is true, since the spinner
+   * glyph has no text alternative. The button also carries `aria-busy`.
+   * @default 'Loading'
+   */
+  ariaLoadingLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -174,7 +187,8 @@ const props = withDefaults(defineProps<Props>(), {
   iconRight: undefined,
   label: undefined,
   ariaLabel: undefined,
-  title: undefined
+  title: undefined,
+  ariaLoadingLabel: 'Loading'
 })
 
 const isIconOnly = computed((): boolean =>
