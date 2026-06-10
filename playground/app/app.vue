@@ -1,15 +1,20 @@
 <template>
   <div id="app">
-    <header class="navbar" role="navigation" aria-label="main navigation">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <!-- The header is the banner landmark; the navigation landmarks are the
+         nav-menu instances (sidebar on desktop, burger menu on touch). -->
+    <header class="navbar">
       <div class="navbar-brand">
         <NuxtLink to="/" class="navbar-item">
           <strong>Catenary Controls</strong>
         </NuxtLink>
         <button
+          type="button"
           class="navbar-burger"
           :class="{ 'is-active': isMenuOpen }"
-          aria-label="menu"
+          aria-label="Menu"
           :aria-expanded="isMenuOpen"
+          aria-controls="navbar-menu"
           @click="isMenuOpen = !isMenuOpen"
         >
           <span aria-hidden="true" />
@@ -18,7 +23,7 @@
           <span aria-hidden="true" />
         </button>
       </div>
-      <div class="navbar-menu" :class="{ 'is-active': isMenuOpen }">
+      <div id="navbar-menu" class="navbar-menu" :class="{ 'is-active': isMenuOpen }">
         <div class="navbar-start is-hidden-desktop">
           <div class="navbar-item">
             <nav-menu :groups="controlsGroups" @navigate="isMenuOpen = false" />
@@ -69,5 +74,23 @@ $link: #234d8c;
 
 .navbar {
   border-bottom: solid 1px #ccc;
+}
+
+/* Visible only while focused, so keyboard and screen reader users can jump
+   past the chrome to the demos. */
+.skip-link {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.5rem 1rem;
+  background: var(--bulma-scheme-main);
+  border: 1px solid var(--bulma-border);
+  border-radius: 4px;
+  transform: translateY(-300%);
+
+  &:focus {
+    transform: none;
+  }
 }
 </style>

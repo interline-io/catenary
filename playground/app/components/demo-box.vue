@@ -1,9 +1,11 @@
 <template>
   <div class="card demo-box">
     <header class="card-header demo-header" :class="{ 'demo-example': example }">
-      <p class="card-header-title">
+      <!-- A real heading so screen reader users can jump demo to demo with
+           heading navigation (h1 is the page title). -->
+      <h2 class="card-header-title">
         {{ label }}
-      </p>
+      </h2>
     </header>
     <div class="card-content demo-content">
       <slot />

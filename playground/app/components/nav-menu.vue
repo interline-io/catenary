@@ -1,5 +1,7 @@
 <template>
-  <div class="menu">
+  <!-- Only one instance (sidebar or burger menu) is displayed per viewport
+       size, so the shared label never produces duplicate visible landmarks. -->
+  <nav class="menu" aria-label="Components">
     <div v-for="group in groups" :key="group.title">
       <p class="menu-label">
         {{ group.title }}
@@ -17,7 +19,7 @@
         </li>
       </ul>
     </div>
-  </div>
+  </nav>
 </template>
 
 <script setup lang="ts">
