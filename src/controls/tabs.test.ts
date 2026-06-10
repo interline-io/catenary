@@ -114,6 +114,82 @@ describe('cat-tabs WAI-ARIA tablist', () => {
     wrapper.unmount()
   })
 
+  it('keeps the first tab keyboard-reachable when modelValue matches no tab', async () => {
+    const wrapper = mount(defineComponent({
+      components: { CatTabs, CatTabItem },
+      setup () {
+        return () => h(CatTabs, { 'aria-label': 'Demo' }, () => [
+          h(CatTabItem, { label: 'One', value: 'one' }, () => 'Panel 1'),
+          h(CatTabItem, { label: 'Two', value: 'two' }, () => 'Panel 2')
+        ])
+      }
+    }), { attachTo: document.body })
+    await wrapper.vm.$nextTick()
+
+    const tabs = wrapper.findAll('[role="tab"]')
+    expect(tabs[0]?.attributes('tabindex')).toBe('0')
+    expect(tabs[1]?.attributes('tabindex')).toBe('-1')
+    // No tab is selected, but one must remain in the tab order
+    expect(tabs[0]?.attributes('aria-selected')).toBe('false')
+    wrapper.unmount()
+  })
+
+  it('binds aria-labelledby on the tablist', async () => {
+    const wrapper = mount(defineComponent({
+      components: { CatTabs, CatTabItem },
+      setup () {
+        return () => h('div', [
+          h('h2', { id: 'tabs-heading' }, 'Sections'),
+          h(CatTabs, { modelValue: 'one', ariaLabelledby: 'tabs-heading' }, () => [
+            h(CatTabItem, { label: 'One', value: 'one' }, () => 'Panel 1'),
+            h(CatTabItem, { label: 'Two', value: 'two' }, () => 'Panel 2')
+          ])
+        ])
+      }
+    }), { attachTo: document.body })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('[role="tablist"]').attributes('aria-labelledby')).toBe('tabs-heading')
+    await expectNoAxeViolations(wrapper)
+    wrapper.unmount()
+  })
+
+  it('applies vertical layout class and aria-orientation when orientation="vertical"', async () => {
+    const wrapper = mount(defineComponent({
+      components: { CatTabs, CatTabItem },
+      setup () {
+        return () => h(CatTabs, { 'modelValue': 'one', 'aria-label': 'Demo', 'orientation': 'vertical' }, () => [
+          h(CatTabItem, { label: 'One', value: 'one' }, () => 'Panel 1'),
+          h(CatTabItem, { label: 'Two', value: 'two' }, () => 'Panel 2')
+        ])
+      }
+    }), { attachTo: document.body })
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.find('.cat-tabs').classes()).toContain('is-vertical')
+    expect(wrapper.find('[role="tablist"]').attributes('aria-orientation')).toBe('vertical')
+    wrapper.unmount()
+  })
+
+  it('gives the panel tabindex="0" when its only interactive content is disabled', async () => {
+    const wrapper = mount(defineComponent({
+      components: { CatTabs, CatTabItem },
+      setup () {
+        return () => h(CatTabs, { 'modelValue': 'one', 'aria-label': 'Demo' }, () => [
+          h(CatTabItem, { label: 'One', value: 'one' }, () => h('button', { disabled: true }, 'Pending')),
+          h(CatTabItem, { label: 'Two', value: 'two' }, () => h('button', 'Active'))
+        ])
+      }
+    }), { attachTo: document.body })
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+
+    const panels = wrapper.findAll('[role="tabpanel"]')
+    expect(panels[0]?.attributes('tabindex')).toBe('0')
+    expect(panels[1]?.attributes('tabindex')).toBeUndefined()
+    wrapper.unmount()
+  })
+
   it('deregisters tabs when their tab-item unmounts', async () => {
     const active = ref('one')
     const showSecond = ref(true)
@@ -144,6 +220,39 @@ describe('cat-tabs WAI-ARIA tablist', () => {
     expect(remaining).toHaveLength(2)
     const labels = remaining.map(t => t.text())
     expect(labels).toEqual(['One', 'Three'])
+
+    wrapper.unmount()
+  })
+
+  it('keeps a tab in the tab order after the active tab-item unmounts', async () => {
+    const active = ref('two')
+    const showSecond = ref(true)
+    const Host = defineComponent({
+      components: { CatTabs, CatTabItem },
+      setup () {
+        return () => h(CatTabs, {
+          'modelValue': active.value,
+          'aria-label': 'Demo',
+          'onUpdate:modelValue': (v: string | number) => { active.value = String(v) }
+        }, () => [
+          h(CatTabItem, { label: 'One', value: 'one' }, () => 'Panel 1'),
+          showSecond.value ? h(CatTabItem, { label: 'Two', value: 'two' }, () => 'Panel 2') : null,
+          h(CatTabItem, { label: 'Three', value: 'three' }, () => 'Panel 3')
+        ])
+      }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    await wrapper.vm.$nextTick()
+
+    showSecond.value = false
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+
+    const remaining = wrapper.findAll('[role="tab"]')
+    expect(remaining).toHaveLength(2)
+    const tabindexes = remaining.map(t => t.attributes('tabindex'))
+    expect(tabindexes.filter(t => t === '0')).toHaveLength(1)
+    expect(tabindexes.filter(t => t === '-1')).toHaveLength(1)
 
     wrapper.unmount()
   })

@@ -41,7 +41,7 @@
           <h3 class="subtitle is-5">
             {{ formatType(tabsType) }}
           </h3>
-          <cat-tabs v-model="typeValues[tabsType]" :type="tabsType">
+          <cat-tabs v-model="typeValues[tabsType]" :type="tabsType" :aria-label="`${formatType(tabsType)} tabs example`">
             <cat-tab-item label="Home" value="1" />
             <cat-tab-item label="Profile" value="2" />
             <cat-tab-item label="Settings" value="3" />
@@ -51,7 +51,7 @@
 
       <!-- With Icons -->
       <demo-box label="With Icons">
-        <cat-tabs v-model="iconTab">
+        <cat-tabs v-model="iconTab" aria-label="Icon tabs example">
           <cat-tab-item label="Dashboard" value="dashboard" icon="view-dashboard" />
           <cat-tab-item label="Messages" value="messages" icon="email" />
           <cat-tab-item label="Notifications" value="notifications" icon="bell" />
@@ -65,7 +65,7 @@
           <h3 class="subtitle is-5">
             {{ capitalize(tabsSize) }}
           </h3>
-          <cat-tabs v-model="sizeValues[tabsSize]" :size="tabsSize">
+          <cat-tabs v-model="sizeValues[tabsSize]" :size="tabsSize" :aria-label="`${capitalize(tabsSize)} size tabs example`">
             <cat-tab-item label="Tab 1" value="1" />
             <cat-tab-item label="Tab 2" value="2" />
           </cat-tabs>
@@ -78,7 +78,7 @@
           <h3 class="subtitle is-5">
             {{ capitalize(position) }}{{ position === 'left' ? '-aligned' : position === 'right' ? '-aligned' : '' }}
           </h3>
-          <cat-tabs v-model="positionValues[position]" :position="position">
+          <cat-tabs v-model="positionValues[position]" :position="position" :aria-label="`${capitalize(position)} aligned tabs example`">
             <cat-tab-item label="One" value="1" />
             <cat-tab-item label="Two" value="2" />
             <cat-tab-item label="Three" value="3" />
@@ -88,7 +88,7 @@
 
       <!-- Full Width -->
       <demo-box label="Full Width">
-        <cat-tabs v-model="fullWidth" expanded>
+        <cat-tabs v-model="fullWidth" expanded aria-label="Full width tabs example">
           <cat-tab-item label="First" value="1" />
           <cat-tab-item label="Second" value="2" />
           <cat-tab-item label="Third" value="3" />
@@ -96,9 +96,33 @@
         </cat-tabs>
       </demo-box>
 
+      <!-- Vertical Orientation -->
+      <demo-box label="Vertical Orientation">
+        <cat-tabs v-model="verticalTab" orientation="vertical" aria-label="Vertical tabs example">
+          <cat-tab-item label="Overview" value="overview">
+            <div class="content">
+              <p>Vertical tabs stack in a column; use ArrowUp / ArrowDown to move between them.</p>
+            </div>
+          </cat-tab-item>
+          <cat-tab-item label="Details" value="details">
+            <div class="content">
+              <p>Details content.</p>
+            </div>
+          </cat-tab-item>
+          <cat-tab-item label="History" value="history">
+            <div class="content">
+              <p>History content.</p>
+            </div>
+          </cat-tab-item>
+        </cat-tabs>
+      </demo-box>
+
       <!-- Practical Example: Settings Panel -->
       <demo-box label="Example: Settings Panel" example>
-        <cat-tabs v-model="settingsTab" type="boxed">
+        <h3 id="settings-tabs-heading" class="subtitle is-5">
+          Settings
+        </h3>
+        <cat-tabs v-model="settingsTab" type="boxed" aria-labelledby="settings-tabs-heading">
           <cat-tab-item label="Account" value="account" icon="account">
             <div class="content">
               <h3>Account Settings</h3>
@@ -175,7 +199,10 @@
 
       <!-- Interactive Example -->
       <demo-box label="Example: Product Details" example>
-        <cat-tabs v-model="productTab">
+        <h3 id="product-tabs-heading" class="subtitle is-5">
+          Product details
+        </h3>
+        <cat-tabs v-model="productTab" aria-labelledby="product-tabs-heading">
           <cat-tab-item label="Description" value="description">
             <div class="content">
               <h3>Product Description</h3>
@@ -258,7 +285,10 @@
             Tabs use <strong>automatic activation</strong>: moving focus to a tab also activates it. The tab list uses a roving <code>tabindex</code> so only one tab is in the page tab order at a time. Tab panels receive <code>tabindex="0"</code> only when their content has no focusable elements of its own; otherwise they are skipped to avoid a redundant tab stop.
           </p>
           <p class="mt-2">
-            Provide the <code>aria-label</code> prop on <code>&lt;cat-tabs&gt;</code> when the tab list isn't already named by surrounding heading text. Without it, screen readers announce each tab without group context.
+            Name every tab list. When a visible heading precedes the tabs, point <code>aria-labelledby</code> on <code>&lt;cat-tabs&gt;</code> at the heading's <code>id</code> (see the Settings Panel and Product Details examples). Otherwise provide the <code>aria-label</code> prop. Without a name, screen readers announce each tab without group context.
+          </p>
+          <p class="mt-2">
+            <code>orientation="vertical"</code> stacks the tabs in a column, sets <code>aria-orientation="vertical"</code>, and switches arrow-key navigation to ArrowUp / ArrowDown so the keyboard behavior matches the visual layout.
           </p>
         </template>
       </demo-a11y>
@@ -301,6 +331,7 @@ for (const tabsType of tabsTypes) {
 }
 
 const fullWidth = ref('2')
+const verticalTab = ref('overview')
 
 const settingsTab = ref('account')
 const settings = ref({
