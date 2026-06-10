@@ -13,6 +13,11 @@
              announcement time are unreliable. -->
         <span class="is-sr-only" role="status">{{ statusMessage }}</span>
         <div class="field has-addons cat-datepicker-field">
+          <!-- .stop on keydown.enter/focusout: cat-input inherits fallthrough
+               listeners onto its root wrapper while also binding $attrs on the
+               native input, so without .stop each handler is registered twice
+               and the bubbled event would run commitTypedInput a second time
+               (double-emitting the date in the same tick). -->
           <cat-input
             ref="inputRef"
             :model-value="inputText"
@@ -29,8 +34,8 @@
             :aria-describedby="formatHintId"
             expanded
             @update:model-value="inputText = $event"
-            @keydown.enter.prevent="commitTypedInput"
-            @focusout="commitTypedInput"
+            @keydown.enter.prevent.stop="commitTypedInput"
+            @focusout.stop="commitTypedInput"
             @icon-right-click="$emit('icon-right-click', $event)"
           />
           <div class="control">
@@ -847,8 +852,10 @@ useDismissablePopup({
 // tabbing past the date grid. A non-modal dialog shouldn't linger open
 // behind the user.
 function handleMenuFocusout (event: FocusEvent) {
-  const next = event.relatedTarget as Node | null
-  if (!next) return
+  // relatedTarget can be null (focus left the document) or a non-Node
+  // EventTarget on synthetic events; contains() accepts only Nodes.
+  const next = event.relatedTarget
+  if (!(next instanceof Node)) return
   if (rootRef.value && !rootRef.value.contains(next)) {
     close(false)
   }
