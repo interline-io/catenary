@@ -251,20 +251,25 @@
           { label: 'APG: Combobox examples', url: 'https://www.w3.org/WAI/ARIA/apg/patterns/combobox/examples/' },
         ]"
         :keyboard="[
-          { key: 'ArrowDown', description: 'When the listbox is open, moves focus to the next option.' },
-          { key: 'ArrowUp', description: 'When the listbox is open, moves focus to the previous option.' },
-          { key: 'Home / End', description: 'When the listbox is open, moves focus to the first / last option. Only intercepted when the listbox is showing options; otherwise the keys reach the input cursor as normal.' },
-          { key: 'Enter / Space', description: 'When focus is on an option, selects that option.' },
-          { key: 'Escape', description: 'Closes the listbox if open; otherwise clears the input text.' },
+          { key: 'ArrowDown', description: 'Opens the listbox, or moves the highlight to the next option. DOM focus stays in the input; the highlighted option is conveyed via aria-activedescendant.' },
+          { key: 'ArrowUp', description: 'When the listbox is open, moves the highlight to the previous option.' },
+          { key: 'Home / End', description: 'When the listbox is open, moves the highlight to the first / last option. Only intercepted when the listbox is showing options; otherwise the keys reach the input cursor as normal.' },
+          { key: 'Enter', description: 'Selects the highlighted option; with allow-new, commits the typed text as a new tag.' },
+          { key: 'Tab', description: 'Selects the highlighted option (if any), closes the listbox, and moves focus onward.' },
+          { key: 'Backspace (in an empty input)', description: 'Removes the last tag; the removal is announced through a status region.' },
+          { key: 'Escape', description: 'Closes the listbox if open; otherwise clears the input text. Either way the keypress is consumed so an enclosing dialog stays open; a third Escape reaches the dialog.' },
           { key: 'Printable characters', description: 'Filter the listbox options. The combobox input itself is the type-ahead surface per the WAI-ARIA Combobox pattern, so a separate buffered type-ahead is not used here.' },
         ]"
       >
         <template #notes>
           <p class="mt-3">
-            The wrapper carries <code>role="combobox"</code> with <code>aria-expanded</code> / <code>aria-haspopup</code> / <code>aria-controls</code> pointing at the listbox. Options expose <code>role="option"</code> and <code>aria-selected</code>. The search input gets an <code>aria-label</code> defaulting to the <code>placeholder</code>, so screen readers always announce something on focus.
+            The input carries <code>role="combobox"</code> (ARIA 1.2 pattern) with <code>aria-expanded</code>, <code>aria-haspopup</code>, <code>aria-autocomplete="list"</code>, <code>aria-controls</code> pointing at the listbox, and <code>aria-activedescendant</code> tracking the highlighted option. Options expose <code>role="option"</code> and <code>aria-selected</code>, and are deliberately not focusable: the input is the single focus point. Inside a labeled <code>cat-field</code>, the field label names the input; standalone, use the <code>aria-label</code> prop (falling back to the placeholder).
           </p>
           <p class="mt-2">
-            In <code>readonly</code> mode the listbox is removed from the DOM, so the combobox role and listbox-related ARIA attributes are omitted on the wrapper. Assistive tech sees a plain set of selected tags with no popup affordance.
+            A visually hidden status region announces additions (<em>Added Apple</em>), removals (<em>Removed Apple</em>), and empty filter results (<em>No results</em>). At the <code>max-tags</code> limit the input stays enabled (disabling the focused element would drop keyboard focus); the option list empties, the placeholder changes, and the live counter reports the state. Removing a tag with its remove button moves focus to the next tag's remove button rather than dropping it.
+          </p>
+          <p class="mt-2">
+            In <code>readonly</code> mode the input and listbox are removed from the DOM. Assistive tech sees a plain set of selected tags with no popup affordance.
           </p>
         </template>
       </demo-a11y>

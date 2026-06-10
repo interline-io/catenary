@@ -1,24 +1,25 @@
 <template>
+  <!-- Combobox semantics live on the input (ARIA 1.2 pattern); the wrapper
+       carries no role. The status region confirms tag additions/removals and
+       empty results to screen reader users; it is rendered from mount because
+       live regions inserted at announcement time are unreliable. -->
   <div
     class="cat-taginput"
     :class="containerClasses"
-    :role="readonly ? undefined : 'combobox'"
-    :aria-label="placeholder || 'Tag input'"
-    :aria-expanded="readonly ? undefined : showDropdown"
-    :aria-haspopup="readonly ? undefined : 'listbox'"
-    :aria-controls="readonly ? undefined : listboxId"
   >
+    <span class="is-sr-only" role="status">{{ statusMessage }}</span>
     <!-- Selected tags (above input) -->
     <div class="cat-taginput-tags" role="list" aria-label="Selected tags">
       <template v-if="selectedTags.length > 0">
         <div
-          v-for="tag in selectedTags"
+          v-for="(tag, tagIndex) in selectedTags"
           :key="tag.value"
           class="tags has-addons"
           role="listitem"
         >
           <button
             v-if="!disabled && !readonly && closable"
+            :ref="el => setRemoveButtonRef(el, tagIndex)"
             type="button"
             class="tag is-delete"
             :class="tagClasses"
@@ -52,17 +53,27 @@
     <div v-if="!readonly" class="cat-taginput-input-wrapper">
       <!-- Input with icon -->
       <div class="control" :class="controlClasses">
+        <!-- The accessible name comes from a wrapping cat-field label when
+             present (via FieldIdKey); aria-label is only a fallback so it
+             never overrides the visible label association. The max-tags state
+             keeps the input enabled: disabling the focused element would drop
+             keyboard focus to the page body and remove the only way to
+             Backspace-remove a tag. -->
         <input
+          :id="fieldId"
           ref="inputRef"
           v-model="searchText"
           type="text"
           class="input"
           :class="inputClasses"
           :placeholder="isMaxReached ? 'Maximum reached' : placeholder"
-          :aria-label="placeholder || 'Search tags'"
-          :disabled="disabled || isMaxReached"
+          :aria-label="ariaLabel ?? (fieldId ? undefined : (placeholder || 'Search tags'))"
+          :disabled="disabled"
           autocomplete="off"
-          role="searchbox"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-haspopup="listbox"
+          :aria-expanded="showDropdown"
           :aria-controls="listboxId"
           :aria-activedescendant="highlightedIndex >= 0 ? `${componentId}-option-${highlightedIndex}` : undefined"
           :aria-describedby="maxTags !== undefined ? counterId : undefined"
@@ -75,22 +86,32 @@
         </span>
       </div>
 
-      <!-- Dropdown -->
+      <!-- Dropdown. The listbox role sits on the options container so the
+           header slot and empty message are not invalid listbox children. -->
       <div
         v-show="showDropdown"
-        :id="listboxId"
         class="cat-taginput-dropdown"
-        role="listbox"
-        aria-multiselectable="true"
-        :aria-label="placeholder || 'Select options'"
       >
         <!-- Header slot -->
         <div v-if="$slots.header" class="cat-taginput-dropdown-header">
           <slot name="header" />
         </div>
 
-        <!-- Options list -->
-        <div class="cat-taginput-dropdown-content">
+        <!-- Options list. DOM focus stays in the input per the ARIA 1.2
+             combobox pattern; the highlighted option is conveyed through
+             aria-activedescendant, so options are deliberately not focusable
+             and have no keyboard handlers of their own. -->
+        <div
+          :id="listboxId"
+          class="cat-taginput-dropdown-content"
+          role="listbox"
+          aria-multiselectable="true"
+          :aria-label="ariaLabel || placeholder || 'Select options'"
+        >
+          <!-- Keyboard interaction happens on the input (arrows move the
+               highlight, hover only mirrors it), so the focus-pairing rules
+               do not apply to these activedescendant-driven options. -->
+          <!-- eslint-disable vuejs-accessibility/interactive-supports-focus, vuejs-accessibility/mouse-events-have-key-events -->
           <div
             v-for="(option, index) in filteredOptions"
             :id="`${componentId}-option-${index}`"
@@ -98,21 +119,18 @@
             class="cat-taginput-dropdown-item"
             :class="{ 'is-active': index === highlightedIndex }"
             role="option"
-            tabindex="0"
             :aria-selected="modelValue?.includes(option.value) || false"
             @mousedown.prevent="selectOption(option)"
             @mouseenter="highlightedIndex = index"
-            @focus="highlightedIndex = index"
-            @keydown.enter.prevent="selectOption(option)"
-            @keydown.space.prevent="selectOption(option)"
           >
             <slot name="option" :option="option">
               {{ option.label }}
             </slot>
           </div>
-          <div v-if="filteredOptions.length === 0 && $slots.empty" class="cat-taginput-dropdown-item is-empty">
-            <slot name="empty" />
-          </div>
+          <!-- eslint-enable vuejs-accessibility/interactive-supports-focus, vuejs-accessibility/mouse-events-have-key-events -->
+        </div>
+        <div v-if="filteredOptions.length === 0 && $slots.empty" class="cat-taginput-dropdown-item is-empty">
+          <slot name="empty" />
         </div>
       </div>
     </div>
@@ -120,8 +138,9 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string">
-import { computed, ref, watch, useSlots, useId } from 'vue'
+import { computed, ref, watch, useSlots, useId, inject, nextTick } from 'vue'
 import type { TaginputVariant, TaginputSize, TagOption as TagOptionBase } from './types'
+import { FieldIdKey } from './types'
 
 /**
  * Tag input component with autocomplete dropdown.
@@ -176,6 +195,8 @@ const props = withDefaults(defineProps<{
   allowNew?: boolean
   /** Separator keys that trigger creating a new tag (in addition to Enter). @default [','] */
   separators?: string[]
+  /** Accessible name for the input, for use when the taginput is not paired with a visible cat-field label. */
+  ariaLabel?: string
 }>(), {
   options: () => [],
   placeholder: '',
@@ -192,7 +213,8 @@ const props = withDefaults(defineProps<{
   emptyText: 'None selected',
   maxTags: undefined,
   allowNew: false,
-  separators: () => [',']
+  separators: () => [','],
+  ariaLabel: undefined
 })
 
 const emit = defineEmits<{
@@ -216,6 +238,29 @@ const highlightedIndex = ref(-1)
 const componentId = useId()
 const listboxId = `${componentId}-listbox`
 const counterId = `${componentId}-counter`
+
+// Associates a wrapping cat-field's label with the input. In readonly mode
+// the input is removed from the DOM, so the label dangles; acceptable, since
+// readonly taginputs render only the tag list.
+const fieldId = inject(FieldIdKey, undefined)
+
+// Screen reader status feedback for tag additions and removals (Backspace
+// removal is otherwise completely silent) and for empty filter results.
+const statusMessage = ref('')
+function announceStatus (message: string) {
+  // Clear first so repeating the same message still triggers an announcement.
+  statusMessage.value = ''
+  nextTick(() => {
+    statusMessage.value = message
+  })
+}
+
+// Remove-button elements by tag index, for restoring keyboard focus after a
+// tag is removed (the focused button unmounts with its tag).
+const removeButtonRefs = ref<(HTMLButtonElement | null)[]>([])
+function setRemoveButtonRef (el: unknown, index: number) {
+  removeButtonRefs.value[index] = el as HTMLButtonElement | null
+}
 
 // Check if max tags limit is reached
 const isMaxReached = computed(() => {
@@ -245,8 +290,10 @@ const selectedTags = computed(() => {
   return selected
 })
 
-// Filter options: exclude already selected
+// Filter options: exclude already selected. At the max-tags limit no option
+// is addable, so offer none rather than a list of dead entries.
 const filteredOptions = computed(() => {
+  if (isMaxReached.value) return []
   const selectedValues = new Set(modelValue.value || [])
   let filtered = props.options.filter(o => !selectedValues.has(o.value))
 
@@ -389,6 +436,31 @@ function handleKeydown (event: KeyboardEvent) {
       }
       break
     case 'Escape':
+      // Consume the Escape that dismisses the listbox (or clears typed text)
+      // so an enclosing dialog does not also close on the same keypress; only
+      // a "spent" Escape with nothing left to dismiss falls through.
+      if (isOpen.value) {
+        event.preventDefault()
+        event.stopPropagation()
+        isOpen.value = false
+        highlightedIndex.value = -1
+      } else if (searchText.value) {
+        event.preventDefault()
+        event.stopPropagation()
+        searchText.value = ''
+      }
+      break
+    case 'Tab':
+      // Tab commits the highlighted option before moving on; accessibility
+      // testers expected Tab (not only Enter) to select, and previously it
+      // silently abandoned the highlight. The default is not prevented, so
+      // focus continues to the next element.
+      if (isOpen.value && highlightedIndex.value >= 0 && highlightedIndex.value < filteredOptions.value.length) {
+        const option = filteredOptions.value[highlightedIndex.value]
+        if (option) {
+          selectOption(option)
+        }
+      }
       isOpen.value = false
       highlightedIndex.value = -1
       break
@@ -420,6 +492,7 @@ function addNewTag () {
   const option: TagOption = { value: text as T, label: text }
   modelValue.value = [...modelValue.value, text as T]
   emit('select', option)
+  announceStatus(`Added ${option.label}`)
   searchText.value = ''
   highlightedIndex.value = -1
   inputRef.value?.focus()
@@ -427,9 +500,14 @@ function addNewTag () {
 }
 
 function selectOption (option: TagOption) {
+  // The input stays enabled at the max-tags limit (disabling the focused
+  // element drops keyboard focus to the page body), so enforce the limit
+  // here instead.
+  if (isMaxReached.value && !modelValue.value.includes(option.value)) return
   if (!modelValue.value.includes(option.value)) {
     modelValue.value = [...modelValue.value, option.value]
     emit('select', option)
+    announceStatus(`Added ${option.label}`)
   }
   searchText.value = ''
   highlightedIndex.value = -1
@@ -438,8 +516,27 @@ function selectOption (option: TagOption) {
 }
 
 function removeTag (tag: TagOption) {
+  const index = selectedTags.value.findIndex(t => t.value === tag.value)
+  // When the removal was activated from the tag's own remove button, that
+  // button unmounts with the tag and focus would fall to the page body.
+  // Restore it to the same-position remove button (or the input). The
+  // Backspace-in-input path leaves focus in the input untouched.
+  const active = document.activeElement
+  const hadButtonFocus = !!active && removeButtonRefs.value.includes(active as HTMLButtonElement)
   modelValue.value = modelValue.value.filter(v => v !== tag.value)
   emit('remove', tag)
+  announceStatus(`Removed ${tag.label}`)
+  if (hadButtonFocus) {
+    nextTick(() => {
+      const buttons = removeButtonRefs.value.filter((b): b is HTMLButtonElement => !!b && b.isConnected)
+      const target = buttons[Math.min(index, buttons.length - 1)]
+      if (target) {
+        target.focus()
+      } else {
+        inputRef.value?.focus()
+      }
+    })
+  }
 }
 
 // Open dropdown when typing
@@ -447,6 +544,29 @@ watch(searchText, (val) => {
   if (val.length > 0 && !props.readonly) {
     isOpen.value = true
   }
+})
+
+// Filtering can shrink the list below the highlighted index, leaving
+// aria-activedescendant pointing at an option that no longer exists. Reset
+// rather than clamp: the user never moved to the option that would otherwise
+// become highlighted.
+watch(filteredOptions, (opts) => {
+  if (highlightedIndex.value >= opts.length) {
+    highlightedIndex.value = -1
+  }
+})
+
+// Announce empty filter results; the listbox simply not rendering is
+// invisible to screen reader users. Announce only on the transition into
+// the empty state: re-announcing on every keystroke while the list stays
+// empty would be disruptive.
+const inNoResultsState = ref(false)
+watch([isOpen, filteredOptions, searchText], () => {
+  const empty = isOpen.value && !!searchText.value && filteredOptions.value.length === 0 && !isMaxReached.value
+  if (empty && !inNoResultsState.value) {
+    announceStatus('No results')
+  }
+  inNoResultsState.value = empty
 })
 
 // Expose focus method
