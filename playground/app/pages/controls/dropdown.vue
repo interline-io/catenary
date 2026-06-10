@@ -144,11 +144,11 @@
 
       <demo-box label="Custom Trigger">
         <cat-dropdown>
-          <template #trigger>
-            <a class="navbar-item">
+          <template #trigger="{ triggerAttrs }">
+            <button type="button" class="button is-ghost navbar-item" v-bind="triggerAttrs">
               <span>More</span>
               <cat-icon icon="menu-down" size="small" />
-            </a>
+            </button>
           </template>
           <cat-dropdown-item value="docs">
             Documentation
@@ -187,8 +187,8 @@
           Selected action: <strong>{{ selectedAction || 'None' }}</strong>
         </p>
         <cat-dropdown @select="handleSelect">
-          <template #trigger>
-            <cat-button variant="primary">
+          <template #trigger="{ triggerAttrs }">
+            <cat-button variant="primary" v-bind="triggerAttrs">
               <span>Choose Action</span>
               <cat-icon icon="menu-down" size="small" />
             </cat-button>
@@ -215,8 +215,8 @@
 
       <demo-box label="Example: Notification Menu" example>
         <cat-dropdown>
-          <template #trigger>
-            <cat-button variant="info">
+          <template #trigger="{ triggerAttrs }">
+            <cat-button variant="info" aria-label="Notifications" v-bind="triggerAttrs">
               <cat-icon icon="bell" size="small" />
               <span class="tag is-danger is-rounded">
                 3
@@ -269,8 +269,8 @@
           Current language: <strong>{{ currentLanguage }}</strong>
         </p>
         <cat-dropdown @select="handleLanguageSelect">
-          <template #trigger>
-            <cat-button>
+          <template #trigger="{ triggerAttrs }">
+            <cat-button v-bind="triggerAttrs">
               <cat-icon icon="translate" size="small" />
               <span>{{ currentLanguage }}</span>
               <cat-icon icon="menu-down" size="small" />
@@ -336,8 +336,8 @@
           { label: 'APG: Menu and Menubar pattern', url: 'https://www.w3.org/WAI/ARIA/apg/patterns/menubar/', note: 'reference for menu keyboard behavior' },
         ]"
         :keyboard="[
-          { key: 'Enter / Space', description: 'When focus is on the trigger, opens the menu and places focus on the first item.' },
-          { key: 'ArrowDown', description: 'When focus is on the trigger, opens the menu and places focus on the first item.' },
+          { key: 'Enter / Space', description: 'When focus is on the trigger, toggles the menu; opening places focus on the first item (or the selected option in listbox mode).' },
+          { key: 'ArrowDown', description: 'When focus is on the trigger, opens the menu and places focus on the first item (or the selected option in listbox mode).' },
           { key: 'ArrowUp', description: 'When focus is on the trigger, opens the menu and places focus on the last item.' },
           { key: 'ArrowDown / ArrowUp', description: 'When focus is inside the menu, moves focus to the next / previous item. Wraps at the ends.' },
           { key: 'Home / End', description: 'When focus is inside the menu, moves focus to the first / last item.' },
@@ -349,10 +349,13 @@
       >
         <template #notes>
           <p class="mt-3">
-            With <code>selectable</code> the menu is a <code>role="listbox"</code> and items expose <code>aria-selected</code>; adding <code>multiple</code> further sets <code>aria-multiselectable="true"</code>. The trigger always carries <code>aria-haspopup</code> (either <code>"menu"</code> or <code>"listbox"</code>) and <code>aria-expanded</code> that tracks open state.
+            With <code>selectable</code> the menu is a <code>role="listbox"</code> and items expose <code>aria-selected</code>; adding <code>multiple</code> further sets <code>aria-multiselectable="true"</code>. The default trigger button carries <code>aria-haspopup</code> (either <code>"menu"</code> or <code>"listbox"</code>) and <code>aria-expanded</code> that tracks open state.
           </p>
           <p class="mt-2">
-            Click-to-toggle is on the trigger wrapper, so a <code>#trigger</code> slot (e.g., a <code>&lt;cat-input&gt;</code> or a custom anchor) opens the menu on click without needing to call the slot's <code>toggle</code> helper.
+            Custom triggers must spread the <code>triggerAttrs</code> slot prop onto their focusable element (<code>&lt;template #trigger="{ triggerAttrs }"&gt;&lt;cat-button v-bind="triggerAttrs"&gt;</code>) to get the same popup semantics. Click-to-toggle is on the trigger wrapper, so any trigger opens the menu on click without needing to call the slot's <code>toggle</code> helper, but the trigger element itself must be focusable (a real button, not a bare anchor) for keyboard users to reach it.
+          </p>
+          <p class="mt-2">
+            When keyboard focus leaves the component while the menu is open (e.g. Tab from the trigger), the menu closes without moving focus.
           </p>
         </template>
       </demo-a11y>
