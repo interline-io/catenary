@@ -69,6 +69,96 @@ describe('cat-dropdown WAI-ARIA + keyboard', () => {
     wrapper.unmount()
   })
 
+  it('Enter on the trigger opens the menu and focuses the first item', async () => {
+    const { wrapper } = mountDropdown()
+    const trigger = wrapper.find('button')
+    trigger.element.focus()
+    await trigger.trigger('keydown', { key: 'Enter' })
+    await nextTick()
+    expect(trigger.attributes('aria-expanded')).toBe('true')
+    const items = wrapper.findAll('.dropdown-item')
+    expect(items[0]?.element).toBe(document.activeElement)
+    wrapper.unmount()
+  })
+
+  it('Space on the trigger toggles the menu', async () => {
+    const { wrapper } = mountDropdown()
+    const trigger = wrapper.find('button')
+    trigger.element.focus()
+    await trigger.trigger('keydown', { key: ' ' })
+    await nextTick()
+    expect(trigger.attributes('aria-expanded')).toBe('true')
+
+    trigger.element.focus()
+    await trigger.trigger('keydown', { key: ' ' })
+    await nextTick()
+    expect(trigger.attributes('aria-expanded')).toBe('false')
+    wrapper.unmount()
+  })
+
+  it('opening a selectable listbox with the keyboard focuses the selected option', async () => {
+    const { wrapper, selected } = mountDropdown({ selectable: true })
+    selected.value = 'two'
+    await nextTick()
+
+    const trigger = wrapper.find('button')
+    trigger.element.focus()
+    await trigger.trigger('keydown', { key: 'ArrowDown' })
+    await nextTick()
+    expect((document.activeElement as HTMLElement)?.textContent?.trim()).toBe('Two')
+    wrapper.unmount()
+  })
+
+  it('exposes triggerAttrs to custom #trigger slots', async () => {
+    const Host = defineComponent({
+      components: { CatDropdown, CatDropdownItem },
+      setup () {
+        return () => h(CatDropdown, {}, {
+          trigger: (slotProps: any) => h('button', { type: 'button', class: 'custom-trigger', ...slotProps.triggerAttrs }, 'Open'),
+          default: () => [h(CatDropdownItem, { value: 'one' }, () => 'One')]
+        })
+      }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    const trigger = wrapper.find('.custom-trigger')
+    expect(trigger.attributes('aria-haspopup')).toBe('menu')
+    expect(trigger.attributes('aria-expanded')).toBe('false')
+    expect(trigger.attributes('aria-controls')).toBe(wrapper.find('.dropdown-menu').attributes('id'))
+
+    await trigger.trigger('click')
+    expect(trigger.attributes('aria-expanded')).toBe('true')
+    wrapper.unmount()
+  })
+
+  it('closes without stealing focus when keyboard focus leaves the component', async () => {
+    const Host = defineComponent({
+      components: { CatDropdown, CatDropdownItem },
+      setup () {
+        return () => h('div', [
+          h(CatDropdown, { label: 'Menu' }, {
+            default: () => [h(CatDropdownItem, { value: 'one' }, () => 'One')]
+          }),
+          h('button', { type: 'button', class: 'after' }, 'After')
+        ])
+      }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    const trigger = wrapper.find('.dropdown-trigger button')
+    await trigger.trigger('click')
+    expect(wrapper.find('.cat-dropdown').classes()).toContain('is-active')
+
+    // Simulate Tab landing on the element after the dropdown.
+    const after = wrapper.find('.after').element as HTMLElement
+    const root = wrapper.find('.cat-dropdown').element
+    root.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: after }))
+    after.focus()
+    await nextTick()
+
+    expect(wrapper.find('.cat-dropdown').classes()).not.toContain('is-active')
+    expect(document.activeElement).toBe(after)
+    wrapper.unmount()
+  })
+
   it('Escape in the menu closes the dropdown and returns focus to the trigger', async () => {
     const { wrapper } = mountDropdown()
     const trigger = wrapper.find('button')
