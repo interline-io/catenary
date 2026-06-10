@@ -321,9 +321,10 @@ function onTriggerKeydown (event: KeyboardEvent) {
     event.preventDefault()
     open('last')
   } else if (event.key === 'Enter' || event.key === ' ') {
-    // Typing fields inside a custom #trigger keep their normal Enter/Space.
+    // Form fields inside a custom #trigger keep their native Enter/Space
+    // (typing in inputs/textareas, opening a select's option picker).
     const target = event.target as HTMLElement
-    if (target.closest('input, textarea, [contenteditable="true"]')) return
+    if (target.closest('input, textarea, select, [contenteditable="true"]')) return
     // preventDefault suppresses the trigger's synthetic click (Enter fires
     // click on keydown, Space on keyup), which would bubble to the wrapper's
     // @click and toggle a second time. Per the APG menu-button pattern,
