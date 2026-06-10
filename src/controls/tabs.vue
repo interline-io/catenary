@@ -8,6 +8,7 @@
         ref="tablistRef"
         role="tablist"
         :aria-label="ariaLabel"
+        :aria-labelledby="ariaLabelledby"
         :aria-orientation="orientation"
         class="cat-tablist"
       >
@@ -22,7 +23,7 @@
           :class="{ 'is-active': modelValue === tab.value }"
           :aria-selected="modelValue === tab.value"
           :aria-controls="tab.panelId"
-          :tabindex="modelValue === tab.value ? 0 : -1"
+          :tabindex="index === selectedIndex ? 0 : -1"
           :data-index="index"
           @click="selectTab(tab.value)"
           @keydown="onTablistKeydown"
@@ -56,8 +57,8 @@ import { computed, provide, ref, watch, nextTick } from 'vue'
  * Activation follows focus (automatic activation) because tab panels are
  * preloaded via v-show — there is no async loading penalty.
  *
- * Works with cat-tab-item children. Pair each cat-tabs with an `ariaLabel` when
- * the tablist isn't already labeled by surrounding heading text.
+ * Works with cat-tab-item children. Name the tablist with `ariaLabelledby`
+ * pointing at a visible heading when one exists, or `ariaLabel` otherwise.
  *
  * @example
  * <cat-tabs v-model="activeTab" aria-label="Sections">
@@ -85,6 +86,11 @@ const props = withDefaults(defineProps<{
    * announce only the active tab without group context.
    */
   ariaLabel?: string
+  /**
+   * id of a visible element (e.g. a heading) that labels the tablist.
+   * Preferred over ariaLabel when a visible label exists.
+   */
+  ariaLabelledby?: string
   /** Tablist orientation. @default 'horizontal' */
   orientation?: 'horizontal' | 'vertical'
 }>(), {
@@ -94,6 +100,7 @@ const props = withDefaults(defineProps<{
   type: 'default',
   expanded: false,
   ariaLabel: undefined,
+  ariaLabelledby: undefined,
   orientation: 'horizontal'
 })
 
@@ -131,6 +138,14 @@ function deregisterTab (value: string | number) {
 provide('registerTab', registerTab)
 provide('deregisterTab', deregisterTab)
 provide('activeTab', computed(() => props.modelValue))
+
+// Roving tabindex anchor. Falls back to the first tab when modelValue matches
+// no registered tab (stale value, or the active tab-item was removed via v-if)
+// so the tablist never drops out of the page tab order entirely.
+const selectedIndex = computed(() => {
+  const i = tabs.value.findIndex(t => t.value === props.modelValue)
+  return i >= 0 ? i : 0
+})
 
 function selectTab (value: string | number) {
   emit('update:modelValue', value as T)
@@ -197,6 +212,8 @@ const tabsClasses = computed(() => {
   if (props.type === 'toggle-rounded') classes.push('is-toggle', 'is-toggle-rounded')
 
   if (props.expanded) classes.push('is-fullwidth')
+
+  if (props.orientation === 'vertical') classes.push('is-vertical')
 
   return classes
 })
@@ -303,4 +320,48 @@ watch(() => props.modelValue, () => {
 
 .cat-tabs.is-toggle-rounded .cat-tab:first-child { border-radius: 290486px 0 0 290486px; padding-left: 1.25em; }
 .cat-tabs.is-toggle-rounded .cat-tab:last-child { border-radius: 0 290486px 290486px 0; padding-right: 1.25em; }
+
+// Vertical orientation: stack tabs in a column and move the active-tab rule
+// from the bottom edge to the right edge so it reads as a side rail.
+.cat-tabs.is-vertical .cat-tablist {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.cat-tabs.is-vertical .cat-tab {
+  border-bottom-color: transparent;
+  border-right: 1px solid $border;
+  margin-bottom: 0;
+  margin-right: -1px;
+  justify-content: flex-start;
+
+  &:hover {
+    border-bottom-color: transparent;
+    border-right-color: $text-strong;
+  }
+
+  &.is-active {
+    border-bottom-color: transparent;
+    border-right-color: $link;
+  }
+}
+
+.cat-tabs.is-vertical.is-toggle .cat-tablist {
+  .cat-tab {
+    border-color: $border;
+    margin-right: 0;
+
+    &.is-active { border-color: $link; }
+  }
+
+  .cat-tab + .cat-tab { margin-left: 0; margin-top: -1px; }
+
+  .cat-tab:first-child { border-radius: 4px 4px 0 0; }
+  .cat-tab:last-child { border-radius: 0 0 4px 4px; }
+}
+
+.cat-tabs.is-vertical.is-toggle-rounded {
+  .cat-tab:first-child { border-radius: 290486px 290486px 0 0; padding-left: 1em; }
+  .cat-tab:last-child { border-radius: 0 0 290486px 290486px; padding-right: 1em; }
+}
 </style>

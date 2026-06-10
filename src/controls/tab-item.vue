@@ -72,8 +72,10 @@ function detectFocusableChild () {
     hasFocusableChild.value = false
     return
   }
+  // :not(:disabled) excludes disabled form controls, which are not focusable;
+  // a panel whose only interactive content is disabled still needs tabindex=0.
   const focusable = panelRef.value.querySelector(
-    'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    'button:not(:disabled), a[href], input:not(:disabled):not([type="hidden"]), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
   )
   hasFocusableChild.value = focusable !== null
 }
