@@ -305,6 +305,9 @@
           <p class="mt-2">
             When <code>minDate</code> / <code>maxDate</code> / <code>unselectableDates</code> would leave the natural tab stop on a disabled day, the focused day is automatically advanced to the nearest selectable day in the visible month, so the grid always has a focusable entry point. Typed dates are deliberately <em>not</em> restricted by these constraints; they are emitted as-is so the consumer can show its own validation messaging.
           </p>
+          <p class="mt-2">
+            The calendar renders in the browser top layer (Popover API) so it is not clipped by a scrollable ancestor such as a modal body; browsers without the API fall back to absolute positioning.
+          </p>
         </template>
       </demo-a11y>
     </section>

@@ -357,6 +357,9 @@
           <p class="mt-2">
             When keyboard focus leaves the component while the menu is open (e.g. Tab from the trigger), the menu closes without moving focus.
           </p>
+          <p class="mt-2">
+            The menu renders in the browser top layer (Popover API) so it is not clipped by a scrollable ancestor such as a modal body; browsers without the API fall back to absolute positioning.
+          </p>
         </template>
       </demo-a11y>
     </section>

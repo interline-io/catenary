@@ -66,7 +66,7 @@
       <!-- Plain positioning wrapper. Bulma dropdown-menu classes are used for
            show/hide and placement only; it deliberately has no ARIA role, so
            the dialog below is the outermost semantic the popup exposes. -->
-      <div class="dropdown-menu" @focusout="handleMenuFocusout">
+      <div ref="menuRef" class="dropdown-menu" @focusout="handleMenuFocusout">
         <div class="dropdown-content">
           <div
             :id="dialogId"
@@ -223,6 +223,7 @@ import { format as formatDate, parse, isValid, isSameDay } from 'date-fns'
 import CatInput from './input.vue'
 import CatSelect from './select.vue'
 import { useDismissablePopup } from '../util/dismissable-popup'
+import { useAnchoredPopover } from '../util/anchored-popover'
 
 const DATE_FORMAT = 'yyyy-MM-dd'
 
@@ -385,6 +386,7 @@ const emit = defineEmits<{
 }>()
 
 const rootRef = ref<HTMLElement | null>(null)
+const menuRef = ref<HTMLElement | null>(null)
 const inputRef = ref()
 const toggleRef = ref<HTMLButtonElement | null>(null)
 const daysGridRef = ref<HTMLElement | null>(null)
@@ -856,6 +858,16 @@ useDismissablePopup({
   }
 })
 
+// Render the calendar in the top layer so it is not clipped by a scrollable
+// ancestor (e.g. a modal body). Anchors to the input+toggle field; no-op
+// without the Popover API.
+useAnchoredPopover({
+  triggerRef: rootRef,
+  popoverRef: menuRef,
+  isOpen: () => isActive.value,
+  placement: () => props.position
+})
+
 // Close (without stealing focus) when keyboard focus leaves the popup, e.g.
 // tabbing past the date grid. A non-modal dialog shouldn't linger open
 // behind the user.
@@ -956,6 +968,23 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
 // hint precedes it), but be explicit in case the markup shifts.
 .cat-datepicker-field {
   margin-bottom: 0;
+}
+
+/* Top-layer rendering (Popover API): the calendar is shown via showPopover()
+   with fixed coordinates set inline, so neutralize the absolute positioning
+   and keep the is-active rule from also showing a clipped copy. */
+.dropdown-menu[popover] {
+  position: fixed;
+  margin: 0;
+  inset: auto;
+
+  &:not(:popover-open) {
+    display: none;
+  }
+
+  &:popover-open {
+    display: block;
+  }
 }
 
 .cat-datepicker-toggle:focus-visible {

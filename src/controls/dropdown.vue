@@ -63,6 +63,7 @@
 import { ref, computed, provide, useId, nextTick } from 'vue'
 import { createTypeAhead } from '../util/type-ahead'
 import { useDismissablePopup } from '../util/dismissable-popup'
+import { useAnchoredPopover } from '../util/anchored-popover'
 
 /**
  * Dropdown component using Bulma dropdown structure with WAI-ARIA keyboard support.
@@ -440,6 +441,16 @@ useDismissablePopup({
   onEscape: () => close()
 })
 
+// Render the menu in the top layer so it is not clipped by a scrollable
+// ancestor (e.g. a modal body). No-op without the Popover API; the absolute
+// positioning below is the fallback.
+useAnchoredPopover({
+  triggerRef: dropdownRef,
+  popoverRef: menuRef,
+  isOpen: () => isActive.value,
+  placement: () => props.position
+})
+
 // Provide context to child dropdown items
 provide('dropdown', {
   handleItemClick,
@@ -456,5 +467,22 @@ defineExpose({ open, close, toggle })
 /* Custom overrides using cat-dropdown class */
 .cat-dropdown .dropdown-menu {
   min-width: 12rem;
+}
+
+/* Top-layer rendering (Popover API): the menu is shown via showPopover() with
+   fixed coordinates set inline, so neutralize Bulma's absolute positioning and
+   keep the is-active display rule from also showing a clipped copy. */
+.dropdown-menu[popover] {
+  position: fixed;
+  margin: 0;
+  inset: auto;
+
+  &:not(:popover-open) {
+    display: none;
+  }
+
+  &:popover-open {
+    display: block;
+  }
 }
 </style>
