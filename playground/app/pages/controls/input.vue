@@ -77,6 +77,19 @@
         </cat-field>
       </demo-box>
 
+      <demo-box label="Clearable">
+        <p class="mb-3">
+          Set <code>clearable</code> to show a clear button once the input has a value. It renders as a real
+          <code>&lt;button&gt;</code> with an accessible label, emits <code>clear</code>, and returns focus to the input.
+        </p>
+        <cat-field label="Search">
+          <cat-input v-model="clearText" icon="magnify" clearable placeholder="Type, then clear" @clear="clearCount++" />
+        </cat-field>
+        <p class="has-text-grey">
+          Value: {{ clearText || '(empty)' }} — cleared {{ clearCount }} time(s)
+        </p>
+      </demo-box>
+
       <demo-box label="Example: Maxlength" example>
         <cat-field label="Username (max 20 chars)">
           <cat-input v-model="username" maxlength="20" placeholder="Enter username" />
@@ -102,6 +115,9 @@
         <template #notes>
           <p class="mt-3">
             When <code>icon-right-clickable</code> is set, the right icon renders as a real <code>&lt;button&gt;</code> with its own focus-visible outline. Set <code>icon-right-aria-label</code> (e.g., <code>"Search"</code>, <code>"Clear input"</code>) so screen readers announce a meaningful action name; the default is the generic <em>Action</em>.
+          </p>
+          <p class="mt-2">
+            The <code>clearable</code> button is likewise a real <code>&lt;button&gt;</code>, focusable in tab order, labelled <code>"Clear"</code> by default (override with <code>clear-aria-label</code>). Its <code>mdi-close-circle</code> icon is <code>aria-hidden</code>, and activating it returns focus to the input so keyboard users are not stranded when the button disappears.
           </p>
           <p class="mt-2">
             Parents that need to focus the input programmatically can call <code>focus()</code> / <code>blur()</code> / <code>select()</code> via a template ref (exposed by <code>defineExpose</code>).
@@ -168,5 +184,7 @@ const rounded = ref('')
 const search = ref('')
 const emailIcon = ref('')
 const clearable = ref('Type to test')
+const clearText = ref('Clear me')
+const clearCount = ref(0)
 const username = ref('')
 </script>
