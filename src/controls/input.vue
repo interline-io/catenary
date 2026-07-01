@@ -24,7 +24,16 @@
       <i :class="`mdi mdi-${icon}`" aria-hidden="true" />
     </span>
     <button
-      v-if="iconRight && iconRightClickable"
+      v-if="showClear"
+      type="button"
+      class="icon is-right is-clickable cat-input-icon-button cat-input-clear-button"
+      :aria-label="clearAriaLabel"
+      @click="handleClear"
+    >
+      <i class="mdi mdi-close-circle" aria-hidden="true" />
+    </button>
+    <button
+      v-else-if="iconRight && iconRightClickable"
       type="button"
       class="icon is-right is-clickable cat-input-icon-button"
       :aria-label="iconRightAriaLabel || 'Action'"
@@ -59,6 +68,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
  * <cat-input v-model="value" placeholder="Enter text" />
  * <cat-input v-model="email" type="email" variant="primary" />
  * <cat-input v-model="numberValue" type="number" />
+ * <cat-input v-model="query" clearable @clear="onClear" />
  */
 
 const props = withDefaults(defineProps<{
@@ -102,6 +112,10 @@ const props = withDefaults(defineProps<{
   iconRightClickable?: boolean
   /** Accessible label for the right icon when clickable. */
   iconRightAriaLabel?: string
+  /** Show a clear ("x") button in the right icon slot when the input has a value. Takes over the right slot, so it is mutually exclusive with `iconRight`. @default false */
+  clearable?: boolean
+  /** Accessible label for the clear button. @default 'Clear' */
+  clearAriaLabel?: string
   /** Make input take full width (expanded). @default false */
   expanded?: boolean
 }>(), {
@@ -125,12 +139,15 @@ const props = withDefaults(defineProps<{
   iconRight: undefined,
   iconRightClickable: false,
   iconRightAriaLabel: undefined,
+  clearable: false,
+  clearAriaLabel: 'Clear',
   expanded: false
 })
 
 const emit = defineEmits<{
   'update:modelValue': [value: T]
   'icon-right-click': [event: MouseEvent]
+  'clear': []
 }>()
 
 // Merge the wrapping cat-field's help-message id (if any) with the
@@ -146,6 +163,14 @@ const ariaInvalid = computed(() => {
   return (props.variant === 'danger' || fieldVariant?.value === 'danger') ? 'true' : undefined
 })
 
+// The clear button only appears once the input holds a value, and never when
+// the input cannot be edited (disabled/readonly/static).
+const showClear = computed(() => {
+  const value = props.modelValue
+  const hasValue = value !== undefined && value !== null && String(value).length > 0
+  return props.clearable && hasValue && !props.disabled && !props.readonly && !props.static
+})
+
 const controlClasses = computed(() => {
   const classes: string[] = []
 
@@ -153,7 +178,7 @@ const controlClasses = computed(() => {
     classes.push('has-icons-left')
   }
 
-  if (props.iconRight) {
+  if (props.iconRight || showClear.value) {
     classes.push('has-icons-right')
   }
 
@@ -208,10 +233,25 @@ function handleIconRightClick (event: MouseEvent) {
   }
 }
 
+function handleClear () {
+  // Mirror handleInput's number handling so the emitted empty value matches the
+  // bound type (0 for numeric inputs, '' otherwise).
+  if (props.type === 'number' && typeof props.modelValue === 'number') {
+    emit('update:modelValue', 0 as T)
+  } else {
+    emit('update:modelValue', '' as T)
+  }
+  emit('clear')
+  // The clear button disappears once the value is empty, so return focus to the
+  // input rather than letting it fall back to the document body.
+  inputRef.value?.focus()
+}
+
 defineExpose({
   focus: () => inputRef.value?.focus(),
   blur: () => inputRef.value?.blur(),
-  select: () => inputRef.value?.select()
+  select: () => inputRef.value?.select(),
+  clear: handleClear
 })
 </script>
 
