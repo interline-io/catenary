@@ -1,5 +1,33 @@
 # @interline-io/catenary
 
+## 0.7.0
+
+### Minor Changes
+
+- [#52](https://github.com/interline-io/catenary/pull/52) [`e3c3dc5`](https://github.com/interline-io/catenary/commit/e3c3dc5a8f5785f7d8d1f3600a77612b14ed05c0) Thanks [@drewda](https://github.com/drewda)! - Layered Escape dismissal and cat-modal fixes. Escape pressed while a popup (cat-dropdown menu, cat-datepicker calendar) is open inside a cat-modal closed both at once, destroying in-progress form state.
+
+  - New shared LIFO dismiss stack (`src/util/dismiss-stack.ts`): a single document keydown listener dismisses only the topmost open layer per Escape press. cat-modal, cat-dropdown, and cat-datepicker register through it (via `useDismissablePopup` for the popups); cat-taginput continues to self-consume Escape on its input. A popup inside a modal now closes on the first Escape and the modal on the second. A non-closable modal still registers a layer, so it swallows Escape rather than letting it dismiss a surface beneath it.
+
+  cat-modal also gains:
+
+  - Open-state side effects (html clipping, focus capture, initial focus) now run when the modal is mounted with `modelValue` already true, not only when it transitions open.
+  - The focus trap skips hidden focusable candidates (`display:none` etc.) so Tab no longer dead-ends on them.
+  - An overflowing `modal-card-body` becomes a focusable named region (`tabindex="0"`, `role="region"`, labeled by the title) so keyboard users can scroll it; Safari does not make scroll containers focusable automatically. Overflow is tracked with a ResizeObserver while open.
+  - An axe smoke test, matching sibling controls.
+
+- [#55](https://github.com/interline-io/catenary/pull/55) [`7257d9a`](https://github.com/interline-io/catenary/commit/7257d9ae3ae73631a397a9dd7ce530c34568180c) Thanks [@drewda](https://github.com/drewda)! - `cat-input` gains an opt-in `clearable` prop that renders a clear button in the right icon slot once the input holds a value.
+
+  - The button is a real `<button type="button">` (focusable in tab order) using the `mdi-close-circle` icon, matching `cat-search-bar`'s clear affordance. The icon is `aria-hidden`; the button carries an accessible label, `"Clear"` by default and overridable via `clear-aria-label`.
+  - Activating it emits a new `clear` event alongside `update:modelValue` (`''`, or `0` for numeric inputs to match the bound type), then returns focus to the input so keyboard users are not stranded when the button disappears.
+  - The button auto-hides when the input is empty, `disabled`, `readonly`, or `static`. It takes over the right slot, so it is mutually exclusive with `icon-right`.
+  - A `clear()` method is exposed via `defineExpose` for programmatic clearing.
+
+- [#54](https://github.com/interline-io/catenary/pull/54) [`3ad066c`](https://github.com/interline-io/catenary/commit/3ad066c433ab1b974a4c68e2f7d4e1e2025c0b5d) Thanks [@drewda](https://github.com/drewda)! - `cat-dropdown` and `cat-datepicker` render their popups (menu, calendar) in the browser top layer via the Popover API, so they are no longer clipped by an ancestor with `overflow: auto/hidden`. The most visible case: a dropdown or datepicker inside a scrollable `cat-modal` body had its menu/calendar cut off at the modal's edge. This brings the two widgets in line with `cat-tooltip` (top-layer since 0.3.0).
+
+  - New `src/util/anchored-popover.ts` composable: shows the popup with `showPopover()` (`popover="manual"`, so it does not light-dismiss outside the components' own handling), positions it with fixed viewport coordinates computed from the trigger's box, flips the vertical side when the preferred side lacks room, clamps to the viewport, and repositions on scroll (capture phase, so scrolling any ancestor works) and resize. The popup stays in place in the DOM, so scoped styles, `aria-controls`/`aria-activedescendant`, focus management, and click-outside containment (`root.contains()`) are unchanged.
+  - Browsers without the Popover API (and jsdom) fall back to the existing absolute positioning; no behavior change there.
+  - The positioning math is a pure exported function (`computePopoverPosition`) with unit tests.
+
 ## 0.6.1
 
 ### Patch Changes
