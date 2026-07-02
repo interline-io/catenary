@@ -43,8 +43,8 @@ import CatInput from './input.vue'
  *   labelled `cat-field`, pass `:aria-label="undefined"` to avoid overriding
  *   that visible label.
  * - The clear button is a real, focusable `<button>` labelled by
- *   `clearAriaLabel` (default "Clear search"); clearing returns focus to the
- *   input (via cat-input).
+ *   `clearAriaLabel` (default "Clear search"); clearing — by click, Escape, or
+ *   the exposed `clear()` method — returns focus to the input.
  * - Escape clears the field when it has a value (and consumes the key so a
  *   surrounding dismissable layer is not also dismissed); when empty, Escape
  *   is left to bubble.
@@ -126,6 +126,17 @@ function handleClear (): void {
   emit('clear')
 }
 
+// Programmatic / Escape clear. Reset to null, announce, and return focus to the
+// input so it never falls back to <body> when the clear button unmounts — e.g.
+// Escape pressed while focus is on the clear button itself (WCAG 2.4.3). focus()
+// runs synchronously before the emitted null re-renders the button away, so
+// focus lands on the still-present input first.
+function clear (): void {
+  emit('update:modelValue', null)
+  emit('clear')
+  inputRef.value?.focus()
+}
+
 function handleEscape (event: KeyboardEvent): void {
   if (!props.clearOnEscape) return
   const hasValue = props.modelValue != null && String(props.modelValue) !== ''
@@ -136,12 +147,12 @@ function handleEscape (event: KeyboardEvent): void {
   // root, so stopping here also collapses that duplicate keydown to one).
   event.preventDefault()
   event.stopPropagation()
-  emit('update:modelValue', null)
-  emit('clear')
+  clear()
 }
 
 defineExpose({
   focus: () => inputRef.value?.focus(),
-  blur: () => inputRef.value?.blur()
+  blur: () => inputRef.value?.blur(),
+  clear
 })
 </script>

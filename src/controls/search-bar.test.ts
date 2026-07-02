@@ -73,6 +73,26 @@ describe('CatSearchBar', () => {
     expect(wrapper.emitted('clear')).toHaveLength(1)
   })
 
+  it('keeps focus in the field when Escape clears while the clear button is focused', async () => {
+    const wrapper = mountComponent(CatSearchBar, {
+      attachTo: document.body,
+      props: { modelValue: 'bus' }
+    })
+
+    const clearButton = wrapper.find('.cat-input-clear-button').element as HTMLElement
+    clearButton.focus()
+    expect(document.activeElement).toBe(clearButton)
+
+    // Escape while the clear button holds focus: clears, then the parent applies
+    // the emitted null which unmounts the button. Focus must land on the input,
+    // not fall back to <body>.
+    dispatchEscape(clearButton)
+    await wrapper.setProps({ modelValue: null })
+
+    expect(document.activeElement).toBe(wrapper.find('input').element)
+    wrapper.unmount()
+  })
+
   it('leaves Escape to bubble when the field is empty', () => {
     const wrapper = mountComponent(CatSearchBar, { props: { modelValue: '' } })
 
@@ -118,6 +138,17 @@ describe('CatSearchBar', () => {
     })
 
     expect(wrapper.find('input').attributes('aria-controls')).toBe('results-table')
+  })
+
+  it('exposes clear() for programmatic clearing', () => {
+    const wrapper = mountComponent(CatSearchBar, { props: { modelValue: 'bus' } })
+
+    const exposed = wrapper.vm as unknown as { clear: () => void }
+    expect(typeof exposed.clear).toBe('function')
+
+    exposed.clear()
+    expect(lastEmit(wrapper.emitted('update:modelValue'))).toEqual([null])
+    expect(wrapper.emitted('clear')).toHaveLength(1)
   })
 
   it('has no axe violations when populated', async () => {
