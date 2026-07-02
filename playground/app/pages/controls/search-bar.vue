@@ -15,6 +15,47 @@
         </p>
       </demo-box>
 
+      <demo-box label="Example: Filtering a Table (screen-reader friendly)" example>
+        <p class="mb-3">
+          The search bar names itself ("Filter routes"), points at the table it
+          filters via <code>aria-controls</code>, and feeds the result count into
+          the <code>#status</code> slot &mdash; which renders into a polite live
+          region so screen-reader users hear how many rows matched as they type.
+        </p>
+        <cat-search-bar
+          v-model="tableFilter"
+          placeholder="Filter routes..."
+          aria-label="Filter routes"
+          aria-controls="sb-routes-table"
+        >
+          <template #status>
+            {{ filterStatus }}
+          </template>
+        </cat-search-bar>
+        <table id="sb-routes-table" class="table is-fullwidth is-striped mt-3">
+          <caption class="is-sr-only">
+            Routes matching the current filter
+          </caption>
+          <thead>
+            <tr>
+              <th>Route</th>
+              <th>Mode</th>
+              <th>Agency</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="route in filteredRoutes" :key="route.id">
+              <td>{{ route.name }}</td>
+              <td>{{ route.mode }}</td>
+              <td>{{ route.agency }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p v-if="filteredRoutes.length === 0" class="has-text-grey">
+          No results found
+        </p>
+      </demo-box>
+
       <demo-box label="Example: Interactive Search with Results" example>
         <cat-search-bar
           v-model="interactiveSearch as string | null"
@@ -211,6 +252,31 @@
           </table>
         </div>
       </demo-box>
+
+      <demo-a11y
+        :references="[
+          { label: 'WCAG SC 4.1.3: Status Messages', url: 'https://www.w3.org/WAI/WCAG21/Understanding/status-messages.html' },
+          { label: 'WCAG SC 3.3.2: Labels or Instructions', url: 'https://www.w3.org/WAI/WCAG21/Understanding/labels-or-instructions.html' },
+          { label: 'ARIA: search landmark role', url: 'https://developer.mozilla.org/en-US/docs/Web/Accessibility/ARIA/Roles/search_role' },
+        ]"
+        :keyboard="[
+          { key: 'Tab / Shift+Tab', description: 'Moves focus into and out of the search field, and to the clear button when present.' },
+          { key: 'Escape', description: 'Clears the field when it has a value (and stops there, so an enclosing modal or popup is not also dismissed). When the field is already empty, Escape is left to bubble.' },
+          { key: 'Enter / Space', description: 'When focus is on the clear button, clears the field and returns focus to the input.' },
+        ]"
+      >
+        <template #intro>
+          Search fields usually have no visible label, so <code>cat-search-bar</code> names itself via <code>aria-label</code> (default <em>Search</em>). Override it to describe what is being searched (e.g. <code>"Filter routes"</code>), or set <code>:aria-label="undefined"</code> when a visible label already names the field.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            The clear button is a real <code>&lt;button&gt;</code> labelled <code>"Clear search"</code> (override with <code>clear-aria-label</code>); its icon is <code>aria-hidden</code>, and clearing &mdash; by click, Enter/Space, or Escape &mdash; returns focus to the input.
+          </p>
+          <p class="mt-2">
+            When the search filters a table or report, pass the result count into the <code>#status</code> slot. It renders into a visually-hidden <code>role="status" aria-live="polite"</code> region so screen-reader users hear how many rows matched without the count needing to be visible. Pair it with <code>aria-controls</code> (forwarded to the input) referencing the <code>id</code> of the region the search updates, as in the table example above.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -218,9 +284,30 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const basicSearch = ref<string | null>('')
 const navbarSearch = ref<string | null>('')
+
+// Table-filter example: demonstrates aria-controls + the #status live region.
+const tableFilter = ref<string | null>('')
+const routes = [
+  { id: 1, name: 'Route 1 - Downtown', mode: 'Bus', agency: 'Metro' },
+  { id: 2, name: 'Route 12 - Airport', mode: 'Bus', agency: 'Metro' },
+  { id: 3, name: 'Blue Line', mode: 'Light Rail', agency: 'Metro' },
+  { id: 4, name: 'Ferry - Bay Crossing', mode: 'Ferry', agency: 'Harbor Transit' },
+  { id: 5, name: 'Express 500', mode: 'Bus', agency: 'Regional' }
+]
+const filteredRoutes = computed(() => {
+  const query = (tableFilter.value || '').trim().toLowerCase()
+  if (!query) return routes
+  return routes.filter(r =>
+    `${r.name} ${r.mode} ${r.agency}`.toLowerCase().includes(query))
+})
+const filterStatus = computed(() => {
+  const n = filteredRoutes.value.length
+  return n === 0 ? 'No results found' : `${n} ${n === 1 ? 'result' : 'results'} found`
+})
 
 const interactiveSearch = ref('')
 const products = [
