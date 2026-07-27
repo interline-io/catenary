@@ -1,0 +1,103 @@
+import { describe, it, expect } from 'vitest'
+import { mount } from '@vue/test-utils'
+import CatMsg from './msg.vue'
+import { expectNoAxeViolations } from '../testutil/component-helpers'
+
+describe('cat-msg', () => {
+  it('renders a plain header with no button when not expandable', () => {
+    const wrapper = mount(CatMsg, { props: { title: 'Heads up' } })
+    expect(wrapper.find('.message-header').exists()).toBe(true)
+    expect(wrapper.find('button').exists()).toBe(false)
+    expect(wrapper.find('[role="button"]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Heads up')
+  })
+
+  describe('expandable', () => {
+    it('uses a native button for the trigger, not role="button" on the header', () => {
+      const wrapper = mount(CatMsg, { props: { title: 'Advanced', expandable: true } })
+      const trigger = wrapper.find('button.cat-msg-trigger')
+      expect(trigger.exists()).toBe(true)
+      expect(trigger.attributes('type')).toBe('button')
+      expect(wrapper.find('.message-header').attributes('role')).toBeUndefined()
+      expect(wrapper.find('.message-header').attributes('tabindex')).toBeUndefined()
+    })
+
+    it('exposes aria-expanded and aria-controls pointing at the body', async () => {
+      const wrapper = mount(CatMsg, { props: { title: 'Advanced', expandable: true, open: true } })
+      const trigger = wrapper.find('button.cat-msg-trigger')
+      expect(trigger.attributes('aria-expanded')).toBe('true')
+      const controls = trigger.attributes('aria-controls')
+      expect(controls).toBeTruthy()
+      expect(wrapper.find(`#${controls}`).exists()).toBe(true)
+    })
+
+    it('toggles the body and emits update:open', async () => {
+      const wrapper = mount(CatMsg, {
+        props: { title: 'Advanced', expandable: true },
+        slots: { default: '<p>Body</p>' }
+      })
+      expect(wrapper.text()).not.toContain('Body')
+
+      await wrapper.find('button.cat-msg-trigger').trigger('click')
+      expect(wrapper.text()).toContain('Body')
+      expect(wrapper.emitted('update:open')).toEqual([[true]])
+
+      await wrapper.find('button.cat-msg-trigger').trigger('click')
+      expect(wrapper.emitted('update:open')).toEqual([[true], [false]])
+    })
+
+    it('follows a controlled open prop', async () => {
+      const wrapper = mount(CatMsg, { props: { title: 'Advanced', expandable: true, open: false } })
+      expect(wrapper.find('button.cat-msg-trigger').attributes('aria-expanded')).toBe('false')
+      await wrapper.setProps({ open: true })
+      expect(wrapper.find('button.cat-msg-trigger').attributes('aria-expanded')).toBe('true')
+    })
+
+    // The bug this component used to have: the close button lived *inside* an
+    // element with role="button", which is invalid nested interactive content and
+    // needed `.self` key modifiers so the outer fake button did not swallow Space
+    // meant for the inner real one.
+    it('renders the close button as a sibling of the trigger, never inside it', () => {
+      const wrapper = mount(CatMsg, {
+        props: { title: 'Advanced', expandable: true, closable: true }
+      })
+      const trigger = wrapper.find('button.cat-msg-trigger')
+      expect(trigger.exists()).toBe(true)
+      const del = wrapper.find('button.delete')
+      expect(del.exists()).toBe(true)
+      // Not nested.
+      expect(trigger.element.contains(del.element)).toBe(false)
+      // Both are direct children of the header.
+      expect(del.element.parentElement).toBe(trigger.element.parentElement)
+    })
+
+    it('emits close (dismiss) from the close button without toggling the body', async () => {
+      const wrapper = mount(CatMsg, {
+        props: { title: 'Advanced', expandable: true, closable: true, open: true }
+      })
+      await wrapper.find('button.delete').trigger('click')
+      expect(wrapper.emitted('close')).toHaveLength(1)
+      // `close` on cat-msg means dismissed, not collapsed — the disclosure state
+      // must not have changed.
+      expect(wrapper.emitted('update:open')).toBeUndefined()
+    })
+
+    it('has no axe violations, expanded and collapsed, with a close button', async () => {
+      const collapsed = mount(CatMsg, {
+        props: { title: 'Advanced', expandable: true, closable: true },
+        slots: { default: '<p>Body</p>' },
+        attachTo: document.body
+      })
+      await expectNoAxeViolations(collapsed)
+      collapsed.unmount()
+
+      const expanded = mount(CatMsg, {
+        props: { title: 'Advanced', expandable: true, closable: true, open: true },
+        slots: { default: '<p>Body</p>' },
+        attachTo: document.body
+      })
+      await expectNoAxeViolations(expanded)
+      expanded.unmount()
+    })
+  })
+})

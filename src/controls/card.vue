@@ -1,43 +1,48 @@
 <template>
   <div class="card cat-card" :class="{ 'cat-card--panel': variant === 'panel' }">
-    <!-- Expandable header has role="button" + tabindex + keyboard handlers
-         via dynamic binds (rule can't see those statically). -->
-    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
     <header
       v-if="label || $slots.header || $slots.actions"
       class="card-header"
-      :class="{ 'is-clickable': expandable }"
-      :role="expandable ? 'button' : undefined"
-      :aria-expanded="expandable ? isOpen : undefined"
-      :tabindex="expandable ? 0 : undefined"
-      @click="expandable && toggle()"
-      @keydown.enter="expandable && toggle()"
-      @keydown.space.prevent="expandable && toggle()"
     >
-      <slot name="header">
+      <!-- When expandable the header content becomes a real <button> carrying
+           the disclosure semantics, rather than role="button" on this <header>.
+           The chevron is a plain <span> inside that button, not the nested
+           <button> it used to be — a control inside a control is invalid and
+           needed @click.stop to work at all. Interactive header content belongs
+           in #actions, which renders as a sibling of the trigger.
+
+           Non-expandable cards render exactly as before, with no extra wrapper,
+           so the far more common plain-card markup is untouched. -->
+      <button
+        v-if="expandable"
+        class="cat-card-trigger"
+        v-bind="triggerAttrs"
+        @click="toggle"
+      >
+        <slot name="header">
+          <p v-if="label" class="card-header-title">
+            {{ label }}
+          </p>
+        </slot>
+        <span class="card-header-icon">
+          <cat-icon
+            :icon="icon"
+            class="cat-expand-icon"
+            :class="{ 'is-rotated': !isOpen }"
+          />
+        </span>
+      </button>
+      <slot v-else name="header">
         <p v-if="label" class="card-header-title">
           {{ label }}
         </p>
       </slot>
-      <div v-if="$slots.actions" class="card-header-actions" @click.stop>
+      <div v-if="$slots.actions" class="card-header-actions">
         <slot name="actions" />
       </div>
-      <button
-        v-if="expandable"
-        type="button"
-        class="card-header-icon"
-        :aria-label="isOpen ? 'Collapse' : 'Expand'"
-        @click.stop="toggle()"
-      >
-        <cat-icon
-          :icon="icon"
-          class="cat-expand-icon"
-          :class="{ 'is-rotated': !isOpen }"
-        />
-      </button>
     </header>
     <Transition name="cat-expand">
-      <div v-show="!expandable || isOpen">
+      <div v-show="!expandable || isOpen" v-bind="expandable ? contentAttrs : {}">
         <div class="card-content">
           <slot />
         </div>
@@ -50,8 +55,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
 import CatIcon from './icon.vue'
+import { useDisclosure } from '../util/disclosure'
 
 /**
  * Card component - a flexible content container.
@@ -109,31 +114,42 @@ const emit = defineEmits<{
   'update:open': [value: boolean]
 }>()
 
-// Use internal state that syncs with prop for proper v-model support
-const internalOpen = ref(props.open)
-
-// Sync internal state when prop changes
-watch(() => props.open, (value) => {
-  internalOpen.value = value
+// Disclosure state and ARIA wiring, shared with cat-collapse and cat-msg.
+const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({
+  open: () => props.open,
+  idPrefix: 'cat-card',
+  onChange: (value: boolean) => emit('update:open', value)
 })
-
-// Computed to read current state
-const isOpen = computed(() => internalOpen.value)
-
-function toggle () {
-  internalOpen.value = !internalOpen.value
-  emit('update:open', internalOpen.value)
-}
 </script>
 
 <style lang="scss" scoped>
+@use "bulma/sass/utilities/derived-variables" as *;
+
 .cat-card {
-  .card-header.is-clickable {
+  // `card-header` is display:flex in Bulma, so the trigger takes the free space
+  // and reproduces the title/icon layout the header used to provide directly.
+  .cat-card-trigger {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
     cursor: pointer;
     user-select: none;
 
     &:hover {
       background-color: var(--bulma-scheme-main-bis, #fafafa);
+    }
+
+    &:focus-visible {
+      outline: 2px solid $link;
+      outline-offset: -2px;
     }
   }
 

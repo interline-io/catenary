@@ -38,6 +38,7 @@ export const controlsGroups: NavGroup[] = [
       { name: 'Dropdown', path: '/controls/dropdown', icon: 'menu-down' },
       { name: 'Modal', path: '/controls/modal', icon: 'window-restore' },
       { name: 'Card', path: '/controls/card', icon: 'card' },
+      { name: 'Collapse', path: '/controls/collapse', icon: 'chevron-down-box' },
       { name: 'Link', path: '/controls/link', icon: 'link-variant' }
     ]
   },

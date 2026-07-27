@@ -1,35 +1,39 @@
 <template>
   <article :class="msgClass">
-    <!-- When expandable, the header acts as a toggle: keyboard + tabindex
-         live on the dynamic role binding the static rule can't see. -->
-    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
     <div
       v-if="title || expandable || closable"
       class="message-header"
-      :class="{ 'is-clickable': expandable }"
-      :role="expandable ? 'button' : undefined"
-      :tabindex="expandable ? 0 : undefined"
-      :aria-expanded="expandable ? isOpen : undefined"
-      @click="expandable && toggle()"
-      @keydown.enter.self="expandable && toggle()"
-      @keydown.space.self.prevent="expandable && toggle()"
     >
-      <span>{{ title || defaultTitle }}</span>
-      <cat-icon
+      <!-- When expandable the title becomes a real <button> carrying the
+           disclosure semantics, rather than role="button" on this header div.
+           That matters most when `closable` is also set: the delete button is a
+           sibling of the trigger, not nested inside it, so there is no invalid
+           nested control and no need for `.self` key modifiers to stop the
+           header swallowing Space meant for the close button. -->
+      <button
         v-if="expandable"
-        :icon="isOpen ? 'chevron-up' : 'chevron-down'"
-        class="cat-expand-icon"
-      />
+        class="cat-msg-trigger"
+        v-bind="triggerAttrs"
+        @click="toggle"
+      >
+        <span>{{ title || defaultTitle }}</span>
+        <cat-icon
+          :icon="isOpen ? 'chevron-up' : 'chevron-down'"
+          class="cat-expand-icon"
+        />
+      </button>
+      <span v-else>{{ title || defaultTitle }}</span>
       <button
         v-if="closable"
         class="delete"
         aria-label="delete"
-        @click.stop="handleClose"
+        @click="handleClose"
       />
     </div>
     <div
       v-if="!expandable || isOpen"
       :class="expandable ? 'cat-expandable-content' : ''"
+      v-bind="expandable ? contentAttrs : {}"
     >
       <template v-if="hasIcon">
         <div class="media message-body">
@@ -49,9 +53,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import type { MsgVariant } from './types'
 import CatIcon from './icon.vue'
+import { useDisclosure } from '../util/disclosure'
 
 // TypeScript types and interfaces
 type MessageVariant = MsgVariant | 'error'
@@ -84,8 +89,14 @@ const emit = defineEmits<{
   'close': []
 }>()
 
-// Reactive state
-const isOpen = ref<boolean>(props.open)
+// Disclosure state and ARIA wiring, shared with cat-collapse and cat-card.
+// Note `close` on this component means "the message was dismissed", not "the
+// body collapsed", so only `update:open` is forwarded here.
+const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({
+  open: () => props.open,
+  idPrefix: 'cat-msg',
+  onChange: (value: boolean) => emit('update:open', value)
+})
 
 // Computed properties
 const getIcon = computed<string>(() => {
@@ -110,17 +121,6 @@ const msgClass = computed<string>(() => {
   return 'message cat-message mb-4'
 })
 
-// Watchers
-watch(() => props.open, (newVal: boolean) => {
-  isOpen.value = newVal
-}, { immediate: true })
-
-// Methods
-const toggle = (): void => {
-  isOpen.value = !isOpen.value
-  emit('update:open', isOpen.value)
-}
-
 const handleClose = (): void => {
   emit('close')
 }
@@ -131,15 +131,31 @@ const handleClose = (): void => {
 @use "bulma/sass/utilities/derived-variables" as *;
 
 .cat-message {
-  .message-header.is-clickable {
-    cursor: pointer;
+  // The trigger is a real button now, so it needs the header's own typography
+  // and layout reset back onto it rather than inheriting Bulma's button styles.
+  .cat-msg-trigger {
+    flex: 1 1 auto;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    transition: background-color 0.2s ease;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
 
     &:hover {
       opacity: 0.8;
+    }
+
+    &:focus-visible {
+      outline: 2px solid currentcolor;
+      outline-offset: 2px;
     }
   }
 
