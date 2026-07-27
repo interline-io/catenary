@@ -31,17 +31,23 @@
         v-bind="triggerAttrs"
         @click="toggle"
       >
-        <slot name="header">
-          <span v-if="label" class="card-header-title">
-            {{ label }}
+        <!-- Flex lives on this span, not the <button>: Safari stops honouring a
+             button's children-presentational semantics when the button is itself
+             a flex container, leaking its contents into the accessibility tree
+             as a trailing "group". -->
+        <span class="cat-card-trigger-inner">
+          <slot name="header">
+            <span v-if="label" class="card-header-title">
+              {{ label }}
+            </span>
+          </slot>
+          <span class="card-header-icon">
+            <cat-icon
+              :icon="icon"
+              class="cat-expand-icon"
+              :class="{ 'is-rotated': !isOpen }"
+            />
           </span>
-        </slot>
-        <span class="card-header-icon">
-          <cat-icon
-            :icon="icon"
-            class="cat-expand-icon"
-            :class="{ 'is-rotated': !isOpen }"
-          />
         </span>
       </button>
       <slot v-else name="header">
@@ -169,9 +175,8 @@ const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({
     // exactly the clickable region and stops where #actions begins, which is
     // honest: those controls are siblings of the trigger and do not toggle.
     align-self: stretch;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    // `display: block`, deliberately not flex — see the template comment.
+    display: block;
     min-width: 0;
     padding: 0;
     border: none;
@@ -192,6 +197,15 @@ const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({
       outline: 2px solid $link;
       outline-offset: -2px;
     }
+  }
+
+  .cat-card-trigger-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
   }
 
   .card-header-actions {

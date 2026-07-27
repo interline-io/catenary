@@ -16,11 +16,17 @@
         v-bind="triggerAttrs"
         @click="toggle"
       >
-        <span>{{ title || defaultTitle }}</span>
-        <cat-icon
-          :icon="isOpen ? 'chevron-up' : 'chevron-down'"
-          class="cat-expand-icon"
-        />
+        <!-- Flex lives on this span, not the <button>: Safari stops honouring a
+             button's children-presentational semantics when the button is itself
+             a flex container, leaking its contents into the accessibility tree
+             as a trailing "group". -->
+        <span class="cat-msg-trigger-inner">
+          <span>{{ title || defaultTitle }}</span>
+          <cat-icon
+            :icon="isOpen ? 'chevron-up' : 'chevron-down'"
+            class="cat-expand-icon"
+          />
+        </span>
       </button>
       <span v-else>{{ title || defaultTitle }}</span>
       <button
@@ -145,10 +151,7 @@ const handleClose = (): void => {
   // and layout reset back onto it rather than inheriting Bulma's button styles.
   .cat-msg-trigger {
     flex: 1 1 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
+    display: block;
     min-width: 0;
     padding: 0;
     border: none;
@@ -171,6 +174,14 @@ const handleClose = (): void => {
       outline: 2px solid currentcolor;
       outline-offset: 2px;
     }
+  }
+
+  .cat-msg-trigger-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
   }
 
   .cat-expand-icon {

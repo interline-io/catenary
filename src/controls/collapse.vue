@@ -16,14 +16,23 @@
           v-bind="triggerAttrs"
           @click="toggle"
         >
-          <slot name="trigger" :open="isOpen">
-            <span class="cat-collapse-label">{{ label }}</span>
-            <cat-icon
-              :icon="icon"
-              class="cat-collapse-icon"
-              :class="{ 'is-collapsed': !isOpen }"
-            />
-          </slot>
+          <!-- The flex layout lives on this span, not on the <button>. Per the
+               ARIA spec `button` is children-presentational, so its descendants
+               should not surface as separate objects — but Safari drops that
+               when the button itself is `display: flex`, leaking the label and
+               icon into the accessibility tree, which VoiceOver then announces
+               as a trailing "group". Keeping the button's own display alone and
+               flexing a wrapper gives the same layout with the semantics intact. -->
+          <span class="cat-collapse-trigger-inner">
+            <slot name="trigger" :open="isOpen">
+              <span class="cat-collapse-label">{{ label }}</span>
+              <cat-icon
+                :icon="icon"
+                class="cat-collapse-icon"
+                :class="{ 'is-collapsed': !isOpen }"
+              />
+            </slot>
+          </span>
         </button>
       </component>
       <!-- Sibling of the trigger, never inside it: nesting a control within the
@@ -203,11 +212,11 @@ defineExpose({
   line-height: inherit;
 }
 
+// `display: block`, deliberately not flex — see the template comment. Safari
+// stops honouring the button's children-presentational semantics when the
+// button itself is a flex container, so the layout lives on the inner span.
 .cat-collapse-trigger {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem;
+  display: block;
   width: 100%;
   padding: 0;
   border: none;
@@ -243,6 +252,14 @@ defineExpose({
 // must not be padded twice.
 .cat-collapse-trigger--default {
   padding: 0.5rem 0;
+}
+
+.cat-collapse-trigger-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
 }
 
 .cat-collapse-label {

@@ -41,9 +41,6 @@ describe('cat-card', () => {
       expect(wrapper.find(`#${controls}`).exists()).toBe(true)
     })
 
-    // The bug this component used to have: the chevron was a <button> nested
-    // inside an element with role="button", which is invalid and only worked
-    // because of @click.stop.
     // A button's content model is phrasing content, so the flow-content <p>
     // used on the non-expandable path would be invalid HTML inside the trigger.
     it('uses a span, not a p, for the title inside the trigger', () => {
@@ -57,6 +54,21 @@ describe('cat-card', () => {
       expect(plain.find('.card-header-title').element.tagName).toBe('P')
     })
 
+    // Safari stops honouring a button's children-presentational semantics when
+    // the button is itself a flex container, leaking its contents into the
+    // accessibility tree as a trailing "group" in VoiceOver.
+    it('keeps the flex layout off the button element itself', () => {
+      const wrapper = mount(CatCard, { props: { label: 'Details', expandable: true } })
+      const trigger = wrapper.find('button.cat-card-trigger')
+      const inner = trigger.find('.cat-card-trigger-inner')
+      expect(inner.exists()).toBe(true)
+      expect(trigger.element.children).toHaveLength(1)
+      expect(trigger.element.firstElementChild).toBe(inner.element)
+    })
+
+    // The bug this component used to have: the chevron was a <button> nested
+    // inside an element with role="button", which is invalid and only worked
+    // because of @click.stop.
     it('renders the chevron as a span inside the trigger, not a nested button', () => {
       const wrapper = mount(CatCard, { props: { label: 'Details', expandable: true } })
       expect(wrapper.findAll('button')).toHaveLength(1)

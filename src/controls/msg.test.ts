@@ -53,6 +53,18 @@ describe('cat-msg', () => {
       expect(wrapper.find('.message-header').attributes('tabindex')).toBeUndefined()
     })
 
+    // Safari stops honouring a button's children-presentational semantics when
+    // the button is itself a flex container, leaking its contents into the
+    // accessibility tree as a trailing "group" in VoiceOver.
+    it('keeps the flex layout off the button element itself', () => {
+      const wrapper = mount(CatMsg, { props: { title: 'Advanced', expandable: true } })
+      const trigger = wrapper.find('button.cat-msg-trigger')
+      const inner = trigger.find('.cat-msg-trigger-inner')
+      expect(inner.exists()).toBe(true)
+      expect(trigger.element.children).toHaveLength(1)
+      expect(trigger.element.firstElementChild).toBe(inner.element)
+    })
+
     it('exposes aria-expanded and aria-controls pointing at the body', async () => {
       const wrapper = mount(CatMsg, { props: { title: 'Advanced', expandable: true, open: true } })
       const trigger = wrapper.find('button.cat-msg-trigger')

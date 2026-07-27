@@ -170,6 +170,22 @@ describe('cat-collapse', () => {
 
   // The default trigger's only other content is an aria-hidden chevron, so with
   // no label and no #trigger slot the button would have no accessible name.
+  // Per the ARIA spec `button` is children-presentational, so its descendants
+  // should not surface as separate accessibility objects. Safari stops honouring
+  // that when the button itself is a flex container, leaking the label and icon
+  // into the tree — VoiceOver then reads "…, button, group". The layout belongs
+  // on an inner span so the button's own display stays out of it.
+  it('keeps the flex layout off the button element itself', () => {
+    const wrapper = mount(CatCollapse, { props: { label: 'Details' } })
+    const trigger = wrapper.find('button.cat-collapse-trigger')
+    const inner = trigger.find('.cat-collapse-trigger-inner')
+    expect(inner.exists()).toBe(true)
+    expect(inner.element.tagName).toBe('SPAN')
+    // Everything the button renders sits inside the wrapper.
+    expect(trigger.element.children).toHaveLength(1)
+    expect(trigger.element.firstElementChild).toBe(inner.element)
+  })
+
   it('falls back to an aria-label when nothing supplies visible text', () => {
     const wrapper = mount(CatCollapse)
     expect(wrapper.find('button').attributes('aria-label')).toBe('Toggle section')
