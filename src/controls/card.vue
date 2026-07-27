@@ -15,6 +15,13 @@
            needed @click.stop to work at all. Interactive header content belongs
            in #actions, which renders as a sibling of the trigger.
 
+           The default title is a <span> here, not the <p> used below: a button's
+           content model is phrasing content, and <p> is flow content, so a
+           paragraph inside the button would be invalid HTML. Bulma's
+           .card-header-title sets its own `display`, so a span renders
+           identically. Anything a consumer puts in #header lands inside this
+           button too, so it must be phrasing content as well.
+
            Non-expandable cards render exactly as before, with no extra wrapper,
            so the far more common plain-card markup is untouched. -->
       <button
@@ -25,9 +32,9 @@
         @click="toggle"
       >
         <slot name="header">
-          <p v-if="label" class="card-header-title">
+          <span v-if="label" class="card-header-title">
             {{ label }}
-          </p>
+          </span>
         </slot>
         <span class="card-header-icon">
           <cat-icon

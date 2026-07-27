@@ -44,6 +44,19 @@ describe('cat-card', () => {
     // The bug this component used to have: the chevron was a <button> nested
     // inside an element with role="button", which is invalid and only worked
     // because of @click.stop.
+    // A button's content model is phrasing content, so the flow-content <p>
+    // used on the non-expandable path would be invalid HTML inside the trigger.
+    it('uses a span, not a p, for the title inside the trigger', () => {
+      const expandable = mount(CatCard, { props: { label: 'Details', expandable: true } })
+      const title = expandable.find('.card-header-title')
+      expect(title.element.tagName).toBe('SPAN')
+      expect(expandable.find('button.cat-card-trigger p').exists()).toBe(false)
+
+      // The plain card keeps its <p>, so its markup is unchanged.
+      const plain = mount(CatCard, { props: { label: 'Details' } })
+      expect(plain.find('.card-header-title').element.tagName).toBe('P')
+    })
+
     it('renders the chevron as a span inside the trigger, not a nested button', () => {
       const wrapper = mount(CatCard, { props: { label: 'Details', expandable: true } })
       expect(wrapper.findAll('button')).toHaveLength(1)

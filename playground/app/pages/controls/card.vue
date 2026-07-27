@@ -377,12 +377,16 @@
               Put interactive header content in <code>#actions</code>, which
               renders as a sibling of the trigger. Anything placed in
               <code>#header</code> while <code>expandable</code> is set ends up
-              inside the trigger button.
+              inside the trigger button, so it must be phrasing content — a
+              <code>&lt;p&gt;</code> or other flow content there is invalid
+              inside a <code>&lt;button&gt;</code>. The built-in title is a
+              <code>&lt;span&gt;</code> when expandable for that reason.
             </li>
             <li>
-              Non-expandable cards render with no wrapper and no ARIA, exactly as
+              Non-expandable cards expose no ARIA and render exactly as they did
               before this component shared its disclosure implementation with
-              <code>cat-collapse</code> and <code>cat-msg</code>.
+              <code>cat-collapse</code> and <code>cat-msg</code>, down to
+              keeping <code>&lt;p class="card-header-title"&gt;</code>.
             </li>
             <li>
               <strong>Not yet reviewed:</strong> the header title renders as a
