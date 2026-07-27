@@ -277,7 +277,10 @@
               With <code>closable</code>, the close button is a <strong>sibling</strong> of the trigger rather than nested inside it. Nesting a control within a control is invalid, and it is why the old implementation needed <code>.self</code> key modifiers to stop the header swallowing Space meant for the close button.
             </li>
             <li>
-              Collapsed bodies are removed from the DOM, so nothing inside them is reachable by Tab.
+              Collapsed bodies stay in the DOM hidden with <code>display: none</code>, so nothing inside them is reachable by Tab or exposed to assistive technology. They are not removed, because <code>aria-controls</code> is an IDREF and would otherwise point at nothing while collapsed.
+            </li>
+            <li>
+              The body is a direct sibling of the header rather than sitting in a wrapper, so Bulma's own <code>.message-header + .message-body</code> styling applies and the body sits flush beneath the header.
             </li>
             <li>
               The wiring is shared with <code>cat-collapse</code> and <code>cat-card</code>, so every disclosure in the library behaves identically.
