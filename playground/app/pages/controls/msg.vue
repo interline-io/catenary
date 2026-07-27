@@ -260,17 +260,29 @@
         pattern-name="Disclosure"
         pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/"
         :keyboard="[
-          { key: 'Enter', description: 'When focus is on the header of an expandable message, toggles the visibility of the body.' },
-          { key: 'Space', description: 'When focus is on the header of an expandable message, toggles the visibility of the body.' },
+          { key: 'Tab', description: 'Moves focus to the trigger button, then to the close button when closable is set.' },
+          { key: 'Enter', description: 'When focus is on the trigger, toggles the visibility of the body.' },
+          { key: 'Space', description: 'When focus is on the trigger, toggles the visibility of the body.' },
         ]"
       >
         <template #intro>
-          The keyboard interactions below apply when <code>expandable</code> is set; non-expandable messages are static content.
+          The keyboard interactions below apply when <code>expandable</code> is set; non-expandable messages are static content and expose no ARIA.
         </template>
         <template #notes>
-          <p class="mt-3">
-            Expandable headers carry <code>role="button"</code>, <code>tabindex="0"</code>, and <code>aria-expanded</code> tracking open state. Keydown handlers are scoped with <code>.self</code> so a focused close button (when <code>closable</code>) can still be activated with Space without the parent header swallowing the keypress.
-          </p>
+          <ul class="content mt-3">
+            <li>
+              The trigger is a native <code>&lt;button&gt;</code> carrying <code>aria-expanded</code> and <code>aria-controls</code>, not <code>role="button"</code> on the header <code>&lt;div&gt;</code>. Role, focus, keyboard activation and forced-colors rendering all come from the platform, so the component has no key handlers of its own.
+            </li>
+            <li>
+              With <code>closable</code>, the close button is a <strong>sibling</strong> of the trigger rather than nested inside it. Nesting a control within a control is invalid, and it is why the old implementation needed <code>.self</code> key modifiers to stop the header swallowing Space meant for the close button.
+            </li>
+            <li>
+              Collapsed bodies are removed from the DOM, so nothing inside them is reachable by Tab.
+            </li>
+            <li>
+              The wiring is shared with <code>cat-collapse</code> and <code>cat-card</code>, so every disclosure in the library behaves identically.
+            </li>
+          </ul>
         </template>
       </demo-a11y>
     </section>
