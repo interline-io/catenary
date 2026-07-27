@@ -26,6 +26,7 @@ A standalone disclosure following the [WAI-ARIA disclosure pattern](https://www.
 - **Both guarantee the trigger has an accessible name.** With no `label` and no `#trigger`/`#header` slot the button held only an aria-hidden chevron, leaving it unnamed (WCAG 4.1.2). Both now fall back to a generic name, overridable with the new `ariaLabel` prop, and omit `aria-label` entirely when visible text already supplies the name.
 - **`cat-msg`'s body is hidden with `v-show` rather than removed with `v-if`.** `aria-controls` is an IDREF, so removing the body while collapsed left it pointing at nothing. `display: none` keeps the reference valid while still taking the subtree out of the accessibility tree and the tab order.
 - Both now set `aria-controls` on the trigger, and both dropped their `eslint-disable` for `vuejs-accessibility/no-static-element-interactions`.
+- **`cat-msg`'s dismiss button gains `type="button"` and a descriptive name.** Without an explicit type a `<button>` defaults to `submit`, so a `closable` message inside a `<form>` submitted it on dismiss. Its accessible name was also the bare `"delete"` — Bulma's class name rather than a description of the action. It now defaults to `"Dismiss message"` and is overridable via a new `ariaCloseLabel` prop, matching `cat-notification`. `cat-modal` and `cat-notification` already had both; `cat-msg` was the outlier. Pre-existing.
 
 ## Pre-existing bugs fixed
 

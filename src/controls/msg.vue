@@ -25,8 +25,9 @@
       <span v-else>{{ title || defaultTitle }}</span>
       <button
         v-if="closable"
+        type="button"
         class="delete"
-        aria-label="delete"
+        :aria-label="ariaCloseLabel"
         @click="handleClose"
       />
     </div>
@@ -77,6 +78,11 @@ const props = withDefaults(defineProps<{
   open?: boolean
   closable?: boolean
   defaultTitle?: string
+  /**
+   * Accessible name for the dismiss button when `closable` is set. Matches
+   * `cat-notification`'s `ariaCloseLabel`.
+   */
+  ariaCloseLabel?: string
 }>(), {
   variant: 'light',
   title: null,
@@ -86,7 +92,8 @@ const props = withDefaults(defineProps<{
   expandable: false,
   open: false,
   closable: false,
-  defaultTitle: 'Information'
+  defaultTitle: 'Information',
+  ariaCloseLabel: 'Dismiss message'
 })
 
 // Emits

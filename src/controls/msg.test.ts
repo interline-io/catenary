@@ -118,6 +118,20 @@ describe('cat-msg', () => {
       expect(del.element.parentElement).toBe(trigger.element.parentElement)
     })
 
+    // Without an explicit type a <button> defaults to submit, so a closable
+    // message inside a <form> would submit it on dismiss.
+    it('gives the dismiss button type=button and a descriptive name', async () => {
+      const wrapper = mount(CatMsg, { props: { title: 'x', closable: true } })
+      const del = wrapper.find('button.delete')
+      expect(del.attributes('type')).toBe('button')
+      expect(del.attributes('aria-label')).toBe('Dismiss message')
+
+      const custom = mount(CatMsg, {
+        props: { title: 'x', closable: true, ariaCloseLabel: 'Dismiss warning' }
+      })
+      expect(custom.find('button.delete').attributes('aria-label')).toBe('Dismiss warning')
+    })
+
     it('emits close (dismiss) from the close button without toggling the body', async () => {
       const wrapper = mount(CatMsg, {
         props: { title: 'Advanced', expandable: true, closable: true, open: true }
