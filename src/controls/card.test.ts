@@ -95,6 +95,28 @@ describe('cat-card', () => {
       expect(content.style.display).toBe('none')
       await trigger.trigger('click')
       expect(content.style.display).not.toBe('none')
+
+      // With no label and no #header there is no visible text, so the trigger
+      // would otherwise be an unnamed button holding an aria-hidden chevron.
+      expect(trigger.attributes('aria-label')).toBe('Toggle card')
+    })
+
+    it('takes its accessible name from the header, not a redundant aria-label', () => {
+      const labelled = mount(CatCard, { props: { label: 'Details', expandable: true } })
+      expect(labelled.find('button.cat-card-trigger').attributes('aria-label')).toBeUndefined()
+
+      const slotted = mount(CatCard, {
+        props: { expandable: true },
+        slots: { header: '<p class="card-header-title">Custom</p>' }
+      })
+      expect(slotted.find('button.cat-card-trigger').attributes('aria-label')).toBeUndefined()
+    })
+
+    it('lets ariaLabel override the fallback name', () => {
+      const wrapper = mount(CatCard, {
+        props: { expandable: true, ariaLabel: 'Show diagnostics' }
+      })
+      expect(wrapper.find('button.cat-card-trigger').attributes('aria-label')).toBe('Show diagnostics')
     })
 
     it('follows a controlled open prop', async () => {

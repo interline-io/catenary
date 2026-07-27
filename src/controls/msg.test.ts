@@ -36,14 +36,30 @@ describe('cat-msg', () => {
         props: { title: 'Advanced', expandable: true },
         slots: { default: '<p>Body</p>' }
       })
-      expect(wrapper.text()).not.toContain('Body')
+      const body = () => wrapper.find('.cat-expandable-content').element as HTMLElement
+      expect(body().style.display).toBe('none')
 
       await wrapper.find('button.cat-msg-trigger').trigger('click')
-      expect(wrapper.text()).toContain('Body')
+      expect(body().style.display).not.toBe('none')
       expect(wrapper.emitted('update:open')).toEqual([[true]])
 
       await wrapper.find('button.cat-msg-trigger').trigger('click')
+      expect(body().style.display).toBe('none')
       expect(wrapper.emitted('update:open')).toEqual([[true], [false]])
+    })
+
+    // aria-controls is an IDREF: it must resolve to a real element even while
+    // collapsed. Hiding the body with v-if instead of v-show would leave the
+    // reference dangling whenever the message is closed.
+    it('keeps aria-controls resolvable while collapsed', () => {
+      const wrapper = mount(CatMsg, {
+        props: { title: 'Advanced', expandable: true, open: false },
+        slots: { default: '<p>Body</p>' }
+      })
+      const controls = wrapper.find('button.cat-msg-trigger').attributes('aria-controls')!
+      const target = wrapper.find(`#${controls}`)
+      expect(target.exists()).toBe(true)
+      expect((target.element as HTMLElement).style.display).toBe('none')
     })
 
     it('follows a controlled open prop', async () => {

@@ -30,8 +30,13 @@
         @click="handleClose"
       />
     </div>
+    <!-- v-show, not v-if: the trigger's `aria-controls` points at this element,
+         and removing it from the DOM while collapsed would leave that reference
+         dangling. `display: none` keeps the reference valid while still taking
+         the subtree out of the accessibility tree and the tab order. Matches
+         cat-collapse and cat-card. -->
     <div
-      v-if="!expandable || isOpen"
+      v-show="!expandable || isOpen"
       :class="expandable ? 'cat-expandable-content' : ''"
       v-bind="expandable ? contentAttrs : {}"
     >

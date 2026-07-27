@@ -12,6 +12,7 @@
           class="cat-collapse-trigger"
           :class="{ 'cat-collapse-trigger--default': !$slots.trigger }"
           :disabled="disabled || undefined"
+          :aria-label="triggerAriaLabel"
           v-bind="triggerAttrs"
           @click="toggle"
         >
@@ -50,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, useSlots } from 'vue'
 import CatIcon from './icon.vue'
 import { useDisclosure } from '../util/disclosure'
 
@@ -114,6 +115,13 @@ interface Props {
    * @default false
    */
   disabled?: boolean
+
+  /**
+   * Accessible name for the trigger. Only needed when neither `label` nor a
+   * #trigger slot supplies visible text — otherwise the name comes from the
+   * content, which is preferable. Overrides the fallback name in that case.
+   */
+  ariaLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -122,7 +130,8 @@ const props = withDefaults(defineProps<Props>(), {
   headingLevel: undefined,
   icon: 'chevron-down',
   animated: false,
-  disabled: false
+  disabled: false,
+  ariaLabel: undefined
 })
 
 const emit = defineEmits<{
@@ -131,7 +140,21 @@ const emit = defineEmits<{
   'close': []
 }>()
 
+const slots = useSlots()
 const triggerRef = ref<HTMLButtonElement | null>(null)
+
+// A disclosure button must have an accessible name. Normally it comes from the
+// visible text — `label`, or whatever the #trigger slot renders — which is the
+// better outcome because the name then describes the content. But with neither,
+// the default trigger is just an aria-hidden chevron, leaving an unnamed button
+// (WCAG 4.1.2). Fall back to a generic name so that misuse degrades rather than
+// fails outright; `ariaLabel` overrides it.
+const triggerAriaLabel = computed(() => {
+  if (props.ariaLabel) {
+    return props.ariaLabel
+  }
+  return slots.trigger || props.label ? undefined : 'Toggle section'
+})
 
 const { isOpen, triggerAttrs, contentAttrs, toggle, setOpen } = useDisclosure({
   open: () => props.open,

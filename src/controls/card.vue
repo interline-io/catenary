@@ -20,6 +20,7 @@
       <button
         v-if="expandable"
         class="cat-card-trigger"
+        :aria-label="triggerAriaLabel"
         v-bind="triggerAttrs"
         @click="toggle"
       >
@@ -59,6 +60,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed, useSlots } from 'vue'
 import CatIcon from './icon.vue'
 import { useDisclosure } from '../util/disclosure'
 
@@ -104,6 +106,13 @@ interface Props {
    * @default 'chevron-down'
    */
   icon?: string
+
+  /**
+   * Accessible name for the expandable trigger. Only needed when neither
+   * `label` nor a #header slot supplies visible text — otherwise the name comes
+   * from the header content, which is preferable.
+   */
+  ariaLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -111,12 +120,26 @@ const props = withDefaults(defineProps<Props>(), {
   variant: undefined,
   expandable: false,
   open: false,
-  icon: 'chevron-down'
+  icon: 'chevron-down',
+  ariaLabel: undefined
 })
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
 }>()
+
+const slots = useSlots()
+
+// The trigger's accessible name normally comes from its visible text — `label`
+// or the #header slot. With neither (a bare `<cat-card expandable>`, which now
+// renders a trigger) the button would hold only an aria-hidden chevron and go
+// unnamed (WCAG 4.1.2). Fall back to a generic name; `ariaLabel` overrides it.
+const triggerAriaLabel = computed(() => {
+  if (props.ariaLabel) {
+    return props.ariaLabel
+  }
+  return slots.header || props.label ? undefined : 'Toggle card'
+})
 
 // Disclosure state and ARIA wiring, shared with cat-collapse and cat-msg.
 const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({

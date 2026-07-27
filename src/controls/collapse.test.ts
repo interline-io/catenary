@@ -168,6 +168,26 @@ describe('cat-collapse', () => {
     expect(wrapper.text()).not.toContain('Ignored')
   })
 
+  // The default trigger's only other content is an aria-hidden chevron, so with
+  // no label and no #trigger slot the button would have no accessible name.
+  it('falls back to an aria-label when nothing supplies visible text', () => {
+    const wrapper = mount(CatCollapse)
+    expect(wrapper.find('button').attributes('aria-label')).toBe('Toggle section')
+  })
+
+  it('omits aria-label when a label or trigger slot names the button', () => {
+    const labelled = mount(CatCollapse, { props: { label: 'Details' } })
+    expect(labelled.find('button').attributes('aria-label')).toBeUndefined()
+
+    const slotted = mount(CatCollapse, { slots: { trigger: '<span>Custom</span>' } })
+    expect(slotted.find('button').attributes('aria-label')).toBeUndefined()
+  })
+
+  it('lets ariaLabel override the fallback name', () => {
+    const wrapper = mount(CatCollapse, { props: { ariaLabel: 'Show files' } })
+    expect(wrapper.find('button').attributes('aria-label')).toBe('Show files')
+  })
+
   it('does not toggle when disabled', async () => {
     const wrapper = mount(CatCollapse, { props: { label: 'Details', disabled: true } })
     const trigger = wrapper.find('button')
