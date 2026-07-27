@@ -30,29 +30,30 @@
         @click="handleClose"
       />
     </div>
-    <!-- v-show, not v-if: the trigger's `aria-controls` points at this element,
-         and removing it from the DOM while collapsed would leave that reference
+    <!-- `message-body` is the element itself, not wrapped in one: Bulma styles
+         `.message-header + .message-body` to drop the accent border and square
+         the top corners so the body sits flush under the header. A wrapper div
+         between them breaks that adjacency, leaving every titled message with a
+         stray left stripe and rounded top. Keeping this as a direct sibling gets
+         Bulma's own defaults with no CSS of our own.
+
+         v-show, not v-if: the trigger's `aria-controls` points here, and
+         removing the element while collapsed would leave that reference
          dangling. `display: none` keeps the reference valid while still taking
-         the subtree out of the accessibility tree and the tab order. Matches
-         cat-collapse and cat-card. -->
+         the subtree out of the accessibility tree and the tab order. -->
     <div
       v-show="!expandable || isOpen"
-      :class="expandable ? 'cat-expandable-content' : ''"
+      class="message-body"
+      :class="{ 'media': hasIcon, 'cat-expandable-content': expandable }"
       v-bind="expandable ? contentAttrs : {}"
     >
       <template v-if="hasIcon">
-        <div class="media message-body">
-          <cat-icon :icon="getIcon" :size="iconSize" class="media-left" />
-          <div class="media-content">
-            <slot />
-          </div>
-        </div>
-      </template>
-      <template v-else>
-        <div class="message-body">
+        <cat-icon :icon="getIcon" :size="iconSize" class="media-left" />
+        <div class="media-content">
           <slot />
         </div>
       </template>
+      <slot v-else />
     </div>
   </article>
 </template>

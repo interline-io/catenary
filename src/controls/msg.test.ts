@@ -12,6 +12,37 @@ describe('cat-msg', () => {
     expect(wrapper.text()).toContain('Heads up')
   })
 
+  // Bulma styles `.message-header + .message-body` to drop the accent border and
+  // square the top corners. Any wrapper element between the two breaks that
+  // adjacency and leaves a stray left stripe with a rounded top on every titled
+  // message, so the sibling relationship is worth pinning.
+  it('keeps message-body as a direct sibling of message-header', () => {
+    const expectAdjacent = (props: {
+      title?: string
+      expandable?: boolean
+      open?: boolean
+      showIcon?: boolean
+    }) => {
+      const wrapper = mount(CatMsg, { props, slots: { default: '<p>Body</p>' } })
+      const header = wrapper.find('.message-header').element
+      const body = wrapper.find('.message-body').element
+      expect(body.previousElementSibling, JSON.stringify(props)).toBe(header)
+      expect(body.parentElement, JSON.stringify(props)).toBe(header.parentElement)
+    }
+
+    expectAdjacent({ title: 'Plain' })
+    expectAdjacent({ title: 'Expandable', expandable: true, open: true })
+    expectAdjacent({ title: 'With icon', showIcon: true })
+  })
+
+  it('puts the media class on message-body itself when showIcon is set', () => {
+    const wrapper = mount(CatMsg, { props: { title: 'x', showIcon: true }, slots: { default: '<p>B</p>' } })
+    const body = wrapper.find('.message-body')
+    expect(body.classes()).toContain('media')
+    expect(body.find('.media-left').exists()).toBe(true)
+    expect(body.find('.media-content').text()).toContain('B')
+  })
+
   describe('expandable', () => {
     it('uses a native button for the trigger, not role="button" on the header', () => {
       const wrapper = mount(CatMsg, { props: { title: 'Advanced', expandable: true } })
