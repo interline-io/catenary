@@ -205,11 +205,18 @@ defineExpose({
   }
 }
 
-// Only the built-in label+icon trigger gets padding. A consumer-supplied
-// #trigger slot brings its own markup (e.g. a Bulma card-header, already
-// padded) and must not be padded twice.
+// Vertical padding only, for a comfortable hit target. Deliberately no
+// horizontal padding: the label must sit flush with the content below it, and
+// the chevron flush with the content's right edge. Indenting the trigger would
+// make every collapse look misaligned against its own body text, and this is a
+// generic primitive — horizontal insets belong to whatever container the
+// consumer puts it in.
+//
+// Only the built-in label+icon trigger gets this. A consumer-supplied #trigger
+// slot brings its own markup (e.g. a Bulma card-header, already padded) and
+// must not be padded twice.
 .cat-collapse-trigger--default {
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0;
 }
 
 .cat-collapse-label {
