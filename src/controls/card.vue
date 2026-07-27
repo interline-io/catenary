@@ -1,7 +1,11 @@
 <template>
   <div class="card cat-card" :class="{ 'cat-card--panel': variant === 'panel' }">
+    <!-- `expandable` must be part of this condition: the trigger lives in the
+         header, so without it an expandable card with no label, #header or
+         #actions would render no trigger at all while still hiding its content
+         behind `isOpen` — permanently invisible with no way to open it. -->
     <header
-      v-if="label || $slots.header || $slots.actions"
+      v-if="label || expandable || $slots.header || $slots.actions"
       class="card-header"
     >
       <!-- When expandable the header content becomes a real <button> carrying
@@ -130,6 +134,11 @@ const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({
   // and reproduces the title/icon layout the header used to provide directly.
   .cat-card-trigger {
     flex: 1 1 auto;
+    // Stretch to the header's full height so the hover highlight reads as a
+    // deliberate block rather than a part-height patch. The highlight covers
+    // exactly the clickable region and stops where #actions begins, which is
+    // honest: those controls are siblings of the trigger and do not toggle.
+    align-self: stretch;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -147,6 +156,8 @@ const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({
       background-color: var(--bulma-scheme-main-bis, #fafafa);
     }
 
+    // Inset the outline: the trigger stretches to the header's edges, so a
+    // positive offset would be clipped by the card's overflow.
     &:focus-visible {
       outline: 2px solid $link;
       outline-offset: -2px;

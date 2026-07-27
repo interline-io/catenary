@@ -79,6 +79,24 @@ describe('cat-card', () => {
       expect(wrapper.emitted('update:open')).toEqual([[true], [false]])
     })
 
+    // The trigger lives in the header, and the header only renders when it has
+    // something to show. Without `expandable` in that condition, a bare
+    // <cat-card expandable> renders no trigger while still hiding its content
+    // behind isOpen — permanently invisible with no way to open it.
+    it('renders a trigger even with no label, #header or #actions', async () => {
+      const wrapper = mount(CatCard, {
+        props: { expandable: true },
+        slots: { default: '<p>Body</p>' }
+      })
+      const trigger = wrapper.find('button.cat-card-trigger')
+      expect(trigger.exists()).toBe(true)
+
+      const content = wrapper.find('.card-content').element.parentElement as HTMLElement
+      expect(content.style.display).toBe('none')
+      await trigger.trigger('click')
+      expect(content.style.display).not.toBe('none')
+    })
+
     it('follows a controlled open prop', async () => {
       const wrapper = mount(CatCard, { props: { label: 'Details', expandable: true, open: false } })
       expect(wrapper.find('button.cat-card-trigger').attributes('aria-expanded')).toBe('false')

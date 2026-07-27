@@ -199,6 +199,9 @@ defineExpose({
     opacity: 0.5;
   }
 
+  // Positive offset, unlike cat-card's inset ring: this trigger is not clipped
+  // by a container, so the ring can sit outside its box. cat-msg uses
+  // `currentcolor` instead of $link because its header is variant-tinted.
   &:focus-visible {
     outline: 2px solid $link;
     outline-offset: 2px;

@@ -127,9 +127,6 @@ const handleClose = (): void => {
 </script>
 
 <style scoped lang="scss">
-@use "bulma/sass/utilities/initial-variables" as *;
-@use "bulma/sass/utilities/derived-variables" as *;
-
 .cat-message {
   // The trigger is a real button now, so it needs the header's own typography
   // and layout reset back onto it rather than inheriting Bulma's button styles.
@@ -153,6 +150,10 @@ const handleClose = (): void => {
       opacity: 0.8;
     }
 
+    // `currentcolor`, not Bulma's $link as in cat-collapse and cat-card: a
+    // message header is tinted by its variant (danger, dark, …), and a fixed
+    // link-blue ring can disappear against those backgrounds. Inheriting the
+    // header's own text colour keeps the ring visible on every variant.
     &:focus-visible {
       outline: 2px solid currentcolor;
       outline-offset: 2px;
@@ -165,6 +166,14 @@ const handleClose = (): void => {
 
   .cat-expandable-content {
     transition: all 0.2s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cat-msg-trigger,
+    .cat-expand-icon,
+    .cat-expandable-content {
+      transition: none;
+    }
   }
 }
 </style>
