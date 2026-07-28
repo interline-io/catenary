@@ -27,18 +27,19 @@ A standalone disclosure following the [WAI-ARIA disclosure pattern](https://www.
 - **`cat-msg`'s body is hidden with `v-show` rather than removed with `v-if`.** `aria-controls` is an IDREF, so removing the body while collapsed left it pointing at nothing. `display: none` keeps the reference valid while still taking the subtree out of the accessibility tree and the tab order.
 - **All three triggers keep their flex layout on an inner `<span>` rather than on the `<button>`.** Per the ARIA spec `button` is children-presentational, so its descendants should not surface as separate accessibility objects, and putting `display: flex` on the button itself is a [documented way to subvert that in WebKit](https://adrianroselli.com/2022/07/its-mid-2022-and-browsers-mostly-safari-still-break-accessibility-via-display-properties.html). Same layout, semantics kept off the button. This is spec conformance rather than a fix for an observed failure: VoiceOver + Safari announces the trigger correctly as *"Methodology, expanded, button"*. VoiceOver + Firefox appends a trailing *"group"*, but that persists regardless of this change and looks like an artifact of that pairing, whose macOS support has been [patchy since it landed in Firefox 87](https://blog.mozilla.org/accessibility/voiceover-support-for-macos-in-firefox-87/).
 - Both now set `aria-controls` on the trigger, and both dropped their `eslint-disable` for `vuejs-accessibility/no-static-element-interactions`.
-- **`cat-msg`'s dismiss button gains `type="button"` and a descriptive name.** Without an explicit type a `<button>` defaults to `submit`, so a `closable` message inside a `<form>` submitted it on dismiss. Its accessible name was also the bare `"delete"` — Bulma's class name rather than a description of the action. It now defaults to `"Dismiss message"` and is overridable via a new `ariaCloseLabel` prop, matching `cat-notification`. `cat-modal` and `cat-notification` already had both; `cat-msg` was the outlier. Pre-existing.
 
 ## Pre-existing bugs fixed
 
-Both found while doing the above, neither introduced by it:
+All three found while doing the above, none introduced by it:
+
+- **`cat-msg`'s dismiss button had no `type` and a poor name.** Without an explicit type a `<button>` defaults to `submit`, so a `closable` message inside a `<form>` submitted it on dismiss. Its accessible name was also the bare `"delete"` — Bulma's class name rather than a description of the action. It is now `type="button"`, named `"Dismiss message"` by default and overridable via a new `ariaCloseLabel` prop matching `cat-notification`. `cat-modal` and `cat-notification` already had both; `cat-msg` was the outlier.
 
 - **`cat-card`: an expandable card with no header rendered permanently invisible content.** The header only rendered given a `label`, `#header` or `#actions` — but the toggle lives in the header, so `<cat-card expandable>` with none of those produced no trigger at all while still hiding its content behind the open state, with no way to reveal it. `expandable` is now part of that condition, with a regression test.
 - **`cat-msg`: the body was wrapped in an extra `<div>`, suppressing Bulma's intended appearance.** Bulma styles `.message-header + .message-body` to drop the accent border and square the top corners so the body sits flush beneath the header. The wrapper broke that adjacency, so **every titled message** rendered with a stray left stripe and a rounded top meeting the header's square bottom. The body element now carries the `media` class, the transition class and the id directly, so Bulma's own defaults apply with no CSS of our own.
 
 ## Migration notes
 
-**Public APIs are additive.** `cat-msg` and `cat-card` keep their existing props, slots and events — including `cat-msg`'s `close` still meaning "dismissed", not "collapsed". `cat-collapse` and `cat-card` each gain an optional `ariaLabel` prop.
+**Public APIs are additive.** `cat-msg` and `cat-card` keep their existing props, slots and events — including `cat-msg`'s `close` still meaning "dismissed", not "collapsed". New optional props: `ariaLabel` on `cat-collapse` and `cat-card`, and `ariaCloseLabel` on `cat-msg`.
 
 **Markup changes, by component:**
 
