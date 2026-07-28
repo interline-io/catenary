@@ -112,7 +112,7 @@ const clipboard = async (): Promise<void> => {
 
 button.cat-safelink-action:focus-visible,
 a.cat-safelink-action:focus-visible {
-  outline: 2px solid var(--bulma-link);
+  outline: 2px solid var(--bulma-link-on-scheme);
   outline-offset: -2px;
 }
 

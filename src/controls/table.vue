@@ -313,7 +313,7 @@ provide('registerColumn', registerColumn)
     padding: 0;
 
     &:hover .cat-table-sort {
-      background-color: $white-bis;
+      background-color: var(--bulma-scheme-main-bis);
     }
   }
 
@@ -332,7 +332,7 @@ provide('registerColumn', registerColumn)
     user-select: none;
 
     &:focus-visible {
-      outline: 2px solid $link;
+      outline: 2px solid var(--bulma-link-on-scheme);
       outline-offset: -2px;
     }
   }

@@ -56,26 +56,51 @@ Catenary is intentionally **Bulma-first**: reach for Bulma helpers/variables bef
 - Custom/invented CSS classes use the `cat-` prefix — and only fill gaps Bulma doesn't cover
 - SCSS `@each` loops for variant styling
 
-**Use Bulma SCSS variables, not CSS-var fallbacks.** When you need a Bulma color or sizing token, prefer importing the SCSS variable rather than referencing a CSS custom property with a hardcoded hex fallback:
+**Split Bulma tokens by whether they follow the theme.** Bulma 1.x switches light/dark at runtime by reassigning CSS custom properties. SCSS variables resolve at compile time, so anything colored from them keeps its light-theme value on a dark background — which is how `cat-tabs` ended up with 45 contrast failures in dark mode.
+
+**Colors follow the theme, so use the runtime token, with no hex fallback:**
 
 ```scss
-// Preferred — SCSS variable resolves at compile time, tracks Bulma updates
-@use "bulma/sass/utilities/derived-variables" as *;
-@use "bulma/sass/utilities/initial-variables" as *;
+// Preferred — tracks the light/dark scheme cat-theme-toggle switches at runtime
+.cat-thing {
+  color: var(--bulma-text);
+  border-color: var(--bulma-border);
+  background-color: var(--bulma-scheme-main);
+}
 
 .cat-thing:focus-visible {
-  outline: 2px solid $link;
+  outline: 2px solid var(--bulma-link);
 }
 ```
 
+For a color on a filled surface use the matching `-invert` token — `var(--bulma-primary-invert)` on `var(--bulma-primary)` — rather than picking white or black by eye. For a translucent scrim, build it from the scheme's HSL parts: `hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-scheme-main-l), 0.8)`.
+
+**Sizing, spacing, radii, weights and breakpoints do not follow the theme, so keep the SCSS variable:**
+
 ```scss
-// Avoid — hex fallback drifts from Bulma if the palette changes
+@use "bulma/sass/utilities/initial-variables" as *;
+
+.cat-thing {
+  font-size: $size-7;
+  border-radius: $radius-rounded;
+  font-weight: $weight-semibold;
+}
+
+@media screen and (max-width: $tablet - 1px) { ... }
+```
+
+**Never a hex fallback.** This is what the rule originally guarded against and it still holds — the fallback drifts silently when the palette changes:
+
+```scss
+// Avoid
 .cat-thing:focus-visible {
   outline: 2px solid var(--bulma-link, #485fc7);
 }
 ```
 
-The CSS-variable approach is fine in `:deep()` selectors or when Bulma intentionally exposes a runtime-customizable token, but should not be the default.
+A deliberately theme-independent color is fine when the surface it sits on is also theme-independent — `cat-tooltip`'s bubble is always dark, so white text on it is correct in both schemes. Say so in a comment when you do it.
+
+**Check both themes.** Any component with a visible surface should be run through axe-core with `data-theme="dark"` as well as light before it ships. That is what would have caught the `cat-tabs` failures.
 
 ### Playground
 

@@ -319,7 +319,7 @@ $tooltip-offset: 8px;
 
   // Wrapper-applied focus ring when the slot itself isn't focusable.
   &[tabindex]:focus-visible {
-    outline: 2px solid $black;
+    outline: 2px solid var(--bulma-text-strong);
     outline-offset: 2px;
     border-radius: $radius-small;
   }
@@ -327,6 +327,8 @@ $tooltip-offset: 8px;
   .cat-tooltip-bubble {
     position: absolute;
     padding: 8px 12px;
+    // Deliberately theme-independent: the bubble is always dark ($tooltip-bg
+    // is black at 90%), so white text is correct in both schemes.
     background: $tooltip-bg;
     color: $white;
     border-radius: $radius;

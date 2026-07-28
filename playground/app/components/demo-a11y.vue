@@ -109,21 +109,27 @@ defineProps<{
 </script>
 
 <style lang="scss" scoped>
-@use "bulma/sass/utilities/initial-variables" as *;
-@use "bulma/sass/utilities/derived-variables" as *;
-
 .cat-demo-a11y-refs {
   list-style: disc;
   padding-left: 1.25rem;
   margin-top: 0.5rem;
+
+  // These links sit in running text, so color alone does not distinguish them
+  // from it (axe: link-in-text-block, and WCAG 1.4.1 more broadly).
+  a {
+    text-decoration: underline;
+  }
 }
 
 .cat-demo-a11y-keys {
   margin-bottom: 1rem;
 
+  // Runtime tokens, not SCSS variables: a compile-time light background kept
+  // its value in dark mode while the text went light, leaving the keys at
+  // 1.07:1.
   kbd {
-    background: $background;
-    border: 1px solid $border;
+    background: var(--bulma-background);
+    border: 1px solid var(--bulma-border);
     border-radius: 3px;
     padding: 0.1rem 0.4rem;
     font-family: monospace;

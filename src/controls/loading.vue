@@ -91,10 +91,10 @@ function handleCancel () {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba($white, 0.8);
+  background: hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-scheme-main-l), 0.8);
 
   &.is-full-page {
-    background: rgba($white, 0.9);
+    background: hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-scheme-main-l), 0.9);
   }
 }
 
@@ -105,7 +105,7 @@ function handleCancel () {
 
 .cat-loading-spinner {
   animation: spinAround 500ms infinite linear;
-  border: 2px solid $grey-light;
+  border: 2px solid var(--bulma-text-weak);
   border-radius: $radius-rounded;
   border-right-color: transparent;
   border-top-color: transparent;

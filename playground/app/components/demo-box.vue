@@ -41,5 +41,12 @@ defineProps<Props>()
 <style lang="scss" scoped>
 .demo-example {
     background-color: var(--bulma-info);
+
+    // The title inherits the scheme's text color, which goes light in dark mode
+    // and then sits on this light-cyan fill. Filled surfaces take the matching
+    // invert token.
+    .card-header-title {
+      color: var(--bulma-info-invert);
+    }
 }
 </style>

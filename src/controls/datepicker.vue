@@ -961,8 +961,6 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
 </script>
 
 <style lang="scss" scoped>
-@use "bulma/sass/utilities/derived-variables" as *;
-
 // The addon field exists only to attach the toggle button to the input;
 // Bulma's .field:not(:last-child) margin doesn't apply (the sr-only format
 // hint precedes it), but be explicit in case the markup shifts.
@@ -988,7 +986,7 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
 }
 
 .cat-datepicker-toggle:focus-visible {
-  outline: 2px solid $link;
+  outline: 2px solid var(--bulma-link-on-scheme);
   outline-offset: -2px;
 }
 
