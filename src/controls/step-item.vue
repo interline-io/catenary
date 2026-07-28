@@ -30,8 +30,13 @@ import { StepsContextKey } from '../util/steps-context'
 
 /**
  * One step of a cat-steps wizard: a panel of content plus the label, marker and
- * state its parent draws in the progress list. Content renders only while the
- * step is active.
+ * state its parent draws in the progress list.
+ *
+ * The panel is only *shown* while its step is active; it stays mounted the rest
+ * of the time, hidden with `display: none`. So a user who steps back finds what
+ * they typed, and `onMounted` in the content runs once rather than on every
+ * visit — but the content is also live from the start, which matters for a step
+ * that kicks off work of its own.
  *
  * @component cat-step-item
  * @example
@@ -111,8 +116,17 @@ onMounted(() => {
 // has to be pushed up again when it changes — a step that fails part-way
 // through and switches to variant="danger" is the case that matters.
 watch(
-  () => [props.label, props.step, props.icon, props.variant, props.clickable],
-  () => steps?.register(registration())
+  () => [props.value, props.label, props.step, props.icon, props.variant, props.clickable],
+  (_current, [oldValue]) => {
+    // `value` is the key the parent registers under, so changing it makes this
+    // a different step as far as the list is concerned. Drop the old entry
+    // first, or the list keeps a marker for a step that no longer exists and
+    // unmounting only ever removes the current one.
+    if (oldValue !== props.value) {
+      steps?.deregister(oldValue as string | number)
+    }
+    steps?.register(registration())
+  }
 )
 
 // Drop the registration when the item unmounts, e.g. a v-if step that no longer

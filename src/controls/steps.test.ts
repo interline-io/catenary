@@ -345,6 +345,31 @@ describe('cat-steps dynamic step items', () => {
     wrapper.unmount()
   })
 
+  it('replaces the old entry when a step item changes its value', async () => {
+    const second = ref('two')
+    const Host = defineComponent({
+      setup () {
+        return () => h(CatSteps, { modelValue: 'one', ariaLabel: 'Demo' }, () => [
+          h(CatStepItem, { label: 'One', value: 'one' }, () => 'Panel 1'),
+          h(CatStepItem, { label: 'Two', value: second.value }, () => 'Panel 2')
+        ])
+      }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    await wrapper.vm.$nextTick()
+    expect(wrapper.findAll('li.cat-step')).toHaveLength(2)
+
+    second.value = 'deux'
+    await wrapper.vm.$nextTick()
+    await wrapper.vm.$nextTick()
+
+    // The renamed step replaces its old registration rather than adding a
+    // second marker for a panel that no longer answers to that value.
+    expect(wrapper.findAll('li.cat-step')).toHaveLength(2)
+    expect(wrapper.findAll('.cat-step-label').map(l => l.text())).toEqual(['One', 'Two'])
+    wrapper.unmount()
+  })
+
   it('re-registers when a step item changes, e.g. one that failed', async () => {
     const variant = ref<'primary' | 'danger'>('primary')
     const Host = defineComponent({
