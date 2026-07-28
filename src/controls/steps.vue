@@ -329,6 +329,9 @@ function stepClasses (step: StepRegistration, index: number) {
 const rootClasses = computed(() => [
   `is-${props.orientation}`,
   `is-${props.size}`,
+  // Colours the connector rail. Prefixed because a bare `is-primary` on the
+  // root would also match the per-step marker rules.
+  `is-variant-${props.variant}`,
   // Vertical steppers put the label beside the marker regardless: below it
   // there would be nothing to fill the width the list already occupies.
   props.orientation === 'vertical' ? 'is-label-right' : `is-label-${props.labelPosition}`
@@ -430,6 +433,7 @@ $cat-step-label-sizes: (
   --cat-step-marker-size: #{map.get($cat-step-marker-sizes, "normal")};
   --cat-step-label-size: #{map.get($cat-step-label-sizes, "normal")};
   --cat-step-connector: 2px;
+  --cat-step-rail: var(--bulma-primary);
 }
 
 @each $name, $size in $cat-step-marker-sizes {
@@ -662,6 +666,8 @@ button.cat-step-trigger {
   @include stacked-steps;
 }
 
+// Markers carry each step's own state, so a step that failed can be red while
+// the rest of the stepper is not.
 @each $name in ("primary", "link", "info", "success", "warning", "danger") {
   .cat-step.is-#{$name} {
     &.is-completed .cat-step-marker,
@@ -676,20 +682,31 @@ button.cat-step-trigger {
     &.is-current .cat-step-marker {
       box-shadow: 0 0 0 4px var(--bulma-#{$name}-light);
     }
-
-    // The line behind a step shows progress reaching it, so a completed step
-    // fills both halves and the current one fills only the half behind it.
-    // Layouts with a single connector after each step use the same properties:
-    // there, only the completed steps' lines fill.
-    &.is-completed {
-      --cat-step-line-before: var(--bulma-#{$name});
-      --cat-step-line-after: var(--bulma-#{$name});
-    }
-
-    &.is-current {
-      --cat-step-line-before: var(--bulma-#{$name});
-    }
   }
+}
+
+// The rail is progress, not status, so it takes the stepper's variant rather
+// than each step's. Deliberately not per-step: in the label-bottom layout a
+// step paints the half-segment on either side of its own marker, so a single
+// step with its own variant would tint half the line leading up to it and the
+// join would read as a rendering fault rather than as meaning.
+@each $name in ("primary", "link", "info", "success", "warning", "danger") {
+  .cat-steps.is-variant-#{$name} {
+    --cat-step-rail: var(--bulma-#{$name});
+  }
+}
+
+// A completed step fills both of its halves; the current one fills only the
+// half behind it, so the rail stops where the user has got to. Layouts with a
+// single connector after each step use the same properties, where only the
+// completed steps fill.
+.cat-step.is-completed {
+  --cat-step-line-before: var(--cat-step-rail);
+  --cat-step-line-after: var(--cat-step-rail);
+}
+
+.cat-step.is-current {
+  --cat-step-line-before: var(--cat-step-rail);
 }
 
 .cat-steps-content {
