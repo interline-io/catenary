@@ -117,6 +117,8 @@ Or via CDN/link tags if you prefer.
 |-----------|-----|-------------|
 | CatTabs | `<cat-tabs>` | Tab navigation |
 | CatTabItem | `<cat-tab-item>` | Individual tab panel |
+| CatSteps | `<cat-steps>` | Stepper / wizard with progress list and one panel at a time |
+| CatStepItem | `<cat-step-item>` | Individual step panel |
 | CatDropdown | `<cat-dropdown>` | Dropdown menu |
 | CatDropdownItem | `<cat-dropdown-item>` | Item within a dropdown |
 | CatModal | `<cat-modal>` | Modal dialog with sizes, fullscreen, footer slots |

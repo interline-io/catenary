@@ -26,6 +26,8 @@ import CatSearchBar from './controls/search-bar.vue'
 import CatSelect from './controls/select.vue'
 import CatSlider from './controls/slider.vue'
 import CatSliderTick from './controls/slider-tick.vue'
+import CatStepItem from './controls/step-item.vue'
+import CatSteps from './controls/steps.vue'
 import CatSwitch from './controls/switch.vue'
 import CatTabItem from './controls/tab-item.vue'
 import CatTable from './controls/table.vue'
@@ -66,6 +68,8 @@ export {
   CatSelect,
   CatSlider,
   CatSliderTick,
+  CatStepItem,
+  CatSteps,
   CatSwitch,
   CatTabItem,
   CatTable,
@@ -122,6 +126,8 @@ export const CatenaryPlugin: Plugin = {
       Select: CatSelect,
       Slider: CatSlider,
       SliderTick: CatSliderTick,
+      StepItem: CatStepItem,
+      Steps: CatSteps,
       Switch: CatSwitch,
       TabItem: CatTabItem,
       Table: CatTable,
@@ -170,6 +176,8 @@ declare module 'vue' {
     CatSelect: typeof CatSelect
     CatSlider: typeof CatSlider
     CatSliderTick: typeof CatSliderTick
+    CatStepItem: typeof CatStepItem
+    CatSteps: typeof CatSteps
     CatSwitch: typeof CatSwitch
     CatTabItem: typeof CatTabItem
     CatTable: typeof CatTable
