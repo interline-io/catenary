@@ -241,42 +241,62 @@ watch(() => props.modelValue, () => {
   list-style: none;
 }
 
+/* The tablist is a <div role="tablist">, not Bulma's <ul>, so `.tabs ul` never
+   matches it and every rule Bulma puts there has to be restated. Missing them
+   cost two bugs: the tab bar had no rule of its own, and because each tab
+   carries `margin-bottom: -1 * border-width` to overlap a line that was not
+   there, the tablist resolved 1px shorter than its buttons and `.tabs`
+   (overflow: hidden) clipped every tab's bottom border. Measured before the
+   fix: tabs 41px, tablist 41px, tab 42px.
+
+   Taking the values from the --bulma-tabs-* tokens rather than the generic
+   ones also means a consumer overriding them on .tabs gets what they asked
+   for, which the hardcoded equivalents ignored. */
 .cat-tabs .cat-tablist {
   display: flex;
   flex-grow: 1;
   flex-wrap: wrap;
   align-items: center;
-  // Inherit Bulma's .tabs ul styling effects via the wrapper.
+  border-bottom-color: var(--bulma-tabs-border-bottom-color);
+  border-bottom-style: var(--bulma-tabs-border-bottom-style);
+  border-bottom-width: var(--bulma-tabs-border-bottom-width);
 }
 
 .cat-tabs.is-centered .cat-tablist { justify-content: center; }
 .cat-tabs.is-right .cat-tablist { justify-content: flex-end; }
 .cat-tabs.is-fullwidth .cat-tab { flex-grow: 1; }
 
+// Restates Bulma's `.tabs a`, since the tab is a real <button>. Values come
+// from the --bulma-tabs-* tokens so the two stay in step; the transparent
+// border on the other three sides is catenary's own, so is-boxed can color
+// them without shifting the layout.
 .cat-tabs .cat-tab {
-  // Render as a Bulma tab anchor visually, but it's a real <button>.
   appearance: none;
   background: transparent;
-  border: 1px solid transparent;
-  border-bottom-color: var(--bulma-border);
-  margin-bottom: -1px;
-  padding: 0.5em 1em;
-  color: var(--bulma-text);
+  border: var(--bulma-tabs-border-bottom-width) solid transparent;
+  border-bottom-color: var(--bulma-tabs-border-bottom-color);
+  border-bottom-style: var(--bulma-tabs-border-bottom-style);
+  margin-bottom: calc(-1 * var(--bulma-tabs-border-bottom-width));
+  padding: var(--bulma-tabs-link-padding);
+  color: var(--bulma-tabs-link-color);
   display: inline-flex;
   align-items: center;
+  // Bulma's `.tabs a` centers its content. Without it a tab that is wider than
+  // its label — which is every tab under `expanded` — left-aligns the text.
+  justify-content: center;
   gap: 0.25rem;
   cursor: pointer;
   font: inherit;
   line-height: 1.5;
 
   &:hover {
-    color: var(--bulma-text-strong);
-    border-bottom-color: var(--bulma-text-strong);
+    color: var(--bulma-tabs-link-hover-color);
+    border-bottom-color: var(--bulma-tabs-link-hover-border-bottom-color);
   }
 
   &.is-active {
-    color: var(--bulma-link-on-scheme);
-    border-bottom-color: var(--bulma-link-on-scheme);
+    color: var(--bulma-tabs-link-active-color);
+    border-bottom-color: var(--bulma-tabs-link-active-border-bottom-color);
   }
 
   &:focus-visible {
@@ -302,6 +322,10 @@ watch(() => props.modelValue, () => {
 }
 
 .cat-tabs.is-toggle .cat-tablist {
+  // Bulma does the same on `.tabs.is-toggle ul`: the group is drawn by the
+  // buttons' own borders, so a rule under it would be a stray line.
+  border-bottom: none;
+
   .cat-tab {
     border-color: var(--bulma-border);
     margin-bottom: 0;
@@ -331,6 +355,14 @@ watch(() => props.modelValue, () => {
   // The horizontal tablist wraps; with a vertical main axis, wrapping would
   // spill tabs into extra columns whenever the container height is short.
   flex-wrap: nowrap;
+  // The rail moves to the right edge with the tabs' own borders, so the
+  // bottom one would be a stray line under the column. Bulma has no vertical
+  // tabs to mirror here — this is the same reasoning applied to the axis the
+  // orientation actually uses.
+  border-bottom: none;
+  border-right-color: var(--bulma-tabs-border-bottom-color);
+  border-right-style: var(--bulma-tabs-border-bottom-style);
+  border-right-width: var(--bulma-tabs-border-bottom-width);
 }
 
 // is-fullwidth grows tabs along the main axis, which in a column layout
@@ -341,19 +373,21 @@ watch(() => props.modelValue, () => {
 
 .cat-tabs.is-vertical .cat-tab {
   border-bottom-color: transparent;
-  border-right: 1px solid var(--bulma-border);
+  border-right-color: var(--bulma-tabs-border-bottom-color);
+  border-right-style: var(--bulma-tabs-border-bottom-style);
+  border-right-width: var(--bulma-tabs-border-bottom-width);
   margin-bottom: 0;
-  margin-right: -1px;
+  margin-right: calc(-1 * var(--bulma-tabs-border-bottom-width));
   justify-content: flex-start;
 
   &:hover {
     border-bottom-color: transparent;
-    border-right-color: var(--bulma-text-strong);
+    border-right-color: var(--bulma-tabs-link-hover-border-bottom-color);
   }
 
   &.is-active {
     border-bottom-color: transparent;
-    border-right-color: var(--bulma-link-on-scheme);
+    border-right-color: var(--bulma-tabs-link-active-border-bottom-color);
   }
 }
 
