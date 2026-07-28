@@ -92,6 +92,16 @@ export type TabsPosition = typeof TabsPositions[number]
 export const TabsTypes = ['default', 'boxed', 'toggle', 'toggle-rounded'] as const
 export type TabsType = typeof TabsTypes[number]
 
+// Steps use core variants and sizes
+export const StepsVariants = CoreVariants
+export type StepsVariant = typeof StepsVariants[number]
+
+export const StepsSizes = CoreSizes
+export type StepsSize = typeof StepsSizes[number]
+
+export const StepsLabelPositions = ['bottom', 'right'] as const
+export type StepsLabelPosition = typeof StepsLabelPositions[number]
+
 // Dropdown extends core variants
 export const DropdownTriggerVariants = [...CoreVariants, 'white', 'light', 'dark'] as const
 export type DropdownTriggerVariant = typeof DropdownTriggerVariants[number]
