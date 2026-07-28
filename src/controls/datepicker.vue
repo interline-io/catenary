@@ -972,11 +972,22 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
 
 /* Top-layer rendering (Popover API): the calendar is shown via showPopover()
    with fixed coordinates set inline, so neutralize the absolute positioning
-   and keep the is-active rule from also showing a clipped copy. */
+   and keep the is-active rule from also showing a clipped copy.
+
+   Also neutralize the rest of the UA `[popover]` rule, which Bulma does not
+   override on .dropdown-menu: `border: solid` draws a black box around the
+   calendar, `padding: 0.25em` survives on the three sides Bulma leaves alone,
+   and the opaque `background-color: Canvas` shows through the padding-top gap
+   and behind the content's rounded corners. Same reset as cat-dropdown. */
 .dropdown-menu[popover] {
   position: fixed;
   margin: 0;
   inset: auto;
+  border: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+  background: transparent;
 
   &:not(:popover-open) {
     display: none;

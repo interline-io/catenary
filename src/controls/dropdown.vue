@@ -471,11 +471,28 @@ defineExpose({ open, close, toggle })
 
 /* Top-layer rendering (Popover API): the menu is shown via showPopover() with
    fixed coordinates set inline, so neutralize Bulma's absolute positioning and
-   keep the is-active display rule from also showing a clipped copy. */
+   keep the is-active display rule from also showing a clipped copy.
+
+   The UA stylesheet's `[popover]` rule brings more than positioning, and Bulma
+   overrides none of it on .dropdown-menu:
+     - `border: solid` — a medium currentColor border, i.e. a black box around
+       the whole menu.
+     - `padding: 0.25em` — Bulma sets only padding-top (the offset between
+       trigger and content), so the other three sides survive.
+     - `background-color: Canvas` — .dropdown-menu has no background of its own
+       in Bulma; .dropdown-content inside it does. An opaque Canvas backdrop
+       therefore shows through the padding-top gap and behind the content's
+       rounded corners.
+   `overflow: auto` is deliberately left alone: a long menu needs to scroll. */
 .dropdown-menu[popover] {
   position: fixed;
   margin: 0;
   inset: auto;
+  border: 0;
+  padding-right: 0;
+  padding-bottom: 0;
+  padding-left: 0;
+  background: transparent;
 
   &:not(:popover-open) {
     display: none;
