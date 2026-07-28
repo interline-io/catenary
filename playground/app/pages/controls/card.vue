@@ -339,6 +339,67 @@
           </div>
         </div>
       </demo-box>
+
+      <demo-a11y
+        pattern-name="Disclosure (Show/Hide)"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/disclosure/"
+        :references="[
+          {
+            label: 'WCAG 2.1 — 4.1.2 Name, Role, Value',
+            url: 'https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html',
+            note: 'the expanded/collapsed state must be exposed programmatically, which aria-expanded provides',
+          },
+        ]"
+        :keyboard="[
+          { key: 'Tab', description: 'Moves focus to the trigger button, then to any controls in the #actions slot.' },
+          { key: 'Enter', description: 'When focus is on the trigger, toggles the card content.' },
+          { key: 'Space', description: 'When focus is on the trigger, toggles the card content.' },
+        ]"
+      >
+        <template #intro>
+          A plain card is a presentational container and exposes no ARIA. The
+          pattern below applies only when <code>expandable</code> is set, in which
+          case the card header becomes a disclosure.
+        </template>
+        <template #notes>
+          <ul class="content mt-3">
+            <li>
+              The trigger is a native <code>&lt;button&gt;</code> carrying
+              <code>aria-expanded</code> and <code>aria-controls</code>, not
+              <code>role="button"</code> on the <code>&lt;header&gt;</code>.
+            </li>
+            <li>
+              The chevron is a <code>&lt;span&gt;</code> inside that single
+              button, not a nested <code>&lt;button&gt;</code>. A control inside
+              a control is invalid and swallows its key events.
+            </li>
+            <li>
+              Put interactive header content in <code>#actions</code>, which
+              renders as a sibling of the trigger. Anything placed in
+              <code>#header</code> while <code>expandable</code> is set ends up
+              inside the trigger button, so it must be phrasing content — a
+              <code>&lt;p&gt;</code> or other flow content there is invalid
+              inside a <code>&lt;button&gt;</code>. The built-in title is a
+              <code>&lt;span&gt;</code> when expandable for that reason.
+            </li>
+            <li>
+              Non-expandable cards expose no ARIA and render exactly as they did
+              before this component shared its disclosure implementation with
+              <code>cat-collapse</code> and <code>cat-msg</code>, down to
+              keeping <code>&lt;p class="card-header-title"&gt;</code>.
+            </li>
+            <li>
+              <strong>Not yet reviewed:</strong> the header title renders as a
+              <code>&lt;p class="card-header-title"&gt;</code> with no heading
+              semantics, so a page of cards is not navigable by heading the way
+              <code>cat-collapse</code>'s <code>heading-level</code> allows. The
+              <code>panel</code> variant's dark header also needs a contrast
+              check in a real browser, which jsdom cannot do. Both are tracked
+              separately.
+            </li>
+          </ul>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -346,6 +407,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const cardOpen = ref(true)
 </script>

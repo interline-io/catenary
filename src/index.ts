@@ -4,6 +4,7 @@ import CatButton from './controls/button.vue'
 import CatCard from './controls/card.vue'
 import CatCheckbox from './controls/checkbox.vue'
 import CatCheckboxGroup from './controls/checkbox-group.vue'
+import CatCollapse from './controls/collapse.vue'
 import CatDatepicker from './controls/datepicker.vue'
 import CatDownloadCsv from './controls/download-csv.vue'
 import CatDownloadJson from './controls/download-json.vue'
@@ -43,6 +44,7 @@ export {
   CatCard,
   CatCheckbox,
   CatCheckboxGroup,
+  CatCollapse,
   CatDatepicker,
   CatDownloadCsv,
   CatDownloadJson,
@@ -98,6 +100,7 @@ export const CatenaryPlugin: Plugin = {
       Card: CatCard,
       Checkbox: CatCheckbox,
       CheckboxGroup: CatCheckboxGroup,
+      Collapse: CatCollapse,
       Datepicker: CatDatepicker,
       DownloadCsv: CatDownloadCsv,
       DownloadJson: CatDownloadJson,
@@ -145,6 +148,7 @@ declare module 'vue' {
     CatCard: typeof CatCard
     CatCheckbox: typeof CatCheckbox
     CatCheckboxGroup: typeof CatCheckboxGroup
+    CatCollapse: typeof CatCollapse
     CatDatepicker: typeof CatDatepicker
     CatDownloadCsv: typeof CatDownloadCsv
     CatDownloadJson: typeof CatDownloadJson

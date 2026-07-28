@@ -1,43 +1,66 @@
 <template>
   <div class="card cat-card" :class="{ 'cat-card--panel': variant === 'panel' }">
-    <!-- Expandable header has role="button" + tabindex + keyboard handlers
-         via dynamic binds (rule can't see those statically). -->
-    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
+    <!-- `expandable` must be part of this condition: the trigger lives in the
+         header, so without it an expandable card with no label, #header or
+         #actions would render no trigger at all while still hiding its content
+         behind `isOpen` — permanently invisible with no way to open it. -->
     <header
-      v-if="label || $slots.header || $slots.actions"
+      v-if="label || expandable || $slots.header || $slots.actions"
       class="card-header"
-      :class="{ 'is-clickable': expandable }"
-      :role="expandable ? 'button' : undefined"
-      :aria-expanded="expandable ? isOpen : undefined"
-      :tabindex="expandable ? 0 : undefined"
-      @click="expandable && toggle()"
-      @keydown.enter="expandable && toggle()"
-      @keydown.space.prevent="expandable && toggle()"
     >
-      <slot name="header">
+      <!-- When expandable the header content becomes a real <button> carrying
+           the disclosure semantics, rather than role="button" on this <header>.
+           The chevron is a plain <span> inside that button, not the nested
+           <button> it used to be — a control inside a control is invalid and
+           needed @click.stop to work at all. Interactive header content belongs
+           in #actions, which renders as a sibling of the trigger.
+
+           The default title is a <span> here, not the <p> used below: a button's
+           content model is phrasing content, and <p> is flow content, so a
+           paragraph inside the button would be invalid HTML. Bulma's
+           .card-header-title sets its own `display`, so a span renders
+           identically. Anything a consumer puts in #header lands inside this
+           button too, so it must be phrasing content as well.
+
+           Non-expandable cards render exactly as before, with no extra wrapper,
+           so the far more common plain-card markup is untouched. -->
+      <button
+        v-if="expandable"
+        class="cat-card-trigger"
+        :aria-label="triggerAriaLabel"
+        v-bind="triggerAttrs"
+        @click="toggle"
+      >
+        <!-- Flex lives on this span, not the <button>: Safari stops honouring a
+             button's children-presentational semantics when the button is itself
+             a flex container, leaking its contents into the accessibility tree
+             as a trailing "group". -->
+        <span class="cat-card-trigger-inner">
+          <slot name="header">
+            <span v-if="label" class="card-header-title">
+              {{ label }}
+            </span>
+          </slot>
+          <span class="card-header-icon">
+            <cat-icon
+              :icon="icon"
+              class="cat-expand-icon"
+              :class="{ 'is-rotated': !isOpen }"
+            />
+          </span>
+        </span>
+      </button>
+      <slot v-else name="header">
         <p v-if="label" class="card-header-title">
           {{ label }}
         </p>
       </slot>
-      <div v-if="$slots.actions" class="card-header-actions" @click.stop>
+      <div v-if="$slots.actions" class="card-header-actions">
         <slot name="actions" />
       </div>
-      <button
-        v-if="expandable"
-        type="button"
-        class="card-header-icon"
-        :aria-label="isOpen ? 'Collapse' : 'Expand'"
-        @click.stop="toggle()"
-      >
-        <cat-icon
-          :icon="icon"
-          class="cat-expand-icon"
-          :class="{ 'is-rotated': !isOpen }"
-        />
-      </button>
     </header>
     <Transition name="cat-expand">
-      <div v-show="!expandable || isOpen">
+      <div v-show="!expandable || isOpen" v-bind="expandable ? contentAttrs : {}">
         <div class="card-content">
           <slot />
         </div>
@@ -50,8 +73,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { computed, useSlots } from 'vue'
 import CatIcon from './icon.vue'
+import { useDisclosure } from '../util/disclosure'
 
 /**
  * Card component - a flexible content container.
@@ -95,6 +119,13 @@ interface Props {
    * @default 'chevron-down'
    */
   icon?: string
+
+  /**
+   * Accessible name for the expandable trigger. Only needed when neither
+   * `label` nor a #header slot supplies visible text — otherwise the name comes
+   * from the header content, which is preferable.
+   */
+  ariaLabel?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -102,39 +133,79 @@ const props = withDefaults(defineProps<Props>(), {
   variant: undefined,
   expandable: false,
   open: false,
-  icon: 'chevron-down'
+  icon: 'chevron-down',
+  ariaLabel: undefined
 })
 
 const emit = defineEmits<{
   'update:open': [value: boolean]
 }>()
 
-// Use internal state that syncs with prop for proper v-model support
-const internalOpen = ref(props.open)
+const slots = useSlots()
 
-// Sync internal state when prop changes
-watch(() => props.open, (value) => {
-  internalOpen.value = value
+// The trigger's accessible name normally comes from its visible text — `label`
+// or the #header slot. With neither (a bare `<cat-card expandable>`, which now
+// renders a trigger) the button would hold only an aria-hidden chevron and go
+// unnamed (WCAG 4.1.2). Fall back to a generic name; `ariaLabel` overrides it.
+const triggerAriaLabel = computed(() => {
+  if (props.ariaLabel) {
+    return props.ariaLabel
+  }
+  return slots.header || props.label ? undefined : 'Toggle card'
 })
 
-// Computed to read current state
-const isOpen = computed(() => internalOpen.value)
-
-function toggle () {
-  internalOpen.value = !internalOpen.value
-  emit('update:open', internalOpen.value)
-}
+// Disclosure state and ARIA wiring, shared with cat-collapse and cat-msg.
+const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({
+  open: () => props.open,
+  idPrefix: 'cat-card',
+  onChange: (value: boolean) => emit('update:open', value)
+})
 </script>
 
 <style lang="scss" scoped>
+@use "bulma/sass/utilities/derived-variables" as *;
+
 .cat-card {
-  .card-header.is-clickable {
+  // `card-header` is display:flex in Bulma, so the trigger takes the free space
+  // and reproduces the title/icon layout the header used to provide directly.
+  .cat-card-trigger {
+    flex: 1 1 auto;
+    // Stretch to the header's full height so the hover highlight reads as a
+    // deliberate block rather than a part-height patch. The highlight covers
+    // exactly the clickable region and stops where #actions begins, which is
+    // honest: those controls are siblings of the trigger and do not toggle.
+    align-self: stretch;
+    // `display: block`, deliberately not flex — see the template comment.
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
     cursor: pointer;
     user-select: none;
 
     &:hover {
       background-color: var(--bulma-scheme-main-bis, #fafafa);
     }
+
+    // Inset the outline: the trigger stretches to the header's edges, so a
+    // positive offset would be clipped by the card's overflow.
+    &:focus-visible {
+      outline: 2px solid $link;
+      outline-offset: -2px;
+    }
+  }
+
+  .cat-card-trigger-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
+    min-width: 0;
   }
 
   .card-header-actions {

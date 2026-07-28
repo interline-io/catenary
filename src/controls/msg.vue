@@ -1,57 +1,75 @@
 <template>
   <article :class="msgClass">
-    <!-- When expandable, the header acts as a toggle: keyboard + tabindex
-         live on the dynamic role binding the static rule can't see. -->
-    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
     <div
       v-if="title || expandable || closable"
       class="message-header"
-      :class="{ 'is-clickable': expandable }"
-      :role="expandable ? 'button' : undefined"
-      :tabindex="expandable ? 0 : undefined"
-      :aria-expanded="expandable ? isOpen : undefined"
-      @click="expandable && toggle()"
-      @keydown.enter.self="expandable && toggle()"
-      @keydown.space.self.prevent="expandable && toggle()"
     >
-      <span>{{ title || defaultTitle }}</span>
-      <cat-icon
+      <!-- When expandable the title becomes a real <button> carrying the
+           disclosure semantics, rather than role="button" on this header div.
+           That matters most when `closable` is also set: the delete button is a
+           sibling of the trigger, not nested inside it, so there is no invalid
+           nested control and no need for `.self` key modifiers to stop the
+           header swallowing Space meant for the close button. -->
+      <button
         v-if="expandable"
-        :icon="isOpen ? 'chevron-up' : 'chevron-down'"
-        class="cat-expand-icon"
-      />
+        class="cat-msg-trigger"
+        v-bind="triggerAttrs"
+        @click="toggle"
+      >
+        <!-- Flex lives on this span, not the <button>: Safari stops honouring a
+             button's children-presentational semantics when the button is itself
+             a flex container, leaking its contents into the accessibility tree
+             as a trailing "group". -->
+        <span class="cat-msg-trigger-inner">
+          <span>{{ title || defaultTitle }}</span>
+          <cat-icon
+            :icon="isOpen ? 'chevron-up' : 'chevron-down'"
+            class="cat-expand-icon"
+          />
+        </span>
+      </button>
+      <span v-else>{{ title || defaultTitle }}</span>
       <button
         v-if="closable"
+        type="button"
         class="delete"
-        aria-label="delete"
-        @click.stop="handleClose"
+        :aria-label="ariaCloseLabel"
+        @click="handleClose"
       />
     </div>
+    <!-- `message-body` is the element itself, not wrapped in one: Bulma styles
+         `.message-header + .message-body` to drop the accent border and square
+         the top corners so the body sits flush under the header. A wrapper div
+         between them breaks that adjacency, leaving every titled message with a
+         stray left stripe and rounded top. Keeping this as a direct sibling gets
+         Bulma's own defaults with no CSS of our own.
+
+         v-show, not v-if: the trigger's `aria-controls` points here, and
+         removing the element while collapsed would leave that reference
+         dangling. `display: none` keeps the reference valid while still taking
+         the subtree out of the accessibility tree and the tab order. -->
     <div
-      v-if="!expandable || isOpen"
-      :class="expandable ? 'cat-expandable-content' : ''"
+      v-show="!expandable || isOpen"
+      class="message-body"
+      :class="{ 'media': hasIcon, 'cat-expandable-content': expandable }"
+      v-bind="expandable ? contentAttrs : {}"
     >
       <template v-if="hasIcon">
-        <div class="media message-body">
-          <cat-icon :icon="getIcon" :size="iconSize" class="media-left" />
-          <div class="media-content">
-            <slot />
-          </div>
-        </div>
-      </template>
-      <template v-else>
-        <div class="message-body">
+        <cat-icon :icon="getIcon" :size="iconSize" class="media-left" />
+        <div class="media-content">
           <slot />
         </div>
       </template>
+      <slot v-else />
     </div>
   </article>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 import type { MsgVariant } from './types'
 import CatIcon from './icon.vue'
+import { useDisclosure } from '../util/disclosure'
 
 // TypeScript types and interfaces
 type MessageVariant = MsgVariant | 'error'
@@ -66,6 +84,11 @@ const props = withDefaults(defineProps<{
   open?: boolean
   closable?: boolean
   defaultTitle?: string
+  /**
+   * Accessible name for the dismiss button when `closable` is set. Matches
+   * `cat-notification`'s `ariaCloseLabel`.
+   */
+  ariaCloseLabel?: string
 }>(), {
   variant: 'light',
   title: null,
@@ -75,7 +98,8 @@ const props = withDefaults(defineProps<{
   expandable: false,
   open: false,
   closable: false,
-  defaultTitle: 'Information'
+  defaultTitle: 'Information',
+  ariaCloseLabel: 'Dismiss message'
 })
 
 // Emits
@@ -84,8 +108,14 @@ const emit = defineEmits<{
   'close': []
 }>()
 
-// Reactive state
-const isOpen = ref<boolean>(props.open)
+// Disclosure state and ARIA wiring, shared with cat-collapse and cat-card.
+// Note `close` on this component means "the message was dismissed", not "the
+// body collapsed", so only `update:open` is forwarded here.
+const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({
+  open: () => props.open,
+  idPrefix: 'cat-msg',
+  onChange: (value: boolean) => emit('update:open', value)
+})
 
 // Computed properties
 const getIcon = computed<string>(() => {
@@ -110,37 +140,48 @@ const msgClass = computed<string>(() => {
   return 'message cat-message mb-4'
 })
 
-// Watchers
-watch(() => props.open, (newVal: boolean) => {
-  isOpen.value = newVal
-}, { immediate: true })
-
-// Methods
-const toggle = (): void => {
-  isOpen.value = !isOpen.value
-  emit('update:open', isOpen.value)
-}
-
 const handleClose = (): void => {
   emit('close')
 }
 </script>
 
 <style scoped lang="scss">
-@use "bulma/sass/utilities/initial-variables" as *;
-@use "bulma/sass/utilities/derived-variables" as *;
-
 .cat-message {
-  .message-header.is-clickable {
+  // The trigger is a real button now, so it needs the header's own typography
+  // and layout reset back onto it rather than inheriting Bulma's button styles.
+  .cat-msg-trigger {
+    flex: 1 1 auto;
+    display: block;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: left;
     cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    transition: background-color 0.2s ease;
+    transition: opacity 0.2s ease;
 
     &:hover {
       opacity: 0.8;
     }
+
+    // `currentcolor`, not Bulma's $link as in cat-collapse and cat-card: a
+    // message header is tinted by its variant (danger, dark, …), and a fixed
+    // link-blue ring can disappear against those backgrounds. Inheriting the
+    // header's own text colour keeps the ring visible on every variant.
+    &:focus-visible {
+      outline: 2px solid currentcolor;
+      outline-offset: 2px;
+    }
+  }
+
+  .cat-msg-trigger-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    width: 100%;
   }
 
   .cat-expand-icon {
@@ -149,6 +190,14 @@ const handleClose = (): void => {
 
   .cat-expandable-content {
     transition: all 0.2s ease;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cat-msg-trigger,
+    .cat-expand-icon,
+    .cat-expandable-content {
+      transition: none;
+    }
   }
 }
 </style>
