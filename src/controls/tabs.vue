@@ -229,8 +229,10 @@ watch(() => props.modelValue, () => {
 </script>
 
 <style lang="scss">
-@use "bulma/sass/utilities/initial-variables" as *;
-@use "bulma/sass/utilities/derived-variables" as *;
+/* Colors come from Bulma's runtime theme tokens, not SCSS variables: those
+   resolve at compile time and would keep their light-theme values when
+   cat-theme-toggle switches the scheme, which is what made the tab labels
+   unreadable in dark mode. */
 
 /* Override .content ul styles for tabs - must be unscoped */
 .content .cat-tabs ul {
@@ -256,10 +258,10 @@ watch(() => props.modelValue, () => {
   appearance: none;
   background: transparent;
   border: 1px solid transparent;
-  border-bottom-color: $border;
+  border-bottom-color: var(--bulma-border);
   margin-bottom: -1px;
   padding: 0.5em 1em;
-  color: $text;
+  color: var(--bulma-text);
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -268,17 +270,17 @@ watch(() => props.modelValue, () => {
   line-height: 1.5;
 
   &:hover {
-    color: $text-strong;
-    border-bottom-color: $text-strong;
+    color: var(--bulma-text-strong);
+    border-bottom-color: var(--bulma-text-strong);
   }
 
   &.is-active {
-    color: $link;
-    border-bottom-color: $link;
+    color: var(--bulma-link-on-scheme);
+    border-bottom-color: var(--bulma-link-on-scheme);
   }
 
   &:focus-visible {
-    outline: 2px solid $link;
+    outline: 2px solid var(--bulma-link-on-scheme);
     outline-offset: -2px;
   }
 }
@@ -288,26 +290,26 @@ watch(() => props.modelValue, () => {
   border-radius: 4px 4px 0 0;
 
   &:hover {
-    background-color: $background;
-    border-color: $border;
+    background-color: var(--bulma-background);
+    border-color: var(--bulma-border);
   }
 
   &.is-active {
-    background-color: $scheme-main;
-    border-color: $border;
+    background-color: var(--bulma-scheme-main);
+    border-color: var(--bulma-border);
     border-bottom-color: transparent;
   }
 }
 
 .cat-tabs.is-toggle .cat-tablist {
   .cat-tab {
-    border-color: $border;
+    border-color: var(--bulma-border);
     margin-bottom: 0;
 
     &.is-active {
-      background-color: $link;
-      border-color: $link;
-      color: $white;
+      background-color: var(--bulma-link);
+      border-color: var(--bulma-link);
+      color: var(--bulma-link-invert);
       z-index: 1;
     }
   }
@@ -339,28 +341,28 @@ watch(() => props.modelValue, () => {
 
 .cat-tabs.is-vertical .cat-tab {
   border-bottom-color: transparent;
-  border-right: 1px solid $border;
+  border-right: 1px solid var(--bulma-border);
   margin-bottom: 0;
   margin-right: -1px;
   justify-content: flex-start;
 
   &:hover {
     border-bottom-color: transparent;
-    border-right-color: $text-strong;
+    border-right-color: var(--bulma-text-strong);
   }
 
   &.is-active {
     border-bottom-color: transparent;
-    border-right-color: $link;
+    border-right-color: var(--bulma-link-on-scheme);
   }
 }
 
 .cat-tabs.is-vertical.is-toggle .cat-tablist {
   .cat-tab {
-    border-color: $border;
+    border-color: var(--bulma-border);
     margin-right: 0;
 
-    &.is-active { border-color: $link; }
+    &.is-active { border-color: var(--bulma-link-on-scheme); }
   }
 
   .cat-tab + .cat-tab { margin-left: 0; margin-top: -1px; }

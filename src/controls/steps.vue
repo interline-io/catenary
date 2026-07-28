@@ -410,10 +410,10 @@ defineExpose({
 
 // Bulma has no steps component, so the whole thing is cat- prefixed CSS. Color
 // comes from Bulma's runtime theme tokens rather than SCSS variables because
-// the marker fills, labels and connector lines all have to follow the light /
-// dark scheme that cat-theme-toggle switches at runtime; SCSS variables would
-// bake in the light palette. The focus ring keeps $link, matching the rest of
-// the library.
+// the marker fills, labels, connector lines and focus ring all have to follow
+// the light / dark scheme that cat-theme-toggle switches at runtime; SCSS
+// variables would bake in the light palette. Sizing stays on SCSS variables,
+// which have no theme dimension.
 
 $cat-step-marker-sizes: (
   "small": 1.5rem,
@@ -485,7 +485,7 @@ button.cat-step-trigger {
   }
 
   &:focus-visible {
-    outline: 2px solid $link;
+    outline: 2px solid var(--bulma-link-on-scheme);
     outline-offset: 2px;
     border-radius: 4px;
   }

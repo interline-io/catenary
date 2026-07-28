@@ -140,13 +140,11 @@ const animated = computed(() => steps?.animated.value ?? false)
 </script>
 
 <style lang="scss" scoped>
-@use "bulma/sass/utilities/derived-variables" as *;
-
 // Programmatic focus lands here after a step change. Browsers do not paint a
 // focus ring for that on their own, and a keyboard user who just pressed Next
 // should be able to see where focus went.
 .cat-step-panel:focus-visible {
-  outline: 2px solid $link;
+  outline: 2px solid var(--bulma-link-on-scheme);
   outline-offset: 4px;
 }
 

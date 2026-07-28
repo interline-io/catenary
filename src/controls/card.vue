@@ -163,8 +163,6 @@ const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({
 </script>
 
 <style lang="scss" scoped>
-@use "bulma/sass/utilities/derived-variables" as *;
-
 .cat-card {
   // `card-header` is display:flex in Bulma, so the trigger takes the free space
   // and reproduces the title/icon layout the header used to provide directly.
@@ -188,13 +186,13 @@ const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({
     user-select: none;
 
     &:hover {
-      background-color: var(--bulma-scheme-main-bis, #fafafa);
+      background-color: var(--bulma-scheme-main-bis);
     }
 
     // Inset the outline: the trigger stretches to the header's edges, so a
     // positive offset would be clipped by the card's overflow.
     &:focus-visible {
-      outline: 2px solid $link;
+      outline: 2px solid var(--bulma-link-on-scheme);
       outline-offset: -2px;
     }
   }

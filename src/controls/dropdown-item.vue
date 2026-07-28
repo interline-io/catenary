@@ -109,9 +109,6 @@ function handleClick (event: MouseEvent) {
 </script>
 
 <style lang="scss" scoped>
-@use "bulma/sass/utilities/initial-variables" as *;
-@use "bulma/sass/utilities/derived-variables" as *;
-
 .dropdown-item {
   display: flex;
   align-items: center;
@@ -126,7 +123,7 @@ function handleClick (event: MouseEvent) {
 }
 
 .dropdown-item:focus-visible {
-  outline: 2px solid $link;
+  outline: 2px solid var(--bulma-link-on-scheme);
   outline-offset: -2px;
 }
 
@@ -149,7 +146,7 @@ function handleClick (event: MouseEvent) {
   top: 0;
   bottom: 0;
   width: 2px;
-  background-color: $border;
+  background-color: var(--bulma-border);
 }
 
 /* Horizontal branch connecting to the vertical trunk line */
@@ -160,7 +157,7 @@ function handleClick (event: MouseEvent) {
   top: 50%;
   width: 0.5rem;
   height: 2px;
-  background-color: $border;
+  background-color: var(--bulma-border);
   transform: translateY(-50%);
 }
 </style>

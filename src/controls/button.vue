@@ -262,7 +262,7 @@ const iconSize = computed((): 'small' | 'medium' | 'large' | undefined => {
  * focus does.
  */
 .button:focus-visible {
-  outline: 2px solid $black;
+  outline: 2px solid var(--bulma-text-strong);
   outline-offset: 2px;
   // Bulma's box-shadow focus ring stays for the "soft" look on light variants.
 }
@@ -270,7 +270,7 @@ const iconSize = computed((): 'small' | 'medium' | 'large' | undefined => {
 // Variants with dark backgrounds need a light outline instead.
 @each $name in (primary, link, info, success, warning, danger, dark) {
   .button.is-#{$name}:not(.is-outlined):not(.is-inverted):focus-visible {
-    outline-color: $white;
+    outline-color: var(--bulma-white);
   }
 }
 </style>

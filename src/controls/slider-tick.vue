@@ -40,7 +40,7 @@ function handleClick () {
   text-align: center;
   white-space: nowrap;
   font-size: $size-small;
-  color: $grey;
+  color: var(--bulma-text-weak);
 }
 
 button.cat-slider-tick {
@@ -54,11 +54,11 @@ button.cat-slider-tick {
     user-select: none;
 
     &:hover {
-      color: $link;
+      color: var(--bulma-link-on-scheme);
     }
 
     &:focus-visible {
-      outline: 2px solid $link;
+      outline: 2px solid var(--bulma-link-on-scheme);
       outline-offset: 2px;
     }
   }
