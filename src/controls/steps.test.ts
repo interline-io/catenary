@@ -121,7 +121,19 @@ describe('cat-steps navigation by marker', () => {
     const { wrapper } = await mountSteps({}, 'two')
     const triggers = wrapper.findAll('.cat-step-trigger')
     expect(triggers.map(t => t.element.tagName)).toEqual(['BUTTON', 'BUTTON', 'BUTTON'])
-    expect(triggers.map(t => t.attributes('aria-disabled'))).toEqual([undefined, 'true', 'true'])
+    // The current step is not aria-disabled even though activating it does
+    // nothing: "unavailable" is the wrong word for where the user already is,
+    // and aria-current already says what it is.
+    expect(triggers.map(t => t.attributes('aria-disabled'))).toEqual([undefined, undefined, 'true'])
+    expect(triggers[1]?.attributes('aria-current')).toBe('step')
+    wrapper.unmount()
+  })
+
+  it('does nothing when the current step is activated', async () => {
+    const { wrapper, active } = await mountSteps({}, 'two')
+    await wrapper.findAll('.cat-step-trigger')[1]?.trigger('click')
+    expect(active.value).toBe('two')
+    expect(wrapper.findAll('li.cat-step')[1]?.classes()).toContain('is-current')
     wrapper.unmount()
   })
 

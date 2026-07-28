@@ -302,7 +302,10 @@
               They stay focusable, so a keyboard user can read ahead through the
               steps instead of tabbing past a gap, and the element type never
               changes as the user advances — swapping a focused button for a
-              span would drop focus to the body mid-wizard.
+              span would drop focus to the body mid-wizard. The current step is
+              exempt: activating it does nothing either, but "unavailable" is
+              the wrong word for where the user already is, and it would blur
+              the one distinction this control exists to draw.
             </li>
             <li>
               <strong>Focus follows the user into the new panel</strong>, but

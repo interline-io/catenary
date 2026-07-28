@@ -26,13 +26,19 @@
              element type then never changes as the user advances (swapping a
              focused <button> for a <span> would drop focus to the body), and
              an aria-disabled button stays focusable, so a keyboard user can
-             read through the steps ahead instead of tabbing past a hole. -->
+             read through the steps ahead instead of tabbing past a hole.
+
+             The current step is exempt. Activating it is a no-op like the
+             others, but "unavailable" is the wrong word for where the user
+             already is, and it would blur the one distinction the whole
+             control exists to draw — done, here, not yet. aria-current says
+             it instead. -->
         <component
           :is="isInteractive(step) ? 'button' : 'span'"
           class="cat-step-trigger"
           :type="isInteractive(step) ? 'button' : undefined"
           :aria-current="index === activeIndex ? 'step' : undefined"
-          :aria-disabled="isInteractive(step) && !isNavigable(step, index) ? 'true' : undefined"
+          :aria-disabled="isInteractive(step) && !isNavigable(step, index) && index !== activeIndex ? 'true' : undefined"
           @click="onTriggerClick(step, index)"
         >
           <!-- Hidden from assistive technology: the number repeats the
