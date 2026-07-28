@@ -418,11 +418,16 @@ describe('cat-steps server rendering', () => {
       ])
     })
     const html = await renderToString(app)
-    const panels = [...html.matchAll(/<div [^>]*class="cat-step-panel"[^>]*>(.*?)<\/div>/g)]
-      // SSR wraps slot content in fragment anchor comments; strip them so the
-      // assertions read as the text the page actually ships.
-      .map(m => ({ hidden: m[0]!.includes('display:none'), text: m[1]!.replace(/<!--.*?-->/g, '') }))
-    return { html, panels }
+    // Parsed rather than pattern-matched. The server markup carries fragment
+    // anchor comments around slot content and may nest elements inside a panel,
+    // neither of which a regex over the string survives — and textContent skips
+    // comment nodes for free.
+    const doc = new DOMParser().parseFromString(html, 'text/html')
+    const panels = [...doc.querySelectorAll<HTMLElement>('.cat-step-panel')].map(el => ({
+      hidden: el.style.display === 'none',
+      text: el.textContent ?? ''
+    }))
+    return { html, doc, panels }
   }
 
   it('renders the active step visible and the rest hidden', async () => {
@@ -445,9 +450,9 @@ describe('cat-steps server rendering', () => {
     // register in onMounted, which never runs during renderToString, so the
     // markers are client-only. Reading the slot's VNodes instead would fix it,
     // and this expectation flips when that lands.
-    const { html } = await renderServerSide('two')
-    expect(html).toContain('class="cat-steps-list"')
-    expect(html).not.toContain('cat-step-marker')
+    const { doc } = await renderServerSide('two')
+    expect(doc.querySelector('.cat-steps-list')).not.toBeNull()
+    expect(doc.querySelectorAll('.cat-step-marker')).toHaveLength(0)
   })
 })
 
