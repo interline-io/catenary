@@ -977,8 +977,10 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
    Also neutralize the rest of the UA `[popover]` rule, which Bulma does not
    override on .dropdown-menu: `border: solid` draws a black box around the
    calendar, `padding: 0.25em` survives on the three sides Bulma leaves alone,
-   and the opaque `background-color: Canvas` shows through the padding-top gap
-   and behind the content's rounded corners. Same reset as cat-dropdown. */
+   the opaque `background-color: Canvas` shows through the padding-top gap and
+   behind the content's rounded corners, and `color: CanvasText` is black
+   regardless of theme because nothing sets a `color-scheme`. Same reset as
+   cat-dropdown. */
 .dropdown-menu[popover] {
   position: fixed;
   margin: 0;
@@ -988,6 +990,7 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
   padding-bottom: 0;
   padding-left: 0;
   background: transparent;
+  color: inherit;
 
   &:not(:popover-open) {
     display: none;

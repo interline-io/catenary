@@ -483,6 +483,11 @@ defineExpose({ open, close, toggle })
        in Bulma; .dropdown-content inside it does. An opaque Canvas backdrop
        therefore shows through the padding-top gap and behind the content's
        rounded corners.
+     - `color: CanvasText` — the one that actually hurts. Bulma sets no
+       `color-scheme`, so system colors resolve light and CanvasText is black
+       whatever the theme. .dropdown-item is `color: inherit`, so in dark mode
+       every item and icon rendered black on Bulma's dark .dropdown-content.
+       Measured: page color rgb(171,177,191), menu color rgb(0,0,0).
    `overflow: auto` is deliberately left alone: a long menu needs to scroll. */
 .dropdown-menu[popover] {
   position: fixed;
@@ -493,6 +498,7 @@ defineExpose({ open, close, toggle })
   padding-bottom: 0;
   padding-left: 0;
   background: transparent;
+  color: inherit;
 
   &:not(:popover-open) {
     display: none;
