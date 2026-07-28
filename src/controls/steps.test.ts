@@ -446,7 +446,7 @@ describe('cat-steps server rendering', () => {
   })
 
   it('leaves the progress list empty until hydration', async () => {
-    // Characterises a known limitation rather than endorsing it: step items
+    // Characterizes a known limitation rather than endorsing it: step items
     // register in onMounted, which never runs during renderToString, so the
     // markers are client-only. Reading the slot's VNodes instead would fix it,
     // and this expectation flips when that lands.

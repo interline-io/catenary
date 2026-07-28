@@ -18,7 +18,7 @@ export interface StepRegistration {
   step?: string
   /** MDI icon name shown in the marker instead of text. */
   icon?: string
-  /** Per-step colour override, e.g. 'danger' for a step that failed. */
+  /** Per-step color override, e.g. 'danger' for a step that failed. */
   variant?: CoreVariant
   /** Explicit override of whether this step's marker can be activated. */
   clickable?: boolean

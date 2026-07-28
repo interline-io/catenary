@@ -129,7 +129,7 @@ import { StepsContextKey, type StepRegistration } from '../util/steps-context'
 // Inlined rather than a named interface: in a generic component the emitted
 // declaration cannot reference a local type (TS4025).
 const props = withDefaults(defineProps<{
-  /** Colour of completed and current markers. @default 'primary' */
+  /** Color of completed and current markers. @default 'primary' */
   variant?: StepsVariant
 
   /** Marker and label scale. @default 'normal' */
@@ -329,7 +329,7 @@ function stepClasses (step: StepRegistration, index: number) {
 const rootClasses = computed(() => [
   `is-${props.orientation}`,
   `is-${props.size}`,
-  // Colours the connector rail. Prefixed because a bare `is-primary` on the
+  // Colors the connector rail. Prefixed because a bare `is-primary` on the
   // root would also match the per-step marker rules.
   `is-variant-${props.variant}`,
   // Vertical steppers put the label beside the marker regardless: below it
@@ -408,7 +408,7 @@ defineExpose({
 @use "bulma/sass/utilities/initial-variables" as *;
 @use "bulma/sass/utilities/derived-variables" as *;
 
-// Bulma has no steps component, so the whole thing is cat- prefixed CSS. Colour
+// Bulma has no steps component, so the whole thing is cat- prefixed CSS. Color
 // comes from Bulma's runtime theme tokens rather than SCSS variables because
 // the marker fills, labels and connector lines all have to follow the light /
 // dark scheme that cat-theme-toggle switches at runtime; SCSS variables would
@@ -450,7 +450,7 @@ $cat-step-label-sizes: (
   padding: 0;
 }
 
-// Connector colour travels through custom properties rather than being set on
+// Connector color travels through custom properties rather than being set on
 // the pseudo-elements directly. The rules that create those pseudo-elements are
 // nested under the layout classes and so outrank any flat `.cat-step.is-primary`
 // rule; setting a property on the step itself sidesteps the specificity race

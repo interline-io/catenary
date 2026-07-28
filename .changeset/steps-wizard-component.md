@@ -17,7 +17,7 @@ A sequence of stages with one panel visible at a time and a progress list showin
 - `variant` and `size` over the core sets, `completed-icon` (default `check`, `null` keeps numbers), `animated` opt-in panel transition suppressed under `prefers-reduced-motion`.
 - Emits `change` with the new and previous values; exposes `previous()`, `next()`, `goTo(value)`.
 
-`cat-step-item` takes `value`, `label`, and optionally `step` (marker text), `icon`, `variant` and `clickable`. Per-item `variant` plus `icon` is how a step that failed gets marked without recolouring the rest.
+`cat-step-item` takes `value`, `label`, and optionally `step` (marker text), `icon`, `variant` and `clickable`. Per-item `variant` plus `icon` is how a step that failed gets marked without recoloring the rest.
 
 ## Accessibility
 

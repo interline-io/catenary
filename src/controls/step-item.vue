@@ -67,7 +67,7 @@ const props = withDefaults(defineProps<{
   icon?: string
 
   /**
-   * Colour override for this step's marker, e.g. 'danger' for one that failed.
+   * Color override for this step's marker, e.g. 'danger' for one that failed.
    * Defaults to the parent's variant.
    */
   variant?: CoreVariant

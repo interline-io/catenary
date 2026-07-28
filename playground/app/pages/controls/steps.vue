@@ -119,7 +119,7 @@
       <demo-box label="A step that failed">
         <p class="content">
           A step carries its own <code>variant</code> and <code>icon</code>, so
-          one that failed can be marked without recolouring the rest. The icon
+          one that failed can be marked without recoloring the rest. The icon
           is decorative — say what happened in the panel, where everyone can
           read it.
         </p>
@@ -270,7 +270,7 @@
         ]"
         :keyboard="[
           { key: 'Tab', description: 'Moves through the step markers, then into the panel content.' },
-          { key: 'Enter / Space', description: 'Activates a reachable step marker. Markers are native buttons, so this is the platform behaviour.' },
+          { key: 'Enter / Space', description: 'Activates a reachable step marker. Markers are native buttons, so this is the platform behavior.' },
         ]"
       >
         <template #intro>
