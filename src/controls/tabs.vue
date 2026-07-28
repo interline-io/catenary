@@ -306,8 +306,8 @@ watch(() => props.modelValue, () => {
 }
 
 .cat-tabs.is-boxed .cat-tab {
-  border: 1px solid transparent;
-  border-radius: 4px 4px 0 0;
+  border-color: transparent;
+  border-radius: var(--bulma-tabs-boxed-link-radius) var(--bulma-tabs-boxed-link-radius) 0 0;
 
   &:hover {
     background-color: var(--bulma-background);
@@ -327,21 +327,26 @@ watch(() => props.modelValue, () => {
   border-bottom: none;
 
   .cat-tab {
-    border-color: var(--bulma-border);
+    border-color: var(--bulma-tabs-toggle-link-border-color);
+    border-style: var(--bulma-tabs-toggle-link-border-style);
+    border-width: var(--bulma-tabs-toggle-link-border-width);
     margin-bottom: 0;
 
     &.is-active {
-      background-color: var(--bulma-link);
-      border-color: var(--bulma-link);
-      color: var(--bulma-link-invert);
+      background-color: var(--bulma-tabs-toggle-link-active-background-color);
+      border-color: var(--bulma-tabs-toggle-link-active-border-color);
+      color: var(--bulma-tabs-toggle-link-active-color);
       z-index: 1;
     }
   }
 
-  .cat-tab + .cat-tab { margin-left: -1px; }
+  // Overlap the shared edge so adjacent buttons draw one border, not two.
+  // Derived from the same token as the border it overlaps, or an override
+  // leaves a seam or a double line.
+  .cat-tab + .cat-tab { margin-left: calc(-1 * var(--bulma-tabs-toggle-link-border-width)); }
 
-  .cat-tab:first-child { border-radius: 4px 0 0 4px; }
-  .cat-tab:last-child { border-radius: 0 4px 4px 0; }
+  .cat-tab:first-child { border-radius: var(--bulma-tabs-toggle-link-radius) 0 0 var(--bulma-tabs-toggle-link-radius); }
+  .cat-tab:last-child { border-radius: 0 var(--bulma-tabs-toggle-link-radius) var(--bulma-tabs-toggle-link-radius) 0; }
 }
 
 .cat-tabs.is-toggle-rounded .cat-tab:first-child { border-radius: 290486px 0 0 290486px; padding-left: 1.25em; }
@@ -393,16 +398,21 @@ watch(() => props.modelValue, () => {
 
 .cat-tabs.is-vertical.is-toggle .cat-tablist {
   .cat-tab {
-    border-color: var(--bulma-border);
+    // The horizontal toggle rules above already set the toggle border tokens;
+    // this only neutralizes the side-rail offset the vertical layout adds.
+    border-color: var(--bulma-tabs-toggle-link-border-color);
     margin-right: 0;
 
-    &.is-active { border-color: var(--bulma-link-on-scheme); }
+    &.is-active { border-color: var(--bulma-tabs-toggle-link-active-border-color); }
   }
 
-  .cat-tab + .cat-tab { margin-left: 0; margin-top: -1px; }
+  .cat-tab + .cat-tab {
+    margin-left: 0;
+    margin-top: calc(-1 * var(--bulma-tabs-toggle-link-border-width));
+  }
 
-  .cat-tab:first-child { border-radius: 4px 4px 0 0; }
-  .cat-tab:last-child { border-radius: 0 0 4px 4px; }
+  .cat-tab:first-child { border-radius: var(--bulma-tabs-toggle-link-radius) var(--bulma-tabs-toggle-link-radius) 0 0; }
+  .cat-tab:last-child { border-radius: 0 0 var(--bulma-tabs-toggle-link-radius) var(--bulma-tabs-toggle-link-radius); }
 }
 
 // Vertical rounding puts the pill ends on top and bottom, so the extra
