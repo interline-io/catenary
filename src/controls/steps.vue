@@ -277,7 +277,14 @@ const activeIndex = computed(() => {
   return i >= 0 ? i : 0
 })
 
-const activeValue = computed(() => steps.value[activeIndex.value]?.value)
+// Falls back to the raw model when nothing has registered yet, which is the
+// state every server render is in: children register in onMounted, and SSR has
+// no second pass. Without the fallback there is no active value on the server,
+// so every panel renders hidden and the page ships with its content behind
+// `display: none`. With it, the active step's content is visible in the HTML
+// and the markers fill in on hydration. The list itself stays empty until then
+// — fixing that means reading the slot instead of waiting for registration.
+const activeValue = computed(() => steps.value[activeIndex.value]?.value ?? model.value)
 
 provide(StepsContextKey, {
   register,

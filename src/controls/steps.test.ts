@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { defineComponent, h, ref } from 'vue'
+import { createSSRApp, defineComponent, h, ref } from 'vue'
+import { renderToString } from 'vue/server-renderer'
 import CatSteps from './steps.vue'
 import CatStepItem from './step-item.vue'
 import { expectNoAxeViolations } from '../testutil/component-helpers'
@@ -404,6 +405,49 @@ describe('cat-steps dynamic step items', () => {
     expect(failed?.classes()).toContain('is-danger')
     expect(failed?.find('.mdi-alert-circle').exists()).toBe(true)
     wrapper.unmount()
+  })
+})
+
+describe('cat-steps server rendering', () => {
+  async function renderServerSide (modelValue?: string) {
+    const app = createSSRApp({
+      render: () => h(CatSteps, { modelValue, ariaLabel: 'Demo' }, () => [
+        h(CatStepItem, { label: 'One', value: 'one' }, () => 'Panel 1'),
+        h(CatStepItem, { label: 'Two', value: 'two' }, () => 'Panel 2'),
+        h(CatStepItem, { label: 'Three', value: 'three' }, () => 'Panel 3')
+      ])
+    })
+    const html = await renderToString(app)
+    const panels = [...html.matchAll(/<div [^>]*class="cat-step-panel"[^>]*>(.*?)<\/div>/g)]
+      // SSR wraps slot content in fragment anchor comments; strip them so the
+      // assertions read as the text the page actually ships.
+      .map(m => ({ hidden: m[0]!.includes('display:none'), text: m[1]!.replace(/<!--.*?-->/g, '') }))
+    return { html, panels }
+  }
+
+  it('renders the active step visible and the rest hidden', async () => {
+    const { panels } = await renderServerSide('two')
+    expect(panels.map(p => p.text)).toEqual(['Panel 1', 'Panel 2', 'Panel 3'])
+    // Without the model fallback in activeValue every panel would be hidden,
+    // shipping the whole component's content behind display:none.
+    expect(panels.map(p => p.hidden)).toEqual([true, false, true])
+  })
+
+  it('hides every panel when no step is selected', async () => {
+    // Nothing has registered on the server, so an unbound stepper has no way to
+    // know which step comes first. Documented limitation of the same gap below.
+    const { panels } = await renderServerSide()
+    expect(panels.map(p => p.hidden)).toEqual([true, true, true])
+  })
+
+  it('leaves the progress list empty until hydration', async () => {
+    // Characterises a known limitation rather than endorsing it: step items
+    // register in onMounted, which never runs during renderToString, so the
+    // markers are client-only. Reading the slot's VNodes instead would fix it,
+    // and this expectation flips when that lands.
+    const { html } = await renderServerSide('two')
+    expect(html).toContain('class="cat-steps-list"')
+    expect(html).not.toContain('cat-step-marker')
   })
 })
 

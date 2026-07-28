@@ -30,3 +30,9 @@ That choice is the substantive difference from Oruga. Tabs are interchangeable v
 - **Focus follows the user into the new panel, but only when the change came from inside the component.** Each panel is a group named by its step's label, so landing there announces which step it is. A change driven from outside — the app advancing after an upload finishes — leaves focus where it is rather than yanking it out of whatever the user was doing.
 - **Inactive panels are hidden with `display: none`**, which takes them out of the accessibility tree and the tab order together. Their fields stay mounted, so stepping back preserves what was typed.
 - The progress list takes `ariaLabel` (default `"Progress"`) or `ariaLabelledby`.
+
+## Server rendering
+
+The active step's panel renders visible on the server, so its content ships in the HTML rather than behind `display: none`. That needs a bound `v-model`: an unbound stepper has no way to know which step comes first until its items register.
+
+The progress list itself is client-only. Step items register in `onMounted`, which never runs during `renderToString`, so the markers appear on hydration — the same limitation `cat-tabs` has. Fixing it means reading the slot's VNodes rather than waiting for registration, which is tracked separately for both components.
