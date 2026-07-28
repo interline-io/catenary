@@ -69,11 +69,21 @@ Catenary is intentionally **Bulma-first**: reach for Bulma helpers/variables bef
 }
 
 .cat-thing:focus-visible {
-  outline: 2px solid var(--bulma-link);
+  outline: 2px solid var(--bulma-link-on-scheme);
 }
 ```
 
-For a color on a filled surface use the matching `-invert` token — `var(--bulma-primary-invert)` on `var(--bulma-primary)` — rather than picking white or black by eye. For a translucent scrim, build it from the scheme's HSL parts: `hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-scheme-main-l), 0.8)`.
+**Not every `--bulma-*` color adapts, and the brand colors are the trap.** The scheme tokens above — `text`, `text-strong`, `text-weak`, `border`, `background`, `scheme-main` — flip with the theme on their own. A brand color does not: Bulma holds its lightness constant across schemes by design, so `var(--bulma-link)` is `rgb(35, 76, 139)` in *both*, and `var(--bulma-primary)` likewise. Which one you want depends on what the color is for:
+
+| Use | Token | Why |
+|---|---|---|
+| Text or an indicator **on the page background** — an active label, an underline, a focus ring | `var(--bulma-link-on-scheme)` | The `-on-scheme` variants are the ones that shift for the background behind them (`rgb(35,77,140)` light, `rgb(89,139,214)` dark) |
+| A **filled surface** — a button, a marker, a selected pill | `var(--bulma-primary)` for the fill, `var(--bulma-primary-invert)` for the text on it | The pair is designed to be legible together, so don't pick white or black by eye |
+| A **translucent scrim** | `hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), var(--bulma-scheme-main-l), 0.8)` | A solid token cannot carry alpha; the scheme's HSL parts can |
+
+Getting this wrong is subtle rather than obvious: converting `cat-tabs` to `var(--bulma-link)` fixed 30 of its 45 dark-mode contrast failures and left 15, because the active-tab color still did not move. Measure the token in both themes rather than assuming the name implies adaptation.
+
+Components generally have their own token set too — `--bulma-tabs-link-active-color`, `--bulma-dropdown-item-color` — which resolve to the right thing *and* let a consumer restyle the component. Prefer those over the generic token when one exists.
 
 **Sizing, spacing, radii, weights and breakpoints do not follow the theme, so keep the SCSS variable:**
 
