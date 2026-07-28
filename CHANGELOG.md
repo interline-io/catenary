@@ -1,5 +1,105 @@
 # @interline-io/catenary
 
+## 0.11.0
+
+### Minor Changes
+
+- [#66](https://github.com/interline-io/catenary/pull/66) [`7081dd9`](https://github.com/interline-io/catenary/commit/7081dd9a575304d30e4f6679ea9d1ded17b70375) Thanks [@drewda](https://github.com/drewda)! - New `cat-steps` / `cat-step-item` stepper ("wizard") components.
+
+  Adds the last widget in [gotransit-editor#397](https://github.com/interline-io/gotransit-editor/issues/397) with no catenary counterpart: `o-steps` / `o-step-item`, the 8 remaining Oruga tags in that audit. The API is close enough to Oruga's for the two wizard flows there to port over, but the accessibility model is not Oruga's — see below.
+
+  ## `cat-steps`
+
+  A sequence of stages with one panel visible at a time and a progress list showing what is done, current and still ahead.
+
+  - `v-model` selects the active step, matched against each item's `value`. Left unbound, the stepper keeps the value itself, so `has-navigation` works with no state of its own.
+  - Steps behind the active one are clickable and those ahead are not, so users can go back but not skip. `clickable` on the parent forces all (`true`) or none (`false`, a read-only progress display with no buttons at all); `clickable` on an item overrides its own step.
+  - `has-navigation` renders Previous/Next buttons below the content, or the `#navigation` slot renders your own from the same state (`previous`, `next`, `goTo`, `hasPrevious`, `hasNext`, `activeIndex`, `count`), typed via `defineSlots`. Without either, navigation is the consumer's — drive `v-model` from buttons in the step content, which is what a wizard whose steps gate on server work needs.
+  - `orientation="vertical"` puts the list beside the panel; `label-position="right"` puts each label next to its marker.
+  - `variant` and `size` over the core sets, `completed-icon` (default `check`, `null` keeps numbers), `animated` opt-in panel transition suppressed under `prefers-reduced-motion`.
+  - Emits `change` with the new and previous values; exposes `previous()`, `next()`, `goTo(value)`.
+
+  `cat-step-item` takes `value`, `label`, and optionally `step` (marker text), `icon`, `variant` and `clickable`. Per-item `variant` plus `icon` is how a step that failed gets marked without recoloring the rest.
+
+  ## Accessibility
+
+  There is no WAI-ARIA Authoring Practices pattern for a stepper. This renders the progress as an `<ol>` with `aria-current="step"` on the active item — the shape used by the GOV.UK, USWDS, Preline and Flowbite step indicators — rather than as a tablist, which is what Oruga and Buefy both use.
+
+  That choice is the substantive difference from Oruga. Tabs are interchangeable views of one thing, reachable in any order, and the pattern's arrow-key model assumes exactly that; steps are a sequence where the order matters, most steps cannot be reached yet, and moving between them is the task rather than a way to look at something else.
+
+  - **Every step's state is announced.** `aria-current="step"` marks the current one, and the others carry visually hidden "Completed" / "Not completed" text — a filled circle and a check glyph say nothing to a screen reader. Both strings are props (`ariaCompletedLabel`, `ariaUpcomingLabel`) for translation.
+  - **Markers that cannot be reached yet are `aria-disabled`, not `disabled`.** They stay focusable, so a keyboard user can read ahead instead of tabbing past a gap, and the element type never changes as the user advances — swapping a focused `<button>` for a `<span>` would drop focus to the body mid-wizard. The current step is exempt: activating it is a no-op like the others, but "unavailable" is the wrong word for where the user already is, and `aria-current` says it better.
+  - **Focus follows the user into the new panel, but only when the change came from inside the component.** Each panel is a group named by its step's label, so landing there announces which step it is. A change driven from outside — the app advancing after an upload finishes — leaves focus where it is rather than yanking it out of whatever the user was doing.
+  - **Inactive panels are hidden with `display: none`**, which takes them out of the accessibility tree and the tab order together. Their fields stay mounted, so stepping back preserves what was typed.
+  - The progress list takes `ariaLabel` (default `"Progress"`) or `ariaLabelledby`.
+
+  ## Server rendering
+
+  The active step's panel renders visible on the server, so its content ships in the HTML rather than behind `display: none`. That needs a bound `v-model`: an unbound stepper has no way to know which step comes first until its items register.
+
+  The progress list itself is client-only. Step items register in `onMounted`, which never runs during `renderToString`, so the markers appear on hydration — the same limitation `cat-tabs` has. Fixing it means reading the slot's VNodes rather than waiting for registration, which is tracked separately for both components.
+
+### Patch Changes
+
+- [#72](https://github.com/interline-io/catenary/pull/72) [`9ea7582`](https://github.com/interline-io/catenary/commit/9ea7582d82fb42b63269c63dbc785596e290b813) Thanks [@drewda](https://github.com/drewda)! - Fix the black box drawn around open `cat-dropdown` menus and `cat-datepicker` calendars.
+
+  Since 0.7.0 moved both popups into the browser top layer, they inherit the user-agent stylesheet's `[popover]` rule. Their existing reset covered `position`, `margin` and `inset` but nothing else, and Bulma overrides none of the rest on `.dropdown-menu`:
+
+  - `border: solid` — a medium `currentColor` border, i.e. a black box around the whole popup. This is the visible symptom.
+  - `padding: 0.25em` — Bulma sets only `padding-top` (the trigger-to-content offset), so the other three sides survived.
+  - `background-color: Canvas` — `.dropdown-menu` has no background of its own in Bulma; `.dropdown-content` inside it does. The opaque backdrop showed through the `padding-top` gap and behind the content's rounded corners.
+  - `color: CanvasText` — **the one that actually hurt**. Nothing in Bulma sets a `color-scheme`, so system colors resolve light and `CanvasText` is black whatever the theme. `.dropdown-item` is `color: inherit`, so in dark mode every menu item and icon rendered black on Bulma's dark `.dropdown-content`. Measured with the page at `rgb(171, 177, 191)`, the menu resolved to `rgb(0, 0, 0)`.
+
+  All three are now reset, matching what `cat-tooltip` already did for its own bubble. `overflow: auto` is deliberately left in place so a long menu can still scroll.
+
+- [#76](https://github.com/interline-io/catenary/pull/76) [`ca2638a`](https://github.com/interline-io/catenary/commit/ca2638a6fd15ffb7adc479bd02c124951e04a44d) Thanks [@drewda](https://github.com/drewda)! - Fix `cat-tabs` rendering no tab-bar rule and no active-tab underline, and center labels under `expanded`.
+
+  `cat-tabs` renders its tablist as `div[role="tablist"]` rather than Bulma's `ul`, so `.tabs ul` never matches and every rule Bulma puts there has to be restated. Two were missing, and they turned out to be the same defect:
+
+  - **The tab bar had no rule of its own.** Nothing drew it.
+  - **Each tab's own bottom border was painted but clipped.** `.cat-tab` keeps Bulma's `margin-bottom: -1px`, which exists to overlap the bar's line. With no line to overlap, the tablist resolved 1px shorter than its buttons and `.tabs` — `overflow: hidden` in Bulma 1.0.4 — clipped every tab's border. Measured before the fix: tabs 41px, tablist 41px, tab 42px, tab `border-bottom-width` 1px.
+
+  Giving `.cat-tablist` what Bulma gives `.tabs ul` restores both in one change. Neither was a recent regression — `tabs.vue` was byte-identical from 0.5.0 to 0.10.0.
+
+  Separately, `.cat-tab` was missing the `justify-content: center` that Bulma's `.tabs a` carries, so `expanded` grew the tabs but left their labels left-aligned.
+
+  ## Visible changes
+
+  - **Default tabs** gain the full-width rule and the active-tab underline they should always have had.
+  - **`is-boxed` changes appearance**, in the right direction: it sets `border-bottom-color: transparent` on the active tab precisely so the bar's line shows through the gap, and that line did not previously exist.
+  - **`expanded` tabs** center their labels.
+  - **`is-vertical`** gains the continuous right-hand rail its active-tab styling already implied, and does not draw a bottom one. Bulma has no vertical tabs to mirror, so this applies the same reasoning to the axis the orientation uses.
+  - **`is-toggle`** is unchanged: it explicitly suppresses the tablist border, as Bulma does on `.tabs.is-toggle ul`.
+
+  ## Tokens
+
+  Values now come from the `--bulma-tabs-*` custom properties (`--bulma-tabs-border-bottom-color`, `--bulma-tabs-link-active-color`, `--bulma-tabs-link-padding` and friends) rather than hardcoded equivalents, so a consumer overriding them on `.tabs` gets what they asked for. The resolved colors are unchanged from the previous release, and both themes measure clean under axe-core.
+
+- [#74](https://github.com/interline-io/catenary/pull/74) [`41abd74`](https://github.com/interline-io/catenary/commit/41abd74c3678bbd5d790cd2e709ebb7470249628) Thanks [@drewda](https://github.com/drewda)! - Fix dark-mode contrast failures by taking colors from Bulma's runtime theme tokens instead of compile-time SCSS variables.
+
+  Bulma 1.x switches light/dark by reassigning CSS custom properties. SCSS variables resolve at build time, so anything colored from them kept its light-theme value on a dark background. Measured with axe-core against the playground with `data-theme="dark"`:
+
+  - **`cat-tabs`: 45 color-contrast violations, now 0.** Inactive tab labels were `[#404654](https://github.com/interline-io/catenary/issues/404654)` on `#14161a` — **1.91:1**, effectively unreadable. Active labels were at 3.51:1.
+  - **`cat-loading`: the scrim was `rgba($white, 0.8)`** — a white veil over dark content. It is now built from the scheme's own HSL parts, so it dims rather than flashes.
+  - **`cat-table`: the sortable-header hover** painted a near-white block.
+  - **`cat-dropdown-item`** dividers and **`cat-slider-tick`** labels used fixed greys.
+  - **`cat-datepicker`: the calendar grid was white on a dark page.** Its day cells were painted with `var(--bulma-white)` and `var(--bulma-grey-*)`, which are palette constants rather than theme tokens — the same value in both schemes — while the day numbers used `var(--bulma-text)`, which does adapt. The result was light-grey text on white: **1.9:1**, now 8.43:1.
+  - **`cat-card`** dropped a `#fafafa` hex fallback, which the amended rule prohibits.
+
+  Focus rings across `cat-button`, `cat-card`, `cat-collapse`, `cat-datepicker`, `cat-dropdown-item`, `cat-input`, `cat-safelink`, `cat-slider-tick`, `cat-steps`, `cat-step-item`, `cat-table` and `cat-tabs` moved to `var(--bulma-link-on-scheme)`. They were not failing — a focus indicator is judged against WCAG 1.4.11's 3:1, which they met — but they were the wrong blue in dark mode.
+
+  ## Visible change worth knowing about
+
+  Text and indicators tinted by a variant now use Bulma's `-on-scheme` tokens, which are the ones that actually adapt: `--bulma-link` resolves to the same value in both schemes, while `--bulma-link-on-scheme` shifts for the background it sits on.
+
+  A side effect is that these components now follow **your** palette. Previously the compiled SCSS default won regardless of what an app configured, so an app overriding `$link` saw Bulma's stock blue in its tabs and focus rings anyway. Those now render in the configured color. If your app overrides Bulma colors, expect tabs, focus rings and slider tick labels to change appearance — to the color you asked for.
+
+  `var(--bulma-white)` is left in place where it is correct: the checkbox tick and the switch knob sit on a variant-colored fill, and `cat-slider`'s value bubble is always dark. Those are theme-independent surfaces, unlike the calendar grid.
+
+  Colors that are deliberately theme-independent were left alone: `cat-tooltip`'s bubble is always dark, so white text on it is correct in both schemes, and it now says so in a comment.
+
+  `.claude/CLAUDE.md` has been amended to match — runtime tokens for color, SCSS variables for sizing, spacing, radii and breakpoints, and never a hex fallback.
+
 ## 0.10.0
 
 ### Minor Changes
