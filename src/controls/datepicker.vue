@@ -1037,12 +1037,16 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
   display: flex;
 }
 
+// Theme tokens, not palette constants: --bulma-white and the --bulma-grey-*
+// shades hold the same value in both schemes, so the calendar drew a white
+// grid on a dark page while its text followed the theme and went light —
+// measured at 1.9:1 in dark mode.
 .cat-datepicker-day {
   flex: 1;
   aspect-ratio: 1;
-  border: 1px solid var(--bulma-grey-lighter);
+  border: 1px solid var(--bulma-border);
   border-radius: var(--bulma-radius);
-  background: var(--bulma-white);
+  background: var(--bulma-scheme-main);
   color: var(--bulma-text);
   font-size: var(--bulma-size-normal);
   cursor: pointer;
@@ -1052,8 +1056,8 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
   justify-content: center;
 
   &:hover:not(:disabled) {
-    background: var(--bulma-grey-lighter);
-    border-color: var(--bulma-grey-light);
+    background: var(--bulma-background);
+    border-color: var(--bulma-border-weak);
   }
 
   &.is-today {
@@ -1063,7 +1067,7 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
 
   &.is-selected {
     background: var(--bulma-primary);
-    color: var(--bulma-white);
+    color: var(--bulma-primary-invert);
     border-color: var(--bulma-primary);
 
     &:hover {
@@ -1072,18 +1076,18 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
   }
 
   &.is-other-month {
-    color: var(--bulma-grey-light);
+    color: var(--bulma-text-weak);
   }
 
   &.is-unselectable,
   &:disabled {
-    color: var(--bulma-grey-lighter);
+    color: var(--bulma-text-weak);
     cursor: not-allowed;
     opacity: 0.5;
 
     &:hover {
-      background: var(--bulma-white);
-      border-color: var(--bulma-grey-lighter);
+      background: var(--bulma-scheme-main);
+      border-color: var(--bulma-border);
     }
   }
 }
@@ -1091,6 +1095,6 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
 .cat-datepicker-footer {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid var(--bulma-grey-lighter);
+  border-top: 1px solid var(--bulma-border);
 }
 </style>

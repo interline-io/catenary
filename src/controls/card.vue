@@ -186,7 +186,7 @@ const { isOpen, triggerAttrs, contentAttrs, toggle } = useDisclosure({
     user-select: none;
 
     &:hover {
-      background-color: var(--bulma-scheme-main-bis, #fafafa);
+      background-color: var(--bulma-scheme-main-bis);
     }
 
     // Inset the outline: the trigger stretches to the header's edges, so a
