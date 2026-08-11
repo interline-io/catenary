@@ -316,6 +316,7 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 @use "bulma/sass/utilities/initial-variables" as *;
 @use "bulma/sass/utilities/derived-variables" as *;
+@use "bulma/sass/utilities/mixins" as mx;
 
 .cat-modal {
   .modal-card {
@@ -339,6 +340,32 @@ onBeforeUnmount(() => {
       height: calc(100vh - 40px);
       max-height: calc(100vh - 40px);
       margin: 20px;
+
+      // Below Bulma's mobile ceiling the inset stops reading as a frame and
+      // starts eating the content, so full screen means the whole screen.
+      //
+      // Measured at 600px, the margin, the 90vw cap and 2rem of body padding
+      // between them took a third of the width. Square corners because a radius
+      // only reads against a backdrop there is no longer any of, and the padding
+      // halved because on a phone it is width the content wants rather than
+      // margin — both off Bulma's own custom properties, which inherit into the
+      // head and body, rather than selectors reaching into them.
+      @include mx.mobile {
+        --bulma-modal-card-head-radius: 0;
+        --bulma-modal-card-foot-radius: 0;
+        --bulma-modal-card-head-padding: 1rem;
+        --bulma-modal-card-body-padding: 1rem;
+
+        width: 100vw;
+        max-width: 100vw;
+        margin: 0;
+        // dvh so the browser's own chrome sliding in and out does not leave the
+        // dialog taller than the screen; vh first for anything that lacks it.
+        height: 100vh;
+        height: 100dvh;
+        max-height: 100vh;
+        max-height: 100dvh;
+      }
     }
   }
 
