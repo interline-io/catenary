@@ -45,9 +45,14 @@
           :aria-labelledby="bodyOverflows && hasTitle ? titleId : undefined"
           :aria-label="bodyOverflows && !hasTitle ? effectiveAriaLabel : undefined"
         >
-          <div v-if="modelValue" ref="bodyContentRef" tabindex="-1">
+          <!-- Takes the body's remaining height rather than its content's, so a
+               definite height reaches whatever is slotted in. Content that does
+               not ask for it is unaffected — it lays out at the top as before and
+               overflows the body the same way — but content that wants to scroll
+               inside the dialog, and to stick a header while it does, now has
+               something to size against. -->
+          <div v-if="modelValue" ref="bodyContentRef" tabindex="-1" class="cat-modal-body-content">
             <slot :close="close" />
-            <br>
           </div>
         </section>
         <footer v-if="$slots.footer" class="modal-card-foot">
@@ -372,5 +377,30 @@ onBeforeUnmount(() => {
   .modal-card-foot {
     justify-content: flex-end;
   }
+}
+
+// The body lays its content out as a column and the wrapper takes what is left,
+// so the slot is handed a height instead of making one. min-height is what lets
+// the wrapper shrink below its content — a flex item refuses to by default, and
+// the definite height never arrives.
+//
+// Slotted content that ignores this is unchanged: it sits at the top and, when
+// taller than the dialog, still overflows into the body's own scroll. Content
+// that opts in — `flex: 1; min-height: 0` down to its own scroll box — scrolls
+// within the dialog instead, and can stick a header to the top of it.
+//
+// Note for anything that does: the body's scroll-region wiring above keys off the
+// body overflowing, which it no longer does once the content scrolls itself. The
+// element that scrolls has to carry its own tabindex and label.
+.modal-card-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.cat-modal-body-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 </style>
