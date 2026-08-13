@@ -45,7 +45,7 @@
           :aria-labelledby="bodyOverflows && hasTitle ? titleId : undefined"
           :aria-label="bodyOverflows && !hasTitle ? effectiveAriaLabel : undefined"
         >
-          <div v-if="modelValue" ref="bodyContentRef" tabindex="-1">
+          <div v-if="modelValue" ref="bodyContentRef" tabindex="-1" class="cat-modal-body-content">
             <slot :close="close" />
             <br>
           </div>
@@ -103,6 +103,34 @@ interface Props {
   size?: 'small' | 'medium' | 'large'
 
   /**
+   * Drop `fullScreen`'s inset at every width, so the dialog is the whole
+   * viewport rather than a card with a margin around it. `fullScreen` already
+   * does this below Bulma's mobile breakpoint; this is for a dialog that should
+   * never read as a card, whatever the screen. No effect without `fullScreen`.
+   * @default false
+   */
+  fullBleed?: boolean
+
+  /**
+   * Hand the body's height down to the slot, for content that scrolls within
+   * the dialog rather than scrolling the dialog itself — a table that keeps its
+   * header in view, say. The slot becomes a column flex container filling the
+   * body, so a child with `flex: 1; min-height: 0` gets a bounded height to
+   * scroll inside.
+   *
+   * Off by default, and deliberately: it makes every direct child of the slot a
+   * flex item, which blockifies inline content, drops floats, and squashes any
+   * child that scrolls on its own axis. Only turn it on for content written
+   * against it.
+   *
+   * Content that scrolls itself also has to carry its own `tabindex` and
+   * accessible name — the body's scroll-region wiring keys off the body
+   * overflowing, which it no longer does.
+   * @default false
+   */
+  fillBody?: boolean
+
+  /**
    * Accessible name for the dialog when there's no visible title. Ignored
    * when `title` or the `#title` slot is provided (those drive
    * `aria-labelledby` automatically). Falls back to "Dialog" if neither a
@@ -126,6 +154,8 @@ const props = withDefaults(defineProps<Props>(), {
   closable: true,
   fullScreen: false,
   size: 'medium',
+  fullBleed: false,
+  fillBody: false,
   ariaLabel: undefined,
   ariaDescribedby: undefined
 })
@@ -154,6 +184,8 @@ const effectiveAriaLabel = computed(() => {
 
 const modalCardClasses = computed(() => ({
   'cat-modal-fullscreen': props.fullScreen,
+  'cat-modal-fullbleed': props.fullBleed,
+  'cat-modal-fill': props.fillBody,
   'cat-modal-small': props.size === 'small',
   'cat-modal-medium': props.size === 'medium',
   'cat-modal-large': props.size === 'large'
@@ -316,6 +348,31 @@ onBeforeUnmount(() => {
 <style scoped lang="scss">
 @use "bulma/sass/utilities/initial-variables" as *;
 @use "bulma/sass/utilities/derived-variables" as *;
+@use "bulma/sass/utilities/mixins" as mx;
+
+// The whole viewport, with nothing between the dialog and its edges. Square
+// corners because a radius only reads against a backdrop there is no longer any
+// of, and the padding halved because at this width it is content the space
+// should go to rather than margin — both off Bulma's own custom properties,
+// which inherit into the head, body and foot, rather than selectors reaching in.
+@mixin edge-to-edge {
+  --bulma-modal-card-head-radius: 0;
+  --bulma-modal-card-foot-radius: 0;
+  --bulma-modal-card-head-padding: 1rem;
+  --bulma-modal-card-body-padding: 1rem;
+
+  // Against .modal, which is fixed at inset 0, so this is the viewport exactly —
+  // where 100vw would add the classic scrollbar's width and be clipped.
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  // dvh so the browser's own chrome sliding in and out does not leave the dialog
+  // taller than the screen; vh first for anything that lacks it.
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+}
 
 .cat-modal {
   .modal-card {
@@ -334,11 +391,53 @@ onBeforeUnmount(() => {
       width: 1200px;
     }
 
+    // fillBody. The body lays out as a column and the slot takes what is left,
+    // so a definite height reaches the content instead of the content making
+    // one. min-height is what lets the slot shrink below its content — a flex
+    // item refuses to by default, and the height never arrives.
+    //
+    // Only under the modifier: it makes every direct child of the slot a flex
+    // item, which is not something to do to a modal not written for it.
+    &.cat-modal-fill {
+      .modal-card-body {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .cat-modal-body-content {
+        flex: 1 1 auto;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+
+        // Trailing space below the slot, which a filled column would spend real
+        // height on rather than leaving at the end of a scroll.
+        > br:last-child {
+          display: none;
+        }
+      }
+    }
+
     &.cat-modal-fullscreen {
       width: calc(100vw - 40px);
       height: calc(100vh - 40px);
       max-height: calc(100vh - 40px);
       margin: 20px;
+
+      // Below Bulma's mobile ceiling the inset stops reading as a frame and
+      // starts eating the content, so full screen means the whole screen.
+      // Measured at 600px, the margin, the 90vw cap and 2rem of body padding
+      // between them took a third of the width.
+      @include mx.mobile {
+        @include edge-to-edge;
+      }
+
+      // fullBleed. The same treatment at every width, for a dialog that should
+      // never read as a card. Written as a modifier of the modifier, so the
+      // prop has no meaning on its own rather than half of one.
+      &.cat-modal-fullbleed {
+        @include edge-to-edge;
+      }
     }
   }
 
