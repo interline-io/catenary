@@ -65,6 +65,109 @@
         </cat-modal>
       </demo-box>
 
+      <!-- fillBody, and what it costs. The three below are meant to be opened
+           side by side: the first is what the prop is for, the second is the
+           same content without it, and the third is the layout every modal that
+           does not opt in still gets. -->
+      <demo-box label="Fullscreen, edge to edge">
+        <cat-button variant="success" @click="showBleed = true">
+          Open Edge-to-Edge Modal
+        </cat-button>
+        <cat-modal
+          v-model="showBleed"
+          title="Edge to Edge"
+          full-screen
+          full-bleed
+        >
+          <div class="content">
+            <h3>No margin, no radius, at any width</h3>
+            <p>
+              Plain <code>full-screen</code> keeps a 20px inset above Bulma's
+              mobile breakpoint and only goes edge to edge below it. Narrow the
+              window with both modals open to see the two converge.
+            </p>
+          </div>
+        </cat-modal>
+      </demo-box>
+
+      <demo-box label="fillBody: content scrolls, header sticks">
+        <cat-button variant="info" @click="showFill = true">
+          Open Filled Modal
+        </cat-button>
+        <cat-modal v-model="showFill" title="fillBody" full-screen fill-body>
+          <!-- The contract: a direct child taking the height with
+               `flex: 1; min-height: 0` scrolls inside the dialog, so its own
+               sticky header stays in view. Filled content carries its own
+               tabindex and label, since the body no longer overflows. -->
+          <div class="fill-scroll" tabindex="0" role="region" aria-label="Rows">
+            <table class="table is-fullwidth">
+              <thead>
+                <tr><th>#</th><th>Row</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="n of 80" :key="n">
+                  <td>{{ n }}</td>
+                  <td>Scroll me — the header should stay put.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </cat-modal>
+      </demo-box>
+
+      <demo-box label="fillBody off: the dialog scrolls instead">
+        <cat-button @click="showFillOff = true">
+          Open Unfilled Modal
+        </cat-button>
+        <cat-modal v-model="showFillOff" title="Without fillBody" full-screen>
+          <!-- Same markup, no prop. The child is a block as tall as its rows, so
+               it never scrolls and its header has no scrollport to stick to; the
+               body scrolls the whole table instead. -->
+          <div class="fill-scroll" tabindex="0" role="region" aria-label="Rows">
+            <table class="table is-fullwidth">
+              <thead>
+                <tr><th>#</th><th>Row</th></tr>
+              </thead>
+              <tbody>
+                <tr v-for="n of 80" :key="n">
+                  <td>{{ n }}</td>
+                  <td>Scroll me — the header scrolls away.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </cat-modal>
+      </demo-box>
+
+      <demo-box label="Default body layout">
+        <cat-button variant="warning" @click="showBodyLayout = true">
+          Open Layout Modal
+        </cat-button>
+        <cat-modal v-model="showBodyLayout" title="Default body layout">
+          <!-- What a modal that does not opt in has always got, and has to keep
+               getting: inline runs stay on one line, a floated row pulls right,
+               a child that scrolls on one axis is as tall as its content rather
+               than squashed to the dialog, and sibling margins collapse. -->
+          <p>
+            Delete <strong>Ashby BART</strong>? Inline content stays on
+            <em>one line</em>.
+          </p>
+          <div class="layout-demo-scroller">
+            <p v-for="n of 12" :key="n">
+              Row {{ n }} — a child scrolling on one axis keeps its own height.
+            </p>
+          </div>
+          <div class="buttons is-pulled-right">
+            <cat-button @click="showBodyLayout = false">
+              Cancel
+            </cat-button>
+            <cat-button variant="danger" @click="showBodyLayout = false">
+              Delete
+            </cat-button>
+          </div>
+        </cat-modal>
+      </demo-box>
+
       <demo-box label="Modal with Footer">
         <cat-button variant="warning" @click="showFooter = true">
           Open Modal with Footer
@@ -204,6 +307,10 @@ const showSmall = ref(false)
 const showMedium = ref(false)
 const showLarge = ref(false)
 const showFullscreen = ref(false)
+const showBleed = ref(false)
+const showFill = ref(false)
+const showFillOff = ref(false)
+const showBodyLayout = ref(false)
 const showFooter = ref(false)
 const showNoClose = ref(false)
 const showForm = ref(false)
@@ -235,3 +342,29 @@ const handleSubmit = () => {
   }, 3000)
 }
 </script>
+
+<style scoped lang="scss">
+// How content opts into fillBody: take the height the body hands down and scroll
+// inside it. Without the prop the same rules do nothing — there is no definite
+// height to take — which is what the paired demos above show.
+.fill-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.fill-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: var(--bulma-scheme-main);
+}
+
+// A child that scrolls on one axis only. As a flex item it would be squashed to
+// the dialog height and clipped on the other, which is why fillBody is opt-in.
+.layout-demo-scroller {
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid var(--bulma-border);
+  padding: 0.5rem;
+}
+</style>
