@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { createSSRApp, defineComponent, h, ref } from 'vue'
+import { createSSRApp, defineComponent, h, nextTick, ref } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import CatSteps from './steps.vue'
 import CatStepItem from './step-item.vue'
@@ -438,21 +438,35 @@ describe('cat-steps server rendering', () => {
     expect(panels.map(p => p.hidden)).toEqual([true, false, true])
   })
 
-  it('hides every panel when no step is selected', async () => {
-    // Nothing has registered on the server, so an unbound stepper has no way to
-    // know which step comes first. Documented limitation of the same gap below.
+  it('shows the first step when the stepper is unbound', async () => {
+    // Previously every panel rendered hidden here: nothing had registered on
+    // the server, so the stepper had no way to know which step came first.
+    // Reading the slot gives it the list, so the fallback to index 0 works
+    // server-side too.
     const { panels } = await renderServerSide()
-    expect(panels.map(p => p.hidden)).toEqual([true, true, true])
+    expect(panels.map(p => p.hidden)).toEqual([false, true, true])
   })
 
-  it('leaves the progress list empty until hydration', async () => {
-    // Characterizes a known limitation rather than endorsing it: step items
-    // register in onMounted, which never runs during renderToString, so the
-    // markers are client-only. Reading the slot's VNodes instead would fix it,
-    // and this expectation flips when that lands.
+  it('renders the progress list in the server HTML', async () => {
+    // This expectation is the one the old test said would flip: markers came
+    // from onMounted registrations, which never run during renderToString, so
+    // the list shipped empty and filled in only on hydration.
     const { doc } = await renderServerSide('two')
     expect(doc.querySelector('.cat-steps-list')).not.toBeNull()
-    expect(doc.querySelectorAll('.cat-step-marker')).toHaveLength(0)
+    expect(doc.querySelectorAll('.cat-step-marker')).toHaveLength(3)
+    expect([...doc.querySelectorAll('.cat-steps-list li')].map(li => li.textContent?.trim()))
+      .toEqual(expect.arrayContaining([expect.stringContaining('One')]))
+  })
+
+  it('pairs marker labels with panels by id on the server', async () => {
+    const { doc } = await renderServerSide('two')
+    const panels = [...doc.querySelectorAll('.cat-step-panel')]
+    expect(panels).toHaveLength(3)
+    for (const panel of panels) {
+      const labelId = panel.getAttribute('aria-labelledby')
+      expect(labelId).toBeTruthy()
+      expect(doc.getElementById(labelId as string)).not.toBeNull()
+    }
   })
 })
 
@@ -488,5 +502,51 @@ describe('cat-steps accessibility', () => {
     expect(list.attributes('aria-label')).toBeUndefined()
     await expectNoAxeViolations(wrapper)
     wrapper.unmount()
+  })
+
+  describe('cat-steps items derived from slot VNodes', () => {
+  // Ordering was previously kept by comparing panel elements with
+  // compareDocumentPosition after a late registration. Reading the slot gives
+  // template order directly, and that workaround is gone.
+    it('keeps template order when a middle step appears after mount', async () => {
+      const showMiddle = ref(false)
+      const Host = defineComponent({
+        setup: () => () => h(CatSteps, { modelValue: 'a', ariaLabel: 'Demo' }, () => [
+          h(CatStepItem, { label: 'Alpha', value: 'a' }, () => 'A'),
+          showMiddle.value ? h(CatStepItem, { label: 'Beta', value: 'b' }, () => 'B') : null,
+          h(CatStepItem, { label: 'Gamma', value: 'c' }, () => 'C')
+        ])
+      })
+      const wrapper = mount(Host)
+      const labels = () => wrapper.findAll('.cat-steps-list li').map(li => li.text())
+      expect(labels().join('|')).toContain('Alpha')
+      expect(labels()).toHaveLength(2)
+
+      showMiddle.value = true
+      await nextTick()
+      const after = labels()
+      expect(after).toHaveLength(3)
+      expect(after[1]).toContain('Beta')
+      wrapper.unmount()
+    })
+
+    // deregister/register on a value change needed a watcher in the item; with
+    // the list read from the slot the old entry cannot outlive the render.
+    it('does not strand an entry when a value changes', async () => {
+      const value = ref('before')
+      const Host = defineComponent({
+        setup: () => () => h(CatSteps, { modelValue: 'first', ariaLabel: 'Demo' }, () => [
+          h(CatStepItem, { label: 'First', value: 'first' }, () => 'one'),
+          h(CatStepItem, { label: 'Second', value: value.value }, () => 'two')
+        ])
+      })
+      const wrapper = mount(Host)
+      expect(wrapper.findAll('.cat-steps-list li')).toHaveLength(2)
+
+      value.value = 'after'
+      await nextTick()
+      expect(wrapper.findAll('.cat-steps-list li')).toHaveLength(2)
+      wrapper.unmount()
+    })
   })
 })

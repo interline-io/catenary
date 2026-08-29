@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { defineComponent, h, ref } from 'vue'
+import { defineComponent, h, ref, nextTick } from 'vue'
 import CatTabs from './tabs.vue'
 import CatTabItem from './tab-item.vue'
 import { expectNoAxeViolations } from '../testutil/component-helpers'
@@ -255,5 +255,85 @@ describe('cat-tabs WAI-ARIA tablist', () => {
     expect(tabindexes.filter(t => t === '-1')).toHaveLength(1)
 
     wrapper.unmount()
+  })
+
+  describe('cat-tabs items derived from slot VNodes', () => {
+  // Items used to register themselves in onMounted, so one revealed later by a
+  // v-if appended to the end of the tablist regardless of where it sat in the
+  // template. Reading the slot gives document order for free.
+    it('keeps template order when a middle tab appears after mount', async () => {
+      const showMiddle = ref(false)
+      const Host = defineComponent({
+        setup: () => () => h(CatTabs, { modelValue: 'a' }, {
+          default: () => [
+            h(CatTabItem, { label: 'A', value: 'a' }, () => 'A'),
+            showMiddle.value ? h(CatTabItem, { label: 'B', value: 'b' }, () => 'B') : null,
+            h(CatTabItem, { label: 'C', value: 'c' }, () => 'C')
+          ]
+        })
+      })
+      const wrapper = mount(Host)
+      expect(wrapper.findAll('[role="tab"]').map(t => t.text())).toEqual(['A', 'C'])
+
+      showMiddle.value = true
+      await nextTick()
+      expect(wrapper.findAll('[role="tab"]').map(t => t.text())).toEqual(['A', 'B', 'C'])
+      wrapper.unmount()
+    })
+
+    // deregister ran with the *current* props.value and nothing watched it, so
+    // changing a value left the old entry in place and added a second.
+    it('does not strand an entry when a value changes', async () => {
+      const value = ref('before')
+      const Host = defineComponent({
+        setup: () => () => h(CatTabs, { modelValue: 'first' }, {
+          default: () => [
+            h(CatTabItem, { label: 'First', value: 'first' }, () => 'one'),
+            h(CatTabItem, { label: 'Second', value: value.value }, () => 'two')
+          ]
+        })
+      })
+      const wrapper = mount(Host)
+      expect(wrapper.findAll('[role="tab"]')).toHaveLength(2)
+
+      value.value = 'after'
+      await nextTick()
+      expect(wrapper.findAll('[role="tab"]')).toHaveLength(2)
+      expect(wrapper.findAll('[role="tab"]')[1]?.attributes('aria-controls')).toContain('after')
+      wrapper.unmount()
+    })
+
+    it('pairs each tab with its panel by id', () => {
+      const wrapper = mount(CatTabs, {
+        props: { modelValue: 'a' },
+        slots: {
+          default: () => [
+            h(CatTabItem, { label: 'A', value: 'a' }, () => 'A'),
+            h(CatTabItem, { label: 'B', value: 'b' }, () => 'B')
+          ]
+        }
+      })
+      for (const tab of wrapper.findAll('[role="tab"]')) {
+        const panel = wrapper.find(`#${tab.attributes('aria-controls')}`)
+        expect(panel.exists()).toBe(true)
+        expect(panel.attributes('aria-labelledby')).toBe(tab.attributes('id'))
+      }
+      wrapper.unmount()
+    })
+
+    it('keeps exactly one roving tabindex anchor, even for an unknown value', () => {
+      const wrapper = mount(CatTabs, {
+        props: { modelValue: 'nonexistent' },
+        slots: {
+          default: () => [
+            h(CatTabItem, { label: 'A', value: 'a' }, () => 'A'),
+            h(CatTabItem, { label: 'B', value: 'b' }, () => 'B')
+          ]
+        }
+      })
+      const zeros = wrapper.findAll('[role="tab"]').filter(t => t.attributes('tabindex') === '0')
+      expect(zeros).toHaveLength(1)
+      wrapper.unmount()
+    })
   })
 })

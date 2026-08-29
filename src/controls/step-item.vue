@@ -12,7 +12,6 @@
     <div
       v-show="isActive"
       :id="panelId"
-      ref="panel"
       class="cat-step-panel"
       role="group"
       :aria-labelledby="labelId"
@@ -24,7 +23,8 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string">
-import { computed, inject, onBeforeUnmount, onMounted, useId, useTemplateRef, watch } from 'vue'
+import { computed, inject, useId } from 'vue'
+import { idFragment } from '../util/slot-items'
 import type { CoreVariant } from './types'
 import { StepsContextKey } from '../util/steps-context'
 
@@ -87,53 +87,14 @@ const props = withDefaults(defineProps<{
 
 const steps = inject(StepsContextKey, undefined)
 
-// Pair of ids binding marker ↔ panel: the parent puts labelId on the label text
-// it renders, and this panel points at it with aria-labelledby.
-const labelId = useId()
-const panelId = useId()
-const panelRef = useTemplateRef<HTMLElement>('panel')
-
-function registration () {
-  return {
-    value: props.value,
-    label: props.label,
-    step: props.step,
-    icon: props.icon,
-    variant: props.variant,
-    clickable: props.clickable,
-    labelId,
-    panelId,
-    el: panelRef.value,
-    focus: () => panelRef.value?.focus()
-  }
-}
-
-onMounted(() => {
-  steps?.register(registration())
-})
-
-// The progress list is rendered from the registration, so anything shown there
-// has to be pushed up again when it changes — a step that fails part-way
-// through and switches to variant="danger" is the case that matters.
-watch(
-  () => [props.value, props.label, props.step, props.icon, props.variant, props.clickable],
-  (_current, [oldValue]) => {
-    // `value` is the key the parent registers under, so changing it makes this
-    // a different step as far as the list is concerned. Drop the old entry
-    // first, or the list keeps a marker for a step that no longer exists and
-    // unmounting only ever removes the current one.
-    if (oldValue !== props.value) {
-      steps?.deregister(oldValue as string | number)
-    }
-    steps?.register(registration())
-  }
-)
-
-// Drop the registration when the item unmounts, e.g. a v-if step that no longer
-// applies. Without this the progress list keeps a marker whose panel is gone.
-onBeforeUnmount(() => {
-  steps?.deregister(props.value)
-})
+// Pair of ids binding marker <-> panel. Derived from the parent's id base plus
+// this item's own `value`, exactly as cat-steps derives them for the marker, so
+// the two agree without the item having to know its index. `value` must be
+// unique within a stepper, which the registration model it replaces assumed too.
+const ownId = useId()
+const fragment = computed(() => idFragment(props.value))
+const labelId = computed(() => steps ? `${steps.idBase}-label-${fragment.value}` : `${ownId}-label`)
+const panelId = computed(() => steps ? `${steps.idBase}-panel-${fragment.value}` : `${ownId}-panel`)
 
 const isActive = computed(() => steps?.activeValue.value === props.value)
 const animated = computed(() => steps?.animated.value ?? false)

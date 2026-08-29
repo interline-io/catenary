@@ -15,7 +15,6 @@
 import {
   inject,
   onMounted,
-  onBeforeUnmount,
   onUpdated,
   computed,
   nextTick,
@@ -23,6 +22,8 @@ import {
   ref,
   type ComputedRef
 } from 'vue'
+import { idFragment } from '../util/slot-items'
+import { TabsIdBaseKey } from './types'
 
 /**
  * Tab panel — child of cat-tabs. Content is only displayed when the tab is active.
@@ -48,22 +49,18 @@ const props = defineProps<{
   icon?: string
 }>()
 
-type RegisterTabFn = (
-  label: string,
-  value: string | number,
-  icon: string | undefined,
-  tabId: string,
-  panelId: string
-) => void
-type DeregisterTabFn = (value: string | number) => void
-
-const registerTab = inject<RegisterTabFn>('registerTab')
-const deregisterTab = inject<DeregisterTabFn>('deregisterTab')
 const activeTab = inject<ComputedRef<string | number | undefined>>('activeTab')
 
-// Pair of IDs that bind tab button ↔ tabpanel via aria-controls / aria-labelledby.
-const tabId = useId()
-const panelId = useId()
+// Pair of ids binding tab button <-> tabpanel via aria-controls /
+// aria-labelledby. Derived from the parent's id base plus this item's own
+// `value`, exactly as cat-tabs derives them for the button, so the two agree
+// without the item having to know its index. `value` must be unique within a
+// tab group, which the parent's keyboard navigation already assumed.
+const idBase = inject(TabsIdBaseKey, undefined)
+const ownId = useId()
+const fragment = computed(() => idFragment(props.value))
+const tabId = computed(() => idBase ? `${idBase}-tab-${fragment.value}` : `${ownId}-tab`)
+const panelId = computed(() => idBase ? `${idBase}-panel-${fragment.value}` : `${ownId}-panel`)
 const panelRef = ref<HTMLElement | null>(null)
 const hasFocusableChild = ref(false)
 
@@ -81,24 +78,12 @@ function detectFocusableChild () {
 }
 
 onMounted(() => {
-  if (registerTab) {
-    registerTab(props.label, props.value, props.icon, tabId, panelId)
-  }
   nextTick(detectFocusableChild)
 })
 
 onUpdated(() => {
   // Slot content can change after mount (v-if/v-for inside, async data).
   nextTick(detectFocusableChild)
-})
-
-// Drop the registration when the tab-item unmounts (e.g., v-if toggles a tab
-// off). Without this, stale entries accumulate and the parent's keyboard nav
-// can land on a value with no rendered panel.
-onBeforeUnmount(() => {
-  if (deregisterTab) {
-    deregisterTab(props.value)
-  }
 })
 
 const isActive = computed(() => {

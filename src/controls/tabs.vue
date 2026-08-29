@@ -12,8 +12,13 @@
         :aria-orientation="orientation"
         class="cat-tablist"
       >
+        <!-- tabItems() is called here rather than held in a computed: it reads
+             the default slot's VNodes, which are not a reactive dependency, so
+             a cached computed would go stale exactly when a `v-if` adds or
+             removes a tab. A method call re-runs with every render of this
+             component, which is when the slot content can have changed. -->
         <button
-          v-for="(tab, index) in tabs"
+          v-for="(tab, index) in tabItems()"
           :id="tab.tabId"
           :key="tab.value"
           ref="tabRefs"
@@ -23,7 +28,7 @@
           :class="{ 'is-active': modelValue === tab.value }"
           :aria-selected="modelValue === tab.value"
           :aria-controls="tab.panelId"
-          :tabindex="index === selectedIndex ? 0 : -1"
+          :tabindex="tab.isRovingAnchor ? 0 : -1"
           :data-index="index"
           @click="selectTab(tab.value)"
           @keydown="onTablistKeydown"
@@ -42,7 +47,10 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string">
-import { computed, provide, ref, watch, nextTick } from 'vue'
+import { computed, provide, ref, watch, nextTick, useId, useSlots } from 'vue'
+import CatTabItem from './tab-item.vue'
+import { collectSlotItems, idFragment } from '../util/slot-items'
+import { TabsIdBaseKey } from './types'
 
 /**
  * Tabs component following the WAI-ARIA Authoring Practices tabs pattern.
@@ -114,38 +122,54 @@ interface TabItem {
   icon?: string
   tabId: string
   panelId: string
+  /** Holds the single `tabindex="0"` in the roving tabindex. */
+  isRovingAnchor: boolean
 }
 
-const tabs = ref<TabItem[]>([])
 const tablistRef = ref<HTMLElement | null>(null)
 const tabRefs = ref<HTMLButtonElement[]>([])
+const slots = useSlots()
 
-function registerTab (label: string, value: string | number, icon: string | undefined, tabId: string, panelId: string) {
-  // Re-register: replace if value already known (covers hot-reload / dynamic tabs).
-  const existing = tabs.value.findIndex(t => t.value === value)
-  if (existing >= 0) {
-    tabs.value[existing] = { label, value, icon, tabId, panelId }
-  } else {
-    tabs.value.push({ label, value, icon, tabId, panelId })
-  }
-}
-
-function deregisterTab (value: string | number) {
-  const idx = tabs.value.findIndex(t => t.value === value)
-  if (idx >= 0) tabs.value.splice(idx, 1)
-}
-
-provide('registerTab', registerTab)
-provide('deregisterTab', deregisterTab)
+// One id per tablist; each tab derives its pair from this plus its own value.
+// The children compute the same ids independently (see cat-tab-item), so the
+// two never have to agree on an index — which is what lets a tab be inserted
+// in the middle without renumbering the ones after it.
+const idBase = useId()
+provide(TabsIdBaseKey, idBase)
 provide('activeTab', computed(() => props.modelValue))
 
-// Roving tabindex anchor. Falls back to the first tab when modelValue matches
-// no registered tab (stale value, or the active tab-item was removed via v-if)
-// so the tablist never drops out of the page tab order entirely.
-const selectedIndex = computed(() => {
-  const i = tabs.value.findIndex(t => t.value === props.modelValue)
-  return i >= 0 ? i : 0
-})
+/**
+ * The tabs, in template order, read from the default slot's VNodes.
+ *
+ * Reading the slot rather than collecting `onMounted` registrations is what
+ * fixes three things at once: items appear in document order even when a
+ * `v-if` reveals one later, changing an item's `value` cannot strand a stale
+ * entry, and the tablist renders on the server instead of appearing only on
+ * hydration.
+ */
+function tabItems (): TabItem[] {
+  const nodes = collectSlotItems(slots.default?.(), CatTabItem)
+  const items = nodes.map((node) => {
+    const p = (node.props ?? {}) as Record<string, unknown>
+    const value = p.value as string | number
+    const fragment = idFragment(value)
+    return {
+      label: String(p.label ?? ''),
+      value,
+      icon: p.icon as string | undefined,
+      tabId: `${idBase}-tab-${fragment}`,
+      panelId: `${idBase}-panel-${fragment}`,
+      isRovingAnchor: false
+    }
+  })
+  // Exactly one tab carries tabindex="0". Falls back to the first when
+  // modelValue matches nothing — a stale value, or the active item removed by
+  // a v-if — so the tablist never drops out of the page tab order entirely.
+  const match = items.findIndex(t => t.value === props.modelValue)
+  const anchor = match >= 0 ? match : 0
+  if (items[anchor]) items[anchor].isRovingAnchor = true
+  return items
+}
 
 function selectTab (value: string | number) {
   emit('update:modelValue', value as T)
@@ -155,12 +179,13 @@ function focusTabAt (index: number) {
   const next = tabRefs.value[index]
   if (!next) return
   next.focus()
-  const value = tabs.value[index]?.value
+  const value = tabItems()[index]?.value
   if (value !== undefined) selectTab(value)
 }
 
 function onTablistKeydown (event: KeyboardEvent) {
-  const count = tabs.value.length
+  const items = tabItems()
+  const count = items.length
   if (count === 0) return
 
   // Source of truth is the actually-focused tab. Each tab carries data-index,
@@ -176,7 +201,7 @@ function onTablistKeydown (event: KeyboardEvent) {
     }
   }
   if (idx < 0) {
-    const fallback = tabs.value.findIndex(t => t.value === props.modelValue)
+    const fallback = items.findIndex(t => t.value === props.modelValue)
     idx = fallback >= 0 ? fallback : 0
   }
 

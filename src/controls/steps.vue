@@ -15,10 +15,10 @@
       :aria-labelledby="ariaLabelledby"
     >
       <li
-        v-for="(step, index) in steps"
+        v-for="step in resolveSteps().steps"
         :key="step.value"
         class="cat-step"
-        :class="stepClasses(step, index)"
+        :class="stepClasses(step)"
       >
         <!-- Markers render as buttons whenever the stepper is interactive at
              all, even for steps that cannot be reached yet, which get
@@ -37,26 +37,26 @@
           :is="isInteractive(step) ? 'button' : 'span'"
           class="cat-step-trigger"
           :type="isInteractive(step) ? 'button' : undefined"
-          :aria-current="index === activeIndex ? 'step' : undefined"
-          :aria-disabled="isInteractive(step) && !isNavigable(step, index) && index !== activeIndex ? 'true' : undefined"
-          @click="onTriggerClick(step, index)"
+          :aria-current="step.state === 'current' ? 'step' : undefined"
+          :aria-disabled="isInteractive(step) && !isNavigable(step) && step.state !== 'current' ? 'true' : undefined"
+          @click="onTriggerClick(step)"
         >
           <!-- Hidden from assistive technology: the number repeats the
                position the list already announces, and a completed step's
                check repeats the status text below. -->
           <span class="cat-step-marker" aria-hidden="true">
             <cat-icon
-              v-if="markerIcon(step, index)"
-              :icon="markerIcon(step, index) as string"
+              v-if="markerIcon(step)"
+              :icon="markerIcon(step) as string"
               :size="markerIconSize"
             />
-            <template v-else>{{ step.step ?? index + 1 }}</template>
+            <template v-else>{{ step.step ?? step.index + 1 }}</template>
           </span>
           <span class="cat-step-text">
             <span :id="step.labelId" class="cat-step-label">{{ step.label }}</span>
             <!-- aria-current already announces the current step, so only the
                  other two states need spelling out. -->
-            <span v-if="statusLabel(index)" class="is-sr-only">{{ statusLabel(index) }}</span>
+            <span v-if="statusLabel(step)" class="is-sr-only">{{ statusLabel(step) }}</span>
           </span>
         </component>
       </li>
@@ -73,15 +73,15 @@
           :previous="previous"
           :next="next"
           :go-to="goTo"
-          :has-previous="hasPrevious"
-          :has-next="hasNext"
-          :active-index="activeIndex"
-          :count="steps.length"
+          :has-previous="resolveSteps().hasPrevious"
+          :has-next="resolveSteps().hasNext"
+          :active-index="resolveSteps().activeIndex"
+          :count="resolveSteps().count"
         >
-          <cat-button :disabled="!hasPrevious" @click="previous">
+          <cat-button :disabled="!resolveSteps().hasPrevious" @click="previous">
             {{ previousLabel }}
           </cat-button>
-          <cat-button variant="primary" :disabled="!hasNext" @click="next">
+          <cat-button variant="primary" :disabled="!resolveSteps().hasNext" @click="next">
             {{ nextLabel }}
           </cat-button>
         </slot>
@@ -91,11 +91,13 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string">
-import { computed, nextTick, provide, ref, watch } from 'vue'
+import { computed, nextTick, provide, watch, useId, useSlots } from 'vue'
+import CatStepItem from './step-item.vue'
+import { collectSlotItems, idFragment } from '../util/slot-items'
 import CatButton from './button.vue'
 import CatIcon from './icon.vue'
 import type { StepsLabelPosition, StepsSize, StepsVariant } from './types'
-import { StepsContextKey, type StepRegistration } from '../util/steps-context'
+import { StepsContextKey, type StepDescriptor } from '../util/steps-context'
 
 /**
  * Steps ("wizard"): a numbered sequence of stages with one panel visible at a
@@ -241,87 +243,126 @@ defineSlots<{
  */
 const model = defineModel<T>()
 
-const steps = ref<StepRegistration[]>([])
+const slots = useSlots()
 
-function register (step: StepRegistration) {
-  const existing = steps.value.findIndex(s => s.value === step.value)
-  if (existing >= 0) {
-    // Re-register on prop change (label edited, step marked failed) rather
-    // than leaving the list showing what the item looked like at mount.
-    steps.value[existing] = step
-    return
-  }
-  // Mount order is document order for a static list, but a step revealed later
-  // by v-if mounts last and would otherwise appear at the end of the progress
-  // list while its panel renders in the middle. Compare elements instead.
-  const before = steps.value.findIndex(s =>
-    s.el && step.el && (s.el.compareDocumentPosition(step.el) & Node.DOCUMENT_POSITION_PRECEDING) !== 0
-  )
-  if (before >= 0) {
-    steps.value.splice(before, 0, step)
-  } else {
-    steps.value.push(step)
+// One id per stepper; each step derives its pair from this plus its own value,
+// so parent and child agree without either counting positions.
+const idBase = useId()
+
+/** A step plus everything the progress list needs to draw it. */
+interface ResolvedStep extends StepDescriptor {
+  index: number
+  state: 'completed' | 'current' | 'upcoming'
+}
+
+/**
+ * The steps, in template order, read from the default slot's VNodes.
+ *
+ * This replaces an onMounted registration channel and, with it, three separate
+ * problems: a step revealed later by `v-if` used to mount last and needed a
+ * `compareDocumentPosition` pass to be sorted back into place, changing a
+ * step's `value` needed a watcher to avoid stranding the old entry, and the
+ * progress list rendered empty on the server because `onMounted` never runs
+ * during `renderToString`.
+ *
+ * Deliberately a function rather than a computed, and everything derived from
+ * the list is resolved here in one pass. Slot VNodes are not a reactive
+ * dependency — Vue warns that a slot invoked outside a render "will not track
+ * dependencies used in the slot" — so a computed would cache exactly when a
+ * `v-if` adds or removes a step. Called during render, it re-runs whenever the
+ * slot can have changed.
+ */
+function resolveSteps () {
+  const items: StepDescriptor[] = collectSlotItems(slots.default?.(), CatStepItem).map((node) => {
+    const p = (node.props ?? {}) as Record<string, unknown>
+    const value = p.value as string | number
+    const fragment = idFragment(value)
+    return {
+      value,
+      label: String(p.label ?? ''),
+      step: p.step as string | undefined,
+      icon: p.icon as string | undefined,
+      variant: p.variant as StepDescriptor['variant'],
+      // Absent means "inherit from the parent"; `false` is a real override.
+      clickable: p.clickable as boolean | undefined,
+      labelId: `${idBase}-label-${fragment}`,
+      panelId: `${idBase}-panel-${fragment}`
+    }
+  })
+
+  // Falls back to the first step when the model matches none — either nothing
+  // is bound yet, or the active item was removed by a v-if. Without it the
+  // stepper would draw a progress list with no panel below it.
+  const found = items.findIndex(s => s.value === model.value)
+  const activeIndex = found >= 0 ? found : 0
+
+  return {
+    activeIndex,
+    count: items.length,
+    hasPrevious: activeIndex > 0,
+    hasNext: activeIndex < items.length - 1,
+    steps: items.map((step, index): ResolvedStep => ({
+      ...step,
+      index,
+      state: index < activeIndex ? 'completed' : index === activeIndex ? 'current' : 'upcoming'
+    }))
   }
 }
 
-function deregister (value: string | number) {
-  const idx = steps.value.findIndex(s => s.value === value)
-  if (idx >= 0) steps.value.splice(idx, 1)
-}
+// Children compare against the model alone, with no slot dependency of their
+// own: a computed that read the slot would not re-evaluate when the slot
+// changed, and would warn. The model is normalised below so it always names a
+// real step on the client.
+const activeValue = computed(() => model.value)
 
-// Falls back to the first step when the model matches no registered step —
-// either because nothing is bound yet, or because the active item was removed.
-// Without it the stepper would render a progress list with no panel below it.
-const activeIndex = computed(() => {
-  const i = steps.value.findIndex(s => s.value === model.value)
-  return i >= 0 ? i : 0
-})
-
-// Falls back to the raw model when nothing has registered yet, which is the
-// state every server render is in: children register in onMounted, and SSR has
-// no second pass. Without the fallback there is no active value on the server,
-// so every panel renders hidden and the page ships with its content behind
-// `display: none`. With it, the active step's content is visible in the HTML
-// and the markers fill in on hydration. The list itself stays empty until then
-// — fixing that means reading the slot instead of waiting for registration.
-const activeValue = computed(() => steps.value[activeIndex.value]?.value ?? model.value)
+// An unbound stepper, or one whose value names a step that has since been
+// removed, settles on the first step. Done as a state change rather than a
+// fallback inside activeValue so that nothing downstream has to read the slot.
+// Never runs during SSR, so a server-rendered stepper needs a bound v-model to
+// show a panel — which is what it needed before this change too.
+watch([model, () => props.animated], () => {
+  const { steps: resolved } = resolveSteps()
+  if (resolved.length === 0) return
+  if (!resolved.some(s => s.value === model.value)) {
+    model.value = resolved[0]!.value as T
+  }
+}, { immediate: true, flush: 'post' })
 
 provide(StepsContextKey, {
-  register,
-  deregister,
+  idBase,
   activeValue,
   animated: computed(() => props.animated)
 })
 
 /** Whether this step's marker is a button at all. */
-function isInteractive (step: StepRegistration) {
+function isInteractive (step: StepDescriptor) {
   return step.clickable ?? props.clickable ?? true
 }
 
 /** Whether activating that button currently moves to the step. */
-function isNavigable (step: StepRegistration, index: number) {
-  return step.clickable ?? props.clickable ?? index < activeIndex.value
+function isNavigable (step: ResolvedStep) {
+  return step.clickable ?? props.clickable ?? step.state === 'completed'
 }
 
-function statusLabel (index: number) {
-  if (index < activeIndex.value) return props.ariaCompletedLabel
-  if (index > activeIndex.value) return props.ariaUpcomingLabel
+function statusLabel (step: ResolvedStep) {
+  if (step.state === 'completed') return props.ariaCompletedLabel
+  if (step.state === 'upcoming') return props.ariaUpcomingLabel
   return undefined
 }
 
-function markerIcon (step: StepRegistration, index: number) {
+function markerIcon (step: ResolvedStep) {
   if (step.icon) return step.icon
-  if (index < activeIndex.value && props.completedIcon) return props.completedIcon
+  if (step.state === 'completed' && props.completedIcon) return props.completedIcon
   return undefined
 }
 
-function stepClasses (step: StepRegistration, index: number) {
+function stepClasses (step: ResolvedStep) {
   return [
     `is-${step.variant ?? props.variant}`,
     {
-      'is-completed': index < activeIndex.value,
-      'is-current': index === activeIndex.value,
-      'is-upcoming': index > activeIndex.value
+      'is-completed': step.state === 'completed',
+      'is-current': step.state === 'current',
+      'is-upcoming': step.state === 'upcoming'
     }
   ]
 }
@@ -343,9 +384,6 @@ const markerIconSize = computed(() => {
   return 'small' as const
 })
 
-const hasPrevious = computed(() => activeIndex.value > 0)
-const hasNext = computed(() => activeIndex.value < steps.value.length - 1)
-
 // Set when a step change originates inside the component, so focus follows the
 // user's own action into the new panel. A change driven from outside — the
 // consumer advancing the model after an upload finishes, say — leaves focus
@@ -353,8 +391,9 @@ const hasNext = computed(() => activeIndex.value < steps.value.length - 1)
 let focusPending = false
 
 function goToIndex (index: number) {
-  const step = steps.value[index]
-  if (!step || index === activeIndex.value) return
+  const { steps: resolved, activeIndex } = resolveSteps()
+  const step = resolved[index]
+  if (!step || index === activeIndex) return
   const oldValue = activeValue.value as T | undefined
   focusPending = true
   model.value = step.value as T
@@ -370,27 +409,31 @@ watch(activeValue, (value) => {
   if (!focusPending) return
   focusPending = false
   nextTick(() => {
-    steps.value.find(s => s.value === value)?.focus()
+    // Focus by id rather than a callback handed up at registration: the
+    // parent already knows the panel id, since it derives it the same way the
+    // child does.
+    const panelId = resolveSteps().steps.find(s => s.value === value)?.panelId
+    if (panelId) document.getElementById(panelId)?.focus()
   })
 })
 
-function onTriggerClick (step: StepRegistration, index: number) {
+function onTriggerClick (step: ResolvedStep) {
   // aria-disabled markers stay focusable and clickable at the DOM level, so
   // the guard lives here rather than in the disabled attribute.
-  if (!isInteractive(step) || !isNavigable(step, index)) return
-  goToIndex(index)
+  if (!isInteractive(step) || !isNavigable(step)) return
+  goToIndex(step.index)
 }
 
 function previous () {
-  goToIndex(activeIndex.value - 1)
+  goToIndex(resolveSteps().activeIndex - 1)
 }
 
 function next () {
-  goToIndex(activeIndex.value + 1)
+  goToIndex(resolveSteps().activeIndex + 1)
 }
 
 function goTo (value: T) {
-  goToIndex(steps.value.findIndex(s => s.value === value))
+  goToIndex(resolveSteps().steps.findIndex(s => s.value === value))
 }
 
 defineExpose({

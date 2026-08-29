@@ -4,12 +4,11 @@ import type { CoreVariant } from '../controls/types'
 /**
  * Contract between cat-steps and its cat-step-item children.
  *
- * The panel stays with the child that owns its content; only what the parent
- * needs to draw the progress list travels up, plus the two ids that pair a
- * marker with its panel and a focus callback the parent calls after a step
- * change.
+ * The parent reads its children's props from the default slot's VNodes at
+ * render time rather than collecting registrations, so this carries only what
+ * the child needs to know about the parent. See `util/slot-items` for why.
  */
-export interface StepRegistration {
+export interface StepDescriptor {
   /** Identifies the step. Matched against the parent's modelValue. */
   value: string | number
   /** Visible label in the progress list. */
@@ -26,19 +25,14 @@ export interface StepRegistration {
   labelId: string
   /** id of the panel element. */
   panelId: string
-  /**
-   * The panel element. Registrations arrive in mount order, which is document
-   * order for a static list but not for a step added later by v-if — the
-   * parent compares elements to keep the list in the order it renders.
-   */
-  el: HTMLElement | null
-  /** Moves focus to the panel. */
-  focus: () => void
 }
 
 export interface StepsContext {
-  register: (step: StepRegistration) => void
-  deregister: (value: string | number) => void
+  /**
+   * Id prefix. Parent and child each derive the label/panel id pair from this
+   * plus the step's own `value`, so neither needs to know its position.
+   */
+  idBase: string
   /** Value of the step currently displayed. */
   activeValue: ComputedRef<string | number | undefined>
   /** Whether panel changes are animated. */

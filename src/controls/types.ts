@@ -156,6 +156,14 @@ export const FieldDescribedbyKey: InjectionKey<ComputedRef<string | undefined>> 
 export const FieldVariantKey: InjectionKey<ComputedRef<'success' | 'warning' | 'danger' | 'info' | undefined>> = Symbol('fieldVariant')
 
 /**
+ * Injection key for the id prefix cat-tabs provides to its cat-tab-items.
+ * Both sides derive the tab/panel id pair from this plus the item's own
+ * `value`, so neither needs to know the item's position — see
+ * `util/slot-items`.
+ */
+export const TabsIdBaseKey: InjectionKey<string> = Symbol('tabsIdBase')
+
+/**
  * Injection key for a route map used by cat-link.
  * Consumers provide a Record<string, string> mapping route keys to vue-router route names.
  */
