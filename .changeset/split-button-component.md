@@ -35,4 +35,4 @@ Checked with axe-core in the playground in both light and dark themes; the autom
 
 Emitting the real class names activates Bulma placement rules that tie the `[popover]` reset in `cat-dropdown` and `cat-datepicker` on specificity, which would have left menu geometry depending on the order a consumer imports the `bulma` peerDependency. Both resets are now scoped a class deeper so they win outright.
 
-Also in `cat-dropdown`: `focusableTrigger()` skips a disabled element, since `.focus()` no-ops on one and closing the menu would drop focus to `<body>`; and `open()` no longer re-emits `open` for a menu that is already open (clicking a trigger and then pressing ArrowDown fired it twice).
+Also in `cat-dropdown`: `focusableTrigger()` skips disabled elements — including one disabled by an ancestor `<fieldset disabled>`, which is what `cat-fieldset` renders — so a trigger holding more than one focusable element restores focus to the next candidate rather than returning one that cannot take it; and `open()` no longer re-emits `open` for a menu that is already open (clicking a trigger and then pressing ArrowDown fired it twice).

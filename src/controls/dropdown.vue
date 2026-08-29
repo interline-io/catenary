@@ -210,12 +210,18 @@ function focusableTrigger (): HTMLElement | null {
   if (triggerButtonRef.value) return triggerButtonRef.value
   const triggerWrapper = dropdownRef.value?.querySelector('.dropdown-trigger')
   if (!triggerWrapper) return null
-  // Skip a disabled element: .focus() silently no-ops on one, so close()
-  // would drop focus to <body> instead of returning it. Reachable when a
-  // #trigger can be disabled while its menu is open (cat-split-button's caret).
+  // Skip disabled elements: .focus() silently no-ops on one, so returning it
+  // strands focus where it was rather than restoring it. Where the trigger
+  // holds more than one focusable element (cat-datepicker's input plus its
+  // calendar button), skipping means the next one gets focus instead.
+  //
+  // `:disabled`, not `[disabled]`: the pseudo-class also matches a control
+  // disabled by an ancestor `<fieldset disabled>`, which is exactly what
+  // cat-fieldset renders. Anchors are exempt — a fieldset does not disable
+  // them, and they take no disabled attribute.
   return triggerWrapper.querySelector<HTMLElement>(
-    'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), '
-    + 'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), '
+    + 'textarea:not(:disabled), [tabindex]:not([tabindex="-1"])'
   )
 }
 

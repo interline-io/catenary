@@ -27,6 +27,48 @@ function mountDropdown (props: Record<string, any> = {}) {
   return { wrapper: mount(Host, { attachTo: document.body }), selected }
 }
 
+describe('cat-dropdown focus restoration', () => {
+  // close() restores focus via focusableTrigger(). A disabled element cannot
+  // take focus, so it has to be skipped in favour of the next candidate —
+  // including one disabled by an ancestor <fieldset disabled>, which is what
+  // cat-fieldset renders and which `[disabled]` alone does not match.
+  function mountWithTrigger (triggerHtml: string) {
+    const Host = defineComponent({
+      components: { CatDropdown, CatDropdownItem },
+      template: `
+        <CatDropdown ref="dd">
+          <template #trigger>${triggerHtml}</template>
+          <CatDropdownItem value="one">One</CatDropdownItem>
+        </CatDropdown>`
+    })
+    return mount(Host, { attachTo: document.body })
+  }
+
+  it('skips a disabled trigger button and focuses the next candidate', async () => {
+    const wrapper = mountWithTrigger(
+      '<button disabled>Off</button><a href="#next" id="fallback">Next</a>')
+    const dd = wrapper.findComponent(CatDropdown).vm as any
+    dd.open()
+    await nextTick()
+    dd.close()
+    await nextTick()
+    expect(document.activeElement).toBe(document.getElementById('fallback'))
+    wrapper.unmount()
+  })
+
+  it('skips a trigger button disabled by an ancestor fieldset', async () => {
+    const wrapper = mountWithTrigger(
+      '<fieldset disabled><button>Off</button></fieldset><a href="#next" id="fallback">Next</a>')
+    const dd = wrapper.findComponent(CatDropdown).vm as any
+    dd.open()
+    await nextTick()
+    dd.close()
+    await nextTick()
+    expect(document.activeElement).toBe(document.getElementById('fallback'))
+    wrapper.unmount()
+  })
+})
+
 describe('cat-dropdown menu placement', () => {
   // Bulma names these `is-right` and `is-up`. Interpolating the prop straight
   // into the class emitted `is-bottom-right` / `is-top-left`, which match no
