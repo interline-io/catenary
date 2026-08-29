@@ -6,21 +6,37 @@
   <span
     ref="wrapperRef"
     class="cat-tooltip"
-    :class="[`is-tooltip-${effectivePosition}`, { 'is-visible': isVisible }]"
+    :class="[
+      `is-tooltip-${effectivePosition}`,
+      { 'is-visible': isVisible, 'cat-tooltip-affordance': affordance, 'cat-tooltip-static': !animated },
+    ]"
     :tabindex="needsTabindex ? 0 : undefined"
     :aria-describedby="needsTabindex ? tooltipId : undefined"
-    @mouseenter="show"
+    @pointerdown="onPointerdown"
+    @mouseenter="onMouseenter"
     @mouseleave="onMouseleave"
-    @focusin="show"
+    @focusin="onFocusin"
     @focusout="onFocusout"
-    @keydown.escape="hide"
   >
     <slot />
+    <!-- The bubble needs its own pointer handlers now that it is hoverable:
+         the wrapper's mouseleave already fired when the pointer crossed onto
+         the bubble, so without these the tooltip would stay up indefinitely
+         once the pointer left the bubble again.
+
+         Both rules are waived deliberately. The bubble is role="tooltip" and
+         carries no interaction of its own — these handlers only decide when it
+         stops being shown — and the keyboard equivalents the second rule asks
+         for are on the wrapper (focusin / focusout) plus Escape via the shared
+         dismiss stack, neither of which belongs on the bubble itself. -->
+    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/mouse-events-have-key-events -->
     <span
       :id="tooltipId"
       ref="bubbleRef"
       class="cat-tooltip-bubble"
       role="tooltip"
+      @mouseenter="cancelClose"
+      @mouseleave="onBubbleMouseleave"
     >
       {{ text }}
     </span>
@@ -28,7 +44,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useId, nextTick, onMounted, onUpdated, onBeforeUnmount } from 'vue'
+import { ref, computed, useId, nextTick, onMounted, onUpdated, onBeforeUnmount, watch } from 'vue'
+import { pushDismissLayer, removeDismissLayer, type DismissLayer } from '../util/dismiss-stack'
 
 /**
  * Accessible tooltip following the WAI-ARIA Authoring Practices tooltip pattern.
@@ -75,11 +92,33 @@ interface Props {
    * focusable element. Defaults to auto-detect on mount.
    */
   alwaysFocusable?: boolean
+
+  /**
+   * Mark the trigger as having a tooltip: `cursor: help` and a dotted
+   * underline. Opt-in, because it changes the appearance of the slot content
+   * at every existing call site.
+   *
+   * Worth setting whenever the trigger is not otherwise obviously
+   * interactive — without it there is nothing on screen telling a pointer
+   * user a tooltip exists, and they have to happen to hover the right pixels.
+   * @default false
+   */
+  affordance?: boolean
+
+  /**
+   * Fade the bubble in and out. Suppressed automatically under
+   * `prefers-reduced-motion: reduce` regardless of this prop, matching
+   * cat-collapse and cat-steps.
+   * @default true
+   */
+  animated?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   position: 'top',
-  alwaysFocusable: false
+  alwaysFocusable: false,
+  affordance: false,
+  animated: true
 })
 
 const wrapperRef = ref<HTMLElement | null>(null)
@@ -157,7 +196,49 @@ function relatedTargetInside (event: FocusEvent | MouseEvent): boolean {
   return !!(target && wrapperRef.value && wrapperRef.value.contains(target))
 }
 
+// Crossing the gap between trigger and bubble briefly puts the pointer over
+// neither, which would otherwise read as a mouseleave. A short close delay,
+// cancelled by re-entry, bridges it — and is position-agnostic, unlike a
+// transparent CSS bridge which would need geometry per side.
+const CLOSE_DELAY_MS = 150
+let closeTimer: ReturnType<typeof setTimeout> | undefined
+
+function cancelClose () {
+  clearTimeout(closeTimer)
+  closeTimer = undefined
+}
+
+function onMouseenter () {
+  cancelClose()
+  show()
+}
+
+// Showing on focus is right for a keyboard user and wrong for a pointer one.
+// When the slot has no focusable child the wrapper takes a tabindex of its
+// own, so a click focuses it; the bubble then stays up after the pointer has
+// left, because onMouseleave declines to hide while focus is inside. That
+// reads as the tooltip getting stuck — which matters most on a trigger that
+// is itself clickable.
+//
+// Tracked from pointerdown rather than `:focus-visible`, which is the same
+// distinction but only as a rendering hint: jsdom reports it false for a
+// synthetic focus, so the behaviour would be untestable and would differ
+// between environments.
+let focusFromPointer = false
+
+function onPointerdown () {
+  focusFromPointer = true
+}
+
+function onFocusin () {
+  // A pointer press has already shown the bubble via mouseenter; showing it
+  // again here is what would make it outlast the pointer.
+  if (focusFromPointer) return
+  show()
+}
+
 function show () {
+  cancelClose()
   isVisible.value = true
   nextTick(() => {
     if (popoverSupported && bubbleRef.value) {
@@ -170,17 +251,37 @@ function show () {
 }
 
 function onMouseleave (event: MouseEvent) {
+  // The bubble is a DOM child of the wrapper even when rendered in the top
+  // layer, so moving the pointer onto it counts as inside and keeps it open.
   if (relatedTargetInside(event)) return
-  if (isFocusInside()) return
-  hide()
+  // Keyboard focus inside keeps it open; focus the pointer itself just put
+  // there does not, or the bubble outlives the pointer that summoned it.
+  if (isFocusInside() && !focusFromPointer) return
+  scheduleHide()
 }
 
 function onFocusout (event: FocusEvent) {
   if (relatedTargetInside(event)) return
+  focusFromPointer = false
   hide()
 }
 
+// Leaving the bubble for anywhere outside the component dismisses; moving
+// back onto the trigger does not, and the wrapper's own mouseleave takes over
+// from there.
+function onBubbleMouseleave (event: MouseEvent) {
+  if (relatedTargetInside(event)) return
+  if (isFocusInside() && !focusFromPointer) return
+  scheduleHide()
+}
+
+function scheduleHide () {
+  cancelClose()
+  closeTimer = setTimeout(hide, CLOSE_DELAY_MS)
+}
+
 function hide () {
+  cancelClose()
   isVisible.value = false
   adjustedPosition.value = null
   if (popoverSupported && bubbleRef.value) {
@@ -201,7 +302,26 @@ onUpdated(() => {
   detectFocusableSlot()
 })
 
+// Escape goes through the shared LIFO dismiss stack rather than a handler on
+// the wrapper. Two things fall out of that: a hover-opened tooltip is
+// dismissable even though focus is elsewhere (the old wrapper handler only
+// fired with focus inside, so Escape did nothing and the pointer had to be
+// moved — which WCAG 1.4.13 says must not be required), and the keypress is
+// consumed, so a tooltip open inside a cat-modal no longer closes the dialog
+// in the same press.
+const dismissLayer: DismissLayer = { onEscape: () => hide() }
+
+watch(isVisible, (visible) => {
+  if (visible) {
+    pushDismissLayer(dismissLayer)
+  } else {
+    removeDismissLayer(dismissLayer)
+  }
+})
+
 onBeforeUnmount(() => {
+  cancelClose()
+  removeDismissLayer(dismissLayer)
   applyDescribedBy(null)
 })
 
@@ -373,6 +493,25 @@ $tooltip-offset: 8px;
   &.is-visible .cat-tooltip-bubble {
     opacity: 1;
     visibility: visible;
+    // WCAG 1.4.13 (Content on Hover or Focus) requires hover content to be
+    // hoverable: a user relying on magnification, or wanting to select a long
+    // tooltip's text, must be able to move the pointer onto it. With
+    // pointer-events: none the bubble was never a pointer target, so any move
+    // toward it fired mouseleave on the wrapper and dismissed it. Only while
+    // visible — a hidden bubble must not intercept clicks on the page.
+    pointer-events: auto;
+  }
+
+  // Trigger affordance: opt-in, because it changes how slot content looks.
+  &.cat-tooltip-affordance {
+    cursor: help;
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2em;
+  }
+
+  // `animated="false"`, and the reduced-motion block below, both land here.
+  &.cat-tooltip-static .cat-tooltip-bubble {
+    transition: none;
   }
 
   // Top-layer rendering (Popover API): fixed coordinates are set inline by
@@ -385,6 +524,15 @@ $tooltip-offset: 8px;
     border: 0;
     overflow: visible;
     transition: opacity 0.2s, visibility 0.2s, display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+  }
+
+  // Matches the convention in cat-collapse, cat-steps and cat-msg: the fade is
+  // suppressed for users who ask for reduced motion regardless of `animated`.
+  @media (prefers-reduced-motion: reduce) {
+    .cat-tooltip-bubble,
+    .cat-tooltip-bubble[popover] {
+      transition: none;
+    }
   }
 
   &.is-tooltip-top {
