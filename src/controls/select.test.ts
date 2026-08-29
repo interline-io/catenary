@@ -24,22 +24,31 @@ describe('CatSelect', () => {
   })
 
   describe('fallthrough attributes', () => {
-    // A duplicated id put the same value on the root .control wrapper, which
-    // precedes the select in document order — so a consumer's <label for>
-    // resolved to that non-labelable wrapper and labelled nothing.
-    it('puts id, aria-* and data-* on the select only', () => {
+    // Undeclared attributes were duplicated onto the root .control wrapper,
+    // putting aria-* and data-* on an element with no role.
+    it('puts aria-* and data-* on the select only', () => {
       const wrapper = mountComponent(CatSelect, {
-        attrs: { 'id': 'dup-check', 'aria-labelledby': 'ext', 'data-probe': '1' }
+        attrs: { 'aria-labelledby': 'ext', 'data-probe': '1' }
       })
       const root = wrapper.find('.control')
       const native = wrapper.find('select')
 
-      for (const attr of ['id', 'aria-labelledby', 'data-probe']) {
+      for (const attr of ['aria-labelledby', 'data-probe']) {
         expect(root.attributes(attr)).toBeUndefined()
       }
-      expect(native.attributes('id')).toBe('dup-check')
       expect(native.attributes('aria-labelledby')).toBe('ext')
       expect(native.attributes('data-probe')).toBe('1')
+      wrapper.unmount()
+    })
+
+    // Unlike cat-input / cat-textarea, this component declares `id` as a prop,
+    // so it was absorbed rather than falling through and never reached the
+    // wrapper even before inheritAttrs was set. Asserted so the distinction is
+    // recorded rather than looking like an oversight.
+    it('takes id as a declared prop, not a fallthrough attribute', () => {
+      const wrapper = mountComponent(CatSelect, { attrs: { id: 'explicit' } })
+      expect(wrapper.find('.control').attributes('id')).toBeUndefined()
+      expect(wrapper.find('select').attributes('id')).toBe('explicit')
       wrapper.unmount()
     })
 

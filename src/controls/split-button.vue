@@ -55,6 +55,7 @@
 <script setup lang="ts">
 import { computed, useAttrs, useSlots, useTemplateRef } from 'vue'
 import type { StyleValue } from 'vue'
+import { filterAttrs } from '../util/attrs'
 import type { ButtonVariant, ButtonSize } from './types'
 import CatButton from './button.vue'
 import CatDropdown from './dropdown.vue'
@@ -231,13 +232,7 @@ const slots = useSlots()
 // div, and a stray `tabindex` there would insert a phantom tab stop ahead of
 // both real buttons. `class` and `style` are the exception — they describe the
 // control as a whole, so they stay on the root.
-const actionAttrs = computed(() => {
-  const forwarded: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(attrs)) {
-    if (key !== 'class' && key !== 'style') forwarded[key] = value
-  }
-  return forwarded
-})
+const actionAttrs = computed(() => filterAttrs(attrs, key => key !== 'class' && key !== 'style'))
 
 const rootStyle = computed(() => attrs.style as StyleValue | undefined)
 

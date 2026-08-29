@@ -31,6 +31,7 @@
 
 <script setup lang="ts" generic="T extends string | null | string[] = string | null">
 import { computed, ref, watch, onMounted, nextTick, inject, useAttrs } from 'vue'
+import { filterAttrs, isPresentationalAttr } from '../util/attrs'
 import type { SelectVariant, SelectSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
@@ -40,6 +41,9 @@ import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 // order, a `<label for>` resolved to that wrapper, which is not a labelable
 // element, and silently stopped labelling anything. Undeclared `aria-*` was
 // duplicated onto a wrapper with no role the same way.
+//
+// This component declares `id` as a prop, so the `id` case never reached it —
+// but every undeclared attribute did.
 //
 // `class`, `style` and event listeners still reach the root as well, which is
 // what they did before and what callers depend on:
@@ -59,13 +63,7 @@ defineOptions({
 const attrs = useAttrs()
 
 // class, style and on* listeners — the subset that keeps reaching the wrapper.
-const rootAttrs = computed(() => {
-  const forwarded: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(attrs)) {
-    if (key === 'class' || key === 'style' || /^on[A-Z]/.test(key)) forwarded[key] = value
-  }
-  return forwarded
-})
+const rootAttrs = computed(() => filterAttrs(attrs, isPresentationalAttr))
 const fieldId = inject(FieldIdKey, undefined)
 
 /**

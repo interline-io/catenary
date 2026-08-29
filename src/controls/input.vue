@@ -57,6 +57,7 @@
 
 <script setup lang="ts" generic="T extends string | number = string">
 import { computed, inject, ref, useAttrs } from 'vue'
+import { filterAttrs, isPresentationalAttr } from '../util/attrs'
 import type { InputVariant, InputSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
@@ -85,13 +86,7 @@ defineOptions({
 const attrs = useAttrs()
 
 // class, style and on* listeners — the subset that keeps reaching the wrapper.
-const rootAttrs = computed(() => {
-  const forwarded: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(attrs)) {
-    if (key === 'class' || key === 'style' || /^on[A-Z]/.test(key)) forwarded[key] = value
-  }
-  return forwarded
-})
+const rootAttrs = computed(() => filterAttrs(attrs, isPresentationalAttr))
 const fieldId = inject(FieldIdKey, undefined)
 const inputRef = ref<HTMLInputElement | null>(null)
 

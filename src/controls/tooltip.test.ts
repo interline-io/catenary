@@ -210,7 +210,10 @@ describe('cat-tooltip', () => {
     // aria-describedby on an element that is not in the tab order.
     it.each([
       ['the disabled attribute', '<button disabled>Delete</button>'],
-      ['an ancestor fieldset', '<fieldset disabled><button>Save</button></fieldset>']
+      ['an ancestor fieldset', '<fieldset disabled><button>Save</button></fieldset>'],
+      // A disabled control with an explicit tabindex would otherwise slip
+      // through the trailing [tabindex] clause and re-create the bug.
+      ['disabled plus an explicit tabindex', '<button disabled tabindex="0">Delete</button>']
     ])('makes the wrapper the tab stop when the control is disabled by %s', async (_label, slot) => {
       const wrapper = mount(CatTooltip, {
         attachTo: document.body,

@@ -6,7 +6,7 @@ Fallthrough attributes, disabled tooltip triggers, and typed ARIA state props â€
 
 ## `cat-input` / `cat-textarea` / `cat-select` route attributes to the native element
 
-All three bound `v-bind="$attrs"` onto the native control without `inheritAttrs: false`, so Vue *also* applied every fallthrough attribute to the root `.control` wrapper. A consumer's `id` landed on both, and because the wrapper precedes the control in document order, a `<label for>` resolved to that non-labelable wrapper element and silently stopped labelling anything. Undeclared `aria-*` was duplicated onto a role-less wrapper the same way.
+All three bound `v-bind="$attrs"` onto the native control without `inheritAttrs: false`, so Vue *also* applied every fallthrough attribute to the root `.control` wrapper. On `cat-input` and `cat-textarea` a consumer's `id` landed on both, and because the wrapper precedes the control in document order, a `<label for>` resolved to that wrapper, which is not a labelable element, and silently stopped labelling anything. (`cat-select` already declared `id` as a prop, so it escaped that one.) Undeclared `aria-*` and `data-*` were duplicated onto a wrapper with no role on all three.
 
 `class`, `style` and event listeners deliberately still reach the wrapper as well, because both destinations turned out to be load-bearing:
 
@@ -27,4 +27,4 @@ Uses `:disabled` rather than `[disabled]` so it also covers a control disabled b
 
 `false` renders rather than dropping the attribute: "not pressed" is what distinguishes an un-pressed toggle from a plain button. The prop docs record the convention that a toggle keeps a fixed label naming what it controls and lets `aria-pressed` carry the state, since a label naming the current state is ambiguous with one naming the action.
 
-Addresses parts of #49, #50 and #51; each issue has further findings still open.
+Addresses parts of #49, #50 and #51; each issue has further findings still open â€” including, on `cat-input` / `cat-textarea`, that a consumer `id` still overrides the one `cat-field` injects, so `<label for>` inside a field breaks the same way. `cat-select`'s `id ?? fieldId` prop is the shape the other two need.
