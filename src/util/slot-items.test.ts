@@ -64,9 +64,34 @@ describe('slot item collection', () => {
 })
 
 describe('idFragment', () => {
-  it('replaces whitespace, which is the only character an id cannot carry', () => {
-    expect(idFragment('two words')).toBe('two-words')
+  it('leaves a plain identifier readable and unhashed', () => {
     expect(idFragment('plain')).toBe('plain')
+    expect(idFragment('with-dash_and_underscore')).toBe('with-dash_and_underscore')
     expect(idFragment(3)).toBe('3')
+  })
+
+  // Replacing unsafe characters alone would flatten distinct values onto the
+  // same id, cross-wiring two items' aria-controls. Uniqueness of `value` does
+  // not save you: 'a b' and 'a-b' are both legitimately unique.
+  it('keeps distinct values distinct after sanitising', () => {
+    expect(idFragment('a b')).not.toBe(idFragment('a-b'))
+    expect(idFragment('a.b')).not.toBe(idFragment('a-b'))
+  })
+
+  it('produces ids that survive being written into a selector', () => {
+    for (const value of ['two words', 'a.b', 'quote"here', 'hash#tag', 'br[ack]et']) {
+      const id = idFragment(value)
+      expect(id).toMatch(/^[\w-]+$/)
+      // A selector built from it must parse and match.
+      const el = document.createElement('div')
+      el.id = id
+      document.body.appendChild(el)
+      expect(document.querySelector(`#${id}`)).toBe(el)
+      el.remove()
+    }
+  })
+
+  it('is stable for the same input', () => {
+    expect(idFragment('two words')).toBe(idFragment('two words'))
   })
 })

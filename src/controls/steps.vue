@@ -1,5 +1,5 @@
 <template>
-  <div class="cat-steps" :class="rootClasses">
+  <div ref="rootRef" class="cat-steps" :class="rootClasses">
     <!-- An ordered list, deliberately not a tablist. Steps are a sequence with
          progress rather than a set of peers: they have an order that matters,
          most of them are unreachable at any given moment, and moving between
@@ -67,33 +67,39 @@
         <slot />
       </div>
 
-      <div v-if="hasNavigation || $slots.navigation" class="cat-steps-nav">
-        <slot
-          name="navigation"
-          :previous="previous"
-          :next="next"
-          :go-to="goTo"
-          :has-previous="resolveSteps().hasPrevious"
-          :has-next="resolveSteps().hasNext"
-          :active-index="resolveSteps().activeIndex"
-          :count="resolveSteps().count"
-        >
-          <cat-button :disabled="!resolveSteps().hasPrevious" @click="previous">
-            {{ previousLabel }}
-          </cat-button>
-          <cat-button variant="primary" :disabled="!resolveSteps().hasNext" @click="next">
-            {{ nextLabel }}
-          </cat-button>
-        </slot>
-      </div>
+      <!-- Resolved once and iterated over a single-element array, rather than
+           called per binding. resolveSteps() re-invokes the consumer's default
+           slot, which rebuilds every step panel's VNode subtree; the six
+           bindings below were doing that six more times on every render. -->
+      <template v-for="(nav, navIndex) in [resolveSteps()]" :key="navIndex">
+        <div v-if="hasNavigation || $slots.navigation" class="cat-steps-nav">
+          <slot
+            name="navigation"
+            :previous="previous"
+            :next="next"
+            :go-to="goTo"
+            :has-previous="nav.hasPrevious"
+            :has-next="nav.hasNext"
+            :active-index="nav.activeIndex"
+            :count="nav.count"
+          >
+            <cat-button :disabled="!nav.hasPrevious" @click="previous">
+              {{ previousLabel }}
+            </cat-button>
+            <cat-button variant="primary" :disabled="!nav.hasNext" @click="next">
+              {{ nextLabel }}
+            </cat-button>
+          </slot>
+        </div>
+      </template>
     </div>
   </div>
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string">
-import { computed, nextTick, provide, shallowRef, watch, useId, useSlots } from 'vue'
+import { computed, nextTick, provide, shallowRef, watch, useId, useSlots, useTemplateRef } from 'vue'
 import CatStepItem from './step-item.vue'
-import { collectSlotItems, idFragment } from '../util/slot-items'
+import { booleanProp, collectSlotItems, idFragment } from '../util/slot-items'
 import CatButton from './button.vue'
 import CatIcon from './icon.vue'
 import type { StepsLabelPosition, StepsSize, StepsVariant } from './types'
@@ -243,6 +249,7 @@ defineSlots<{
  */
 const model = defineModel<T>()
 
+const rootRef = useTemplateRef<HTMLElement>('rootRef')
 const slots = useSlots()
 
 // One id per stepper; each step derives its pair from this plus its own value,
@@ -284,7 +291,8 @@ function resolveSteps () {
       icon: p.icon as string | undefined,
       variant: p.variant as StepDescriptor['variant'],
       // Absent means "inherit from the parent"; `false` is a real override.
-      clickable: p.clickable as boolean | undefined,
+      // Normalised because a valueless `clickable` attribute arrives as ''.
+      clickable: booleanProp(p.clickable),
       labelId: `${idBase}-label-${fragment}`,
       panelId: `${idBase}-panel-${fragment}`
     }
@@ -402,8 +410,21 @@ const markerIconSize = computed(() => {
 // where it is rather than yanking it out of whatever the user was doing.
 let focusPending = false
 
+// Resolves once and moves relative to the active step, so stepping does not
+// walk the slot twice per press.
+function goToStep (delta: number) {
+  const resolved = resolveSteps()
+  goToResolved(resolved, resolved.activeIndex + delta)
+}
+
 function goToIndex (index: number) {
-  const { steps: resolved, activeIndex } = resolveSteps()
+  goToResolved(resolveSteps(), index)
+}
+
+function goToResolved (
+  { steps: resolved, activeIndex }: ReturnType<typeof resolveSteps>,
+  index: number
+) {
   const step = resolved[index]
   if (!step || index === activeIndex) return
   const oldValue = activeValue.value as T | undefined
@@ -421,11 +442,13 @@ watch(activeValue, (value) => {
   if (!focusPending) return
   focusPending = false
   nextTick(() => {
-    // Focus by id rather than a callback handed up at registration: the
-    // parent already knows the panel id, since it derives it the same way the
-    // child does.
+    // Focus by id rather than a callback handed up at registration: the parent
+    // already knows the panel id, since it derives it the same way the child
+    // does. Scoped to this stepper's own root rather than document-wide, so it
+    // still resolves inside a shadow root or a detached container, where
+    // getElementById returns null and focus would silently stop moving.
     const panelId = resolveSteps().steps.find(s => s.value === value)?.panelId
-    if (panelId) document.getElementById(panelId)?.focus()
+    if (panelId) rootRef.value?.querySelector<HTMLElement>(`[id="${panelId}"]`)?.focus()
   })
 })
 
@@ -437,11 +460,11 @@ function onTriggerClick (step: ResolvedStep) {
 }
 
 function previous () {
-  goToIndex(resolveSteps().activeIndex - 1)
+  goToStep(-1)
 }
 
 function next () {
-  goToIndex(resolveSteps().activeIndex + 1)
+  goToStep(1)
 }
 
 function goTo (value: T) {

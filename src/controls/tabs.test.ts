@@ -303,6 +303,41 @@ describe('cat-tabs WAI-ARIA tablist', () => {
       wrapper.unmount()
     })
 
+    // The header is in template order now, but a `v-for` template-ref array is
+    // filled in mount order, which Vue does not guarantee to match. Indexing one
+    // by the other made ArrowRight select the right tab while moving DOM focus
+    // to a different one.
+    it('moves DOM focus to the same tab it selects after a late insertion', async () => {
+      const showMiddle = ref(false)
+      const model = ref('a')
+      const Host = defineComponent({
+        setup: () => () => h(CatTabs, {
+          'modelValue': model.value,
+          'onUpdate:modelValue': (v: string) => { model.value = v }
+        }, {
+          default: () => [
+            h(CatTabItem, { label: 'A', value: 'a' }, () => 'A'),
+            showMiddle.value ? h(CatTabItem, { label: 'B', value: 'b' }, () => 'B') : null,
+            h(CatTabItem, { label: 'C', value: 'c' }, () => 'C')
+          ]
+        })
+      })
+      const wrapper = mount(Host, { attachTo: document.body })
+      showMiddle.value = true
+      await nextTick()
+      await nextTick()
+
+      const tabs = wrapper.findAll('[role="tab"]')
+      expect(tabs.map(t => t.text())).toEqual(['A', 'B', 'C'])
+      ;(tabs[0]!.element as HTMLElement).focus()
+      await tabs[0]!.trigger('keydown', { key: 'ArrowRight' })
+      await nextTick()
+
+      expect(model.value).toBe('b')
+      expect((document.activeElement as HTMLElement)?.textContent?.trim()).toBe('B')
+      wrapper.unmount()
+    })
+
     it('pairs each tab with its panel by id', () => {
       const wrapper = mount(CatTabs, {
         props: { modelValue: 'a' },

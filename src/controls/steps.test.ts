@@ -559,6 +559,39 @@ describe('cat-steps accessibility', () => {
       wrapper.unmount()
     })
 
+    // VNode props are pre-normalization, so a valueless attribute arrives as the
+    // empty string. Read naively that is falsy, which made `clickable` render a
+    // non-interactive span — the opposite of what it asks for.
+    it('treats a valueless clickable attribute as true', () => {
+      const wrapper = mount(CatSteps, {
+        props: { modelValue: 'one', ariaLabel: 'Demo' },
+        slots: {
+          default: () => [
+            h(CatStepItem, { label: 'One', value: 'one' }, () => '1'),
+            h(CatStepItem, { label: 'Two', value: 'two', clickable: '' }, () => '2')
+          ]
+        }
+      })
+      expect(wrapper.findAll('.cat-step-trigger').map(t => t.element.tagName))
+        .toEqual(['BUTTON', 'BUTTON'])
+      wrapper.unmount()
+    })
+
+    it('still honours an explicit clickable=false', () => {
+      const wrapper = mount(CatSteps, {
+        props: { modelValue: 'one', ariaLabel: 'Demo' },
+        slots: {
+          default: () => [
+            h(CatStepItem, { label: 'One', value: 'one' }, () => '1'),
+            h(CatStepItem, { label: 'Two', value: 'two', clickable: false }, () => '2')
+          ]
+        }
+      })
+      expect(wrapper.findAll('.cat-step-trigger').map(t => t.element.tagName))
+        .toEqual(['BUTTON', 'SPAN'])
+      wrapper.unmount()
+    })
+
     it('does not strand an entry when a value changes', async () => {
       const value = ref('before')
       const Host = defineComponent({

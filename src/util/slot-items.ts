@@ -52,15 +52,21 @@ const warned = new Set<string>()
  */
 function warnUnrecognisedChild (node: VNode, expected?: string): void {
   if (!expected) return
-  if (process.env.NODE_ENV === 'production') return
   const type = node.type
   const isComponent = typeof type === 'function'
     || (typeof type === 'object' && type !== null)
+  // A plain element beside the items renders in the content area and may well
+  // be deliberate; a component in that position is far more likely to be a
+  // wrapper that used to work. Checked before the environment guard so the
+  // common case never reaches it.
   if (!isComponent) return
+  // `typeof` first: Vite skips the process.env define in library mode, so this
+  // reference survives into the published bundle. A consumer loading the ESM
+  // build without a bundler — a plain <script type="module">, a CDN import map
+  // — has no `process` at all, and a bare reference would throw.
+  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') return
 
-  const name = (typeof type === 'object' && type !== null && 'name' in type
-    ? String((type as { name?: unknown }).name ?? '')
-    : (type as { name?: string }).name ?? '') || 'a component'
+  const name = componentName(type) || 'a component'
   const key = `${expected}:${name}`
   if (warned.has(key)) return
   warned.add(key)
@@ -77,15 +83,63 @@ function warnUnrecognisedChild (node: VNode, expected?: string): void {
  * Build an id fragment from a child's `value`.
  *
  * Ids are derived from the value rather than the child's position, so
- * inserting a tab ahead of another does not renumber — and, more importantly,
- * so the parent and the child arrive at the same id without having to agree on
- * an index. The child knows its own `value`; it does not know where it sits.
+ * inserting an item ahead of another does not renumber — and, more
+ * importantly, so the parent and the child arrive at the same id without
+ * having to agree on an index. The child knows its own `value`; it does not
+ * know where it sits.
  *
- * Whitespace is the only character an HTML id cannot carry, so that is all
- * that is replaced. Two values differing only in whitespace would collide,
- * which is why `value` is documented as needing to be unique per group
- * anyway — the registration model it replaces keyed on it too.
+ * Anything outside `[A-Za-z0-9_-]` is replaced, since ids also have to survive
+ * being written into a CSS selector. Replacing alone would make distinct
+ * values collide — `'a b'` and `'a-b'` are both legitimately unique yet would
+ * flatten to the same fragment, cross-wiring two items' aria-controls — so a
+ * short hash of the original is appended whenever anything was replaced. The
+ * common case of a plain identifier is left readable and unhashed.
  */
 export function idFragment (value: string | number): string {
-  return String(value).replace(/\s+/g, '-')
+  const raw = String(value)
+  const safe = raw.replace(/[^\w-]/g, '-')
+  return safe === raw ? safe : `${safe}-${hashString(raw)}`
+}
+
+/**
+ * Read a boolean prop off a raw VNode.
+ *
+ * VNode props are pre-normalization, so a valueless attribute — `<cat-step-item
+ * clickable>` — arrives as the empty string, which is falsy. Read naively that
+ * made `clickable` mean the *opposite* of what it says: the marker rendered as
+ * a non-interactive span. Vue's own prop normalization does this conversion;
+ * anything reading props from VNodes has to do it by hand.
+ */
+export function booleanProp (value: unknown): boolean | undefined {
+  if (value === undefined || value === null) return undefined
+  if (value === '') return true
+  return value !== false && value !== 'false'
+}
+
+/** djb2, base 36. Short and stable across server and client — not for security. */
+function hashString (input: string): string {
+  let hash = 5381
+  for (let i = 0; i < input.length; i++) {
+    hash = ((hash << 5) + hash + input.charCodeAt(i)) | 0
+  }
+  return Math.abs(hash).toString(36)
+}
+
+/**
+ * Best-effort display name for a component VNode type.
+ *
+ * `<script setup>` SFCs do not set `name` — the compiler emits `__name`, and
+ * `__file` when filename-based naming is on. Without those the dedupe key
+ * collapsed to the same generic string for every wrapper, so only the first
+ * one in an app was ever reported and the message could not say which
+ * component to move.
+ */
+function componentName (type: unknown): string {
+  if (typeof type === 'function') return type.name || ''
+  if (typeof type !== 'object' || type === null) return ''
+  const c = type as { name?: string, __name?: string, __file?: string }
+  if (c.name) return c.name
+  if (c.__name) return c.__name
+  if (c.__file) return c.__file.split('/').pop() ?? ''
+  return ''
 }

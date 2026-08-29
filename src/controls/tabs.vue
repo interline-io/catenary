@@ -21,7 +21,6 @@
           v-for="(tab, index) in tabItems()"
           :id="tab.tabId"
           :key="tab.value"
-          ref="tabRefs"
           type="button"
           role="tab"
           class="cat-tab"
@@ -127,7 +126,6 @@ interface TabItem {
 }
 
 const tablistRef = ref<HTMLElement | null>(null)
-const tabRefs = ref<HTMLButtonElement[]>([])
 const slots = useSlots()
 
 // One id per tablist; each tab derives its pair from this plus its own value.
@@ -176,7 +174,14 @@ function selectTab (value: string | number) {
 }
 
 function focusTabAt (index: number) {
-  const next = tabRefs.value[index]
+  // Resolved from the DOM by data-index rather than a `v-for` template-ref
+  // array. Vue fills those by pushing on mount and removing on unmount, so the
+  // array is in mount order, which the docs decline to guarantee. That used to
+  // match the header because the header was built from mount-ordered
+  // registrations too; now the header is in template order, so a tab revealed
+  // later by `v-if` made the two disagree — ArrowRight selected the right tab
+  // and moved DOM focus to a different one.
+  const next = tablistRef.value?.querySelector<HTMLElement>(`[data-index="${index}"]`)
   if (!next) return
   next.focus()
   const value = tabItems()[index]?.value
