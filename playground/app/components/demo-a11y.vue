@@ -109,16 +109,20 @@ defineProps<{
 </script>
 
 <style lang="scss" scoped>
+// These links sit in running text, so color alone does not distinguish them
+// from it (axe: link-in-text-block, and WCAG 1.4.1 more broadly). #70 fixed
+// the reference list; the intro paragraph needs it for the same reason, and
+// only shows up once a page puts enough prose around the pattern link for axe
+// to treat it as a text block.
+.cat-demo-a11y-refs a,
+p a {
+  text-decoration: underline;
+}
+
 .cat-demo-a11y-refs {
   list-style: disc;
   padding-left: 1.25rem;
   margin-top: 0.5rem;
-
-  // These links sit in running text, so color alone does not distinguish them
-  // from it (axe: link-in-text-block, and WCAG 1.4.1 more broadly).
-  a {
-    text-decoration: underline;
-  }
 }
 
 .cat-demo-a11y-keys {

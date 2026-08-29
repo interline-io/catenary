@@ -59,7 +59,15 @@
         ]"
       >
         <template #intro>
-          The copy action is a real <code>&lt;button&gt;</code>; the external-link variant is an <code>&lt;a target="_blank" rel="noopener noreferrer"&gt;</code> with <code>aria-label="Open URL in new tab"</code>. URLs are sanitized to block <code>javascript:</code> and other unsafe schemes before being assigned to <code>href</code>.
+          The copy action is a real <code>&lt;button&gt;</code>; the external-link variant is an <code>&lt;a target="_blank" rel="noopener noreferrer"&gt;</code>. URLs are sanitized to block <code>javascript:</code> and other unsafe schemes before being assigned to <code>href</code>.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            Both controls are named after their subject — <code>Copy https://example.com/… to clipboard</code>, <code>Open https://example.com/… in new tab</code> — rather than with a constant string. A safelink is usually rendered once per row of a table, so identical names would leave a screen reader's elements list showing several indistinguishable buttons, and a bare "Open URL in new tab" never says where it goes (WCAG 2.4.4).
+          </p>
+          <p class="mt-2">
+            Copying produces no visible change, so the result is announced through a visually hidden <code>role="status"</code>. That region is rendered from mount and only its text changes: a live region inserted together with its content is announced unreliably. <code>copied-label</code> and <code>copy-failed-label</code> are props for translation.
+          </p>
         </template>
       </demo-a11y>
     </section>

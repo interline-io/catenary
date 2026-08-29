@@ -177,6 +177,28 @@
           Place this component anywhere in your layout, typically in the header or navigation bar.
         </p>
       </demo-box>
+      <demo-a11y
+        pattern-name="Button"
+        pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/button/"
+        :references="[
+          { label: 'WCAG SC 4.1.2: Name, Role, Value', url: 'https://www.w3.org/WAI/WCAG22/Understanding/name-role-value.html', note: 'a toggle must expose its pressed state' },
+        ]"
+        :keyboard="[
+          { key: 'Enter / Space', description: 'Toggles between the light and dark theme.' },
+        ]"
+      >
+        <template #intro>
+          Rendered as a toggle button: a native <code>&lt;button&gt;</code> carrying <code>aria-pressed</code>.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            The label is fixed at "Dark mode" and names what the button controls; <code>aria-pressed</code> carries whether dark mode is currently on. A label that names the current state instead — "Dark Mode" while dark — is ambiguous with one that names the action, so a screen reader user cannot tell whether pressing it turns dark mode on or off. The <code>label</code> prop exists for translation.
+          </p>
+          <p class="mt-2">
+            The sun / moon glyph is decorative and <code>aria-hidden</code>, so it cannot leak into the accessible name. State is conveyed by <code>aria-pressed</code>, not by the icon alone.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -184,6 +206,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const sampleText = ref('')
 const sampleTextarea = ref('')

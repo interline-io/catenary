@@ -3,7 +3,7 @@
     ref="inputRef"
     v-bind="$attrs"
     expanded
-    type="text"
+    type="search"
     icon="magnify"
     clearable
     :model-value="modelValue ?? undefined"
