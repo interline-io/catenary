@@ -287,6 +287,18 @@ defineExpose({
 </script>
 
 <style scoped lang="scss">
+/* `type="search"` makes WebKit render its own clear affordance, and this
+   component draws one of its own whenever `clearable` is set — cat-search-bar
+   always does. Chrome already drops the native one because Bulma's control
+   mixin sets `appearance: none` on `.input`, but Safari keeps it unless the
+   pseudo-element is suppressed explicitly, which would show two X buttons in
+   the same field. */
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration {
+  appearance: none;
+  -webkit-appearance: none;
+}
+
 /* Override default button styling so the clickable right icon visually
    matches the non-clickable span variant. */
 .cat-input-icon-button {

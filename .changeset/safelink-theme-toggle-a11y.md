@@ -21,6 +21,8 @@ Now the standard toggle-button shape: a fixed label naming what the button contr
 
 `type="search"` rather than `type="text"`, giving the input its implicit `searchbox` role.
 
+`cat-input` now suppresses WebKit's native search clear affordance, since it draws its own whenever `clearable` is set and `cat-search-bar` always sets it. Chrome already dropped the native one because Bulma's control mixin sets `appearance: none` on `.input` — verified that layout is byte-identical between `type="text"` and `type="search"` there — but Safari keeps it unless the pseudo-element is suppressed explicitly, which would have shown two clear buttons in the same field.
+
 ## Tests and docs
 
 New `safelink.test.ts` and `theme-toggle.test.ts` (neither component had tests), covering the naming, the live region in all three outcomes, and the pressed state. `cat-theme-toggle`'s playground page gains the `demo-a11y` section it lacked, which also takes one component off the list in #64.
