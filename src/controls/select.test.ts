@@ -26,7 +26,7 @@ describe('CatSelect', () => {
   describe('fallthrough attributes', () => {
     // A duplicated id put the same value on the root .control wrapper, which
     // precedes the select in document order — so a consumer's <label for>
-    // resolved to a non-labelable div and labelled nothing.
+    // resolved to that non-labelable wrapper and labelled nothing.
     it('puts id, aria-* and data-* on the select only', () => {
       const wrapper = mountComponent(CatSelect, {
         attrs: { 'id': 'dup-check', 'aria-labelledby': 'ext', 'data-probe': '1' }

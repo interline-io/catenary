@@ -33,9 +33,9 @@ import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 // Fallthrough *attributes* go to the native element only. Without this, Vue
 // also applied them to the root `.control` wrapper, so a consumer's `id`
 // landed on both — and since the wrapper precedes the control in document
-// order, a `<label for>` resolved to a non-labelable div and silently stopped
-// labelling anything. Undeclared `aria-*` was duplicated onto a role-less div
-// the same way.
+// order, a `<label for>` resolved to that wrapper, which is not a labelable
+// element, and silently stopped labelling anything. Undeclared `aria-*` was
+// duplicated onto a wrapper with no role the same way.
 //
 // `class`, `style` and event listeners still reach the root as well, which is
 // what they did before and what callers depend on:

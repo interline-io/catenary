@@ -6,7 +6,7 @@ Fallthrough attributes, disabled tooltip triggers, and typed ARIA state props â€
 
 ## `cat-input` / `cat-textarea` / `cat-select` route attributes to the native element
 
-All three bound `v-bind="$attrs"` onto the native control without `inheritAttrs: false`, so Vue *also* applied every fallthrough attribute to the root `.control` wrapper. A consumer's `id` landed on both, and because the wrapper precedes the control in document order, a `<label for>` resolved to a non-labelable `<div>` and silently stopped labelling anything. Undeclared `aria-*` was duplicated onto a role-less div the same way.
+All three bound `v-bind="$attrs"` onto the native control without `inheritAttrs: false`, so Vue *also* applied every fallthrough attribute to the root `.control` wrapper. A consumer's `id` landed on both, and because the wrapper precedes the control in document order, a `<label for>` resolved to that non-labelable wrapper element and silently stopped labelling anything. Undeclared `aria-*` was duplicated onto a role-less wrapper the same way.
 
 `class`, `style` and event listeners deliberately still reach the wrapper as well, because both destinations turned out to be load-bearing:
 
