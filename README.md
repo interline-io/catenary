@@ -98,6 +98,7 @@ Or via CDN/link tags if you prefer.
 | Component | Tag | Description |
 |-----------|-----|-------------|
 | CatButton | `<cat-button>` | Button with variants, sizes, loading state, icons |
+| CatSplitButton | `<cat-split-button>` | Button with an attached dropdown of related actions |
 | CatCheckbox | `<cat-checkbox>` | Checkbox with v-model support |
 | CatCheckboxGroup | `<cat-checkbox-group>` | Multiple checkboxes from an options array |
 | CatRadio | `<cat-radio>` | Radio button |

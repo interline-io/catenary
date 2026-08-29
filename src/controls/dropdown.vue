@@ -210,8 +210,12 @@ function focusableTrigger (): HTMLElement | null {
   if (triggerButtonRef.value) return triggerButtonRef.value
   const triggerWrapper = dropdownRef.value?.querySelector('.dropdown-trigger')
   if (!triggerWrapper) return null
+  // Skip a disabled element: .focus() silently no-ops on one, so close()
+  // would drop focus to <body> instead of returning it. Reachable when a
+  // #trigger can be disabled while its menu is open (cat-split-button's caret).
   return triggerWrapper.querySelector<HTMLElement>(
-    'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), '
+    + 'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
   )
 }
 
@@ -229,10 +233,20 @@ const triggerAttrs = computed(() => ({
   'aria-expanded': isActive.value
 }))
 
+// Bulma names the non-default placements `is-right` and `is-up`, not
+// `is-bottom-right` / `is-top-left`. The interpolated form emitted a class
+// Bulma has no rule for, so the CSS fallback always rendered bottom-left.
+// Matches what cat-datepicker already does.
+//
+// These classes are bound unconditionally, so Bulma's placement rules apply in
+// the Popover API path too, where useAnchoredPopover sets the coordinates
+// itself. The `[popover]` reset in this file's style block is scoped to
+// out-specify them there; see the comment above it.
 const dropdownClass = computed(() => ({
   'is-active': isActive.value,
   'is-hoverable': props.hoverable,
-  [`is-${props.position}`]: props.position !== 'bottom-left'
+  'is-right': props.position === 'bottom-right' || props.position === 'top-right',
+  'is-up': props.position === 'top-left' || props.position === 'top-right'
 }))
 
 const menuStyle = computed(() => {
@@ -268,8 +282,13 @@ function toggle () {
 
 function open (focusIndex?: 'first' | 'last' | 'selected') {
   if (isActive.value && focusIndex === undefined) return
+  // Only on the closed -> open transition. A focusIndex call is allowed
+  // through the guard above so the keyboard can move focus into an already
+  // open menu (click the trigger, then ArrowDown), which must not read as a
+  // second open to a consumer counting the event or lazy-loading on it.
+  const wasActive = isActive.value
   isActive.value = true
-  emit('open')
+  if (!wasActive) emit('open')
   if (focusIndex !== undefined) {
     nextTick(() => {
       const items = focusableMenuItems()
@@ -488,8 +507,15 @@ defineExpose({ open, close, toggle })
        whatever the theme. .dropdown-item is `color: inherit`, so in dark mode
        every item and icon rendered black on Bulma's dark .dropdown-content.
        Measured: page color rgb(171,177,191), menu color rgb(0,0,0).
-   `overflow: auto` is deliberately left alone: a long menu needs to scroll. */
-.dropdown-menu[popover] {
+   `overflow: auto` is deliberately left alone: a long menu needs to scroll.
+
+   Scoped to `.cat-dropdown` purely for specificity. Bulma's placement rules
+   (`.dropdown.is-right .dropdown-menu { right: 0 }`, `.dropdown.is-up
+   .dropdown-menu { bottom: 100% }`) are (0,3,0), exactly what this rule scores
+   with its scope attribute — and `bulma` is a peerDependency the consumer
+   imports separately, so which one wins would otherwise come down to their
+   stylesheet order. The extra class makes this reset (0,4,0) and settles it. */
+.cat-dropdown .dropdown-menu[popover] {
   position: fixed;
   margin: 0;
   inset: auto;

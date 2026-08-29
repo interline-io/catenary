@@ -27,6 +27,33 @@ function mountDropdown (props: Record<string, any> = {}) {
   return { wrapper: mount(Host, { attachTo: document.body }), selected }
 }
 
+describe('cat-dropdown menu placement', () => {
+  // Bulma names these `is-right` and `is-up`. Interpolating the prop straight
+  // into the class emitted `is-bottom-right` / `is-top-left`, which match no
+  // Bulma rule, so the CSS fallback silently rendered bottom-left whatever the
+  // prop said. Nothing asserted on the classes, which is why it went unseen.
+  it.each([
+    ['bottom-left', []],
+    ['bottom-right', ['is-right']],
+    ['top-left', ['is-up']],
+    ['top-right', ['is-right', 'is-up']]
+  ] as const)('maps position=%s to Bulma placement classes', (position, expected) => {
+    const { wrapper } = mountDropdown({ position })
+    const classes = wrapper.find('.dropdown').classes()
+    for (const cls of expected) {
+      expect(classes).toContain(cls)
+    }
+    for (const cls of ['is-right', 'is-up'] as const) {
+      if (!(expected as readonly string[]).includes(cls)) {
+        expect(classes).not.toContain(cls)
+      }
+    }
+    // The old interpolated names must not come back.
+    expect(classes.some(c => c.startsWith('is-bottom-') || c.startsWith('is-top-'))).toBe(false)
+    wrapper.unmount()
+  })
+})
+
 describe('cat-dropdown WAI-ARIA + keyboard', () => {
   it('renders aria-haspopup, aria-controls, and aria-expanded on the trigger', () => {
     const { wrapper } = mountDropdown()
