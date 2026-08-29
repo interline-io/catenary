@@ -532,6 +532,33 @@ describe('cat-steps accessibility', () => {
 
     // deregister/register on a value change needed a watcher in the item; with
     // the list read from the slot the old entry cannot outlive the render.
+    // The active step disappearing must not leave the stepper with no visible
+    // panel. Previously handled by a fallback in activeValue; when that fallback
+    // briefly moved into a watch on the model, removing the active step stopped
+    // triggering it and every panel went hidden.
+    it('falls back to the first step when the active one is removed', async () => {
+      const showSecond = ref(true)
+      const Host = defineComponent({
+        setup: () => () => h(CatSteps, { modelValue: 'b', ariaLabel: 'Demo' }, () => [
+          h(CatStepItem, { label: 'A', value: 'a' }, () => 'A'),
+          showSecond.value ? h(CatStepItem, { label: 'B', value: 'b' }, () => 'B') : null,
+          h(CatStepItem, { label: 'C', value: 'c' }, () => 'C')
+        ])
+      })
+      const wrapper = mount(Host, { attachTo: document.body })
+      const visible = () => wrapper.findAll('.cat-step-panel')
+        .filter(p => (p.element as HTMLElement).style.display !== 'none')
+      expect(visible()).toHaveLength(1)
+      expect(visible()[0]?.text()).toBe('B')
+
+      showSecond.value = false
+      await nextTick()
+      await nextTick()
+      expect(visible()).toHaveLength(1)
+      expect(visible()[0]?.text()).toBe('A')
+      wrapper.unmount()
+    })
+
     it('does not strand an entry when a value changes', async () => {
       const value = ref('before')
       const Host = defineComponent({

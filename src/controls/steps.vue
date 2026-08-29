@@ -91,7 +91,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string">
-import { computed, nextTick, provide, watch, useId, useSlots } from 'vue'
+import { computed, nextTick, provide, shallowRef, watch, useId, useSlots } from 'vue'
 import CatStepItem from './step-item.vue'
 import { collectSlotItems, idFragment } from '../util/slot-items'
 import CatButton from './button.vue'
@@ -295,6 +295,7 @@ function resolveSteps () {
   // stepper would draw a progress list with no panel below it.
   const found = items.findIndex(s => s.value === model.value)
   const activeIndex = found >= 0 ? found : 0
+  publishValues(items.map(s => s.value))
 
   return {
     activeIndex,
@@ -309,24 +310,35 @@ function resolveSteps () {
   }
 }
 
-// Children compare against the model alone, with no slot dependency of their
-// own: a computed that read the slot would not re-evaluate when the slot
-// changed, and would warn. The model is normalised below so it always names a
-// real step on the client.
-const activeValue = computed(() => model.value)
+/**
+ * The step values from the most recent render, published for `activeValue`.
+ *
+ * Written from inside `resolveSteps()` — that is, during render, the only
+ * place a slot can be read without Vue warning that its dependencies will not
+ * be tracked. Children need the list to resolve the fallback, and reading it
+ * from a computed of their own would hit exactly that problem.
+ *
+ * Guarded against no-op writes: an unconditional assignment during render
+ * would invalidate the computed on every pass and schedule another.
+ */
+const resolvedValues = shallowRef<(string | number)[]>([])
 
-// An unbound stepper, or one whose value names a step that has since been
-// removed, settles on the first step. Done as a state change rather than a
-// fallback inside activeValue so that nothing downstream has to read the slot.
-// Never runs during SSR, so a server-rendered stepper needs a bound v-model to
-// show a panel — which is what it needed before this change too.
-watch([model, () => props.animated], () => {
-  const { steps: resolved } = resolveSteps()
-  if (resolved.length === 0) return
-  if (!resolved.some(s => s.value === model.value)) {
-    model.value = resolved[0]!.value as T
-  }
-}, { immediate: true, flush: 'post' })
+function publishValues (values: (string | number)[]) {
+  const previous = resolvedValues.value
+  if (values.length === previous.length && values.every((v, i) => v === previous[i])) return
+  resolvedValues.value = values
+}
+
+// Falls back to the first step whenever the model names none — nothing bound
+// yet, or the active step removed by a `v-if`. Left as a fallback rather than
+// written back to the model: the model belongs to the consumer, and a stepper
+// whose active step disappears should keep showing something without silently
+// rewriting the value they bound.
+const activeValue = computed(() => {
+  const values = resolvedValues.value
+  if (values.length === 0) return model.value
+  return values.includes(model.value as string | number) ? model.value : values[0]
+})
 
 provide(StepsContextKey, {
   idBase,

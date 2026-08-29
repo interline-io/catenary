@@ -11,8 +11,9 @@ import { Comment, Fragment, Text, type VNode } from 'vue'
  * `onMounted` never runs during `renderToString`, so a registration-based
  * header is empty in the server HTML and only appears on hydration.
  *
- * Flattens Fragments (`v-for`, `<template>`) and drops Comments, which is what
- * a `v-if` renders when false.
+ * Flattens Fragments (`v-for`, `<template>`) and drops anything that is not
+ * the component asked for: Comments, which is what a `v-if` renders when
+ * false, and Text, which is the whitespace between elements in a template.
  */
 export function collectSlotItems (nodes: VNode[] | undefined, type: unknown): VNode[] {
   if (!nodes) return []
