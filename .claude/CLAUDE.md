@@ -36,7 +36,7 @@ Tests use **Vitest** with jsdom environment. Test files live alongside component
 
 ### Source Structure (`src/`)
 
-- **controls/** — 30 Vue components (prefix `cat-`): button, input, modal, table, select, datepicker, taginput, etc. Styled with Bulma CSS. Components that use other controls import them explicitly (e.g., button imports icon, datepicker imports dropdown/input/select).
+- **controls/** — 31 Vue components (prefix `cat-`): button, input, modal, table, select, datepicker, taginput, etc. Styled with Bulma CSS. Components that use other controls import them explicitly (e.g., button imports icon, datepicker imports dropdown/input/select).
 - **controls/types.ts** — Shared TypeScript types for variants, sizes, and injection keys (`FieldIdKey`).
 - **testutil/** — Test helper utilities (mount helpers, variant/size generators, v-model testing, a11y checks).
 

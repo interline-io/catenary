@@ -978,8 +978,11 @@ defineExpose({ close, focus: () => inputRef.value?.focus() })
    the opaque `background-color: Canvas` shows through the padding-top gap and
    behind the content's rounded corners, and `color: CanvasText` is black
    regardless of theme because nothing sets a `color-scheme`. Same reset as
-   cat-dropdown. */
-.dropdown-menu[popover] {
+   cat-dropdown — including the `.cat-datepicker-dropdown` scope, which is
+   there for specificity: it ties Bulma's `.dropdown.is-right`/`.is-up`
+   placement rules at (0,3,0) otherwise, leaving the winner up to the order in
+   which the consumer imports the `bulma` peerDependency. */
+.cat-datepicker-dropdown .dropdown-menu[popover] {
   position: fixed;
   margin: 0;
   inset: auto;
