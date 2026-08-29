@@ -202,4 +202,46 @@ describe('cat-tooltip', () => {
       wrapper.unmount()
     })
   })
+
+  describe('disabled triggers', () => {
+    // Explaining why an action is unavailable is the commonest reason to wrap
+    // a disabled control. Treating it as the tab stop made the tooltip
+    // unreachable by keyboard: the wrapper skipped its own tabindex and hung
+    // aria-describedby on an element that is not in the tab order.
+    it.each([
+      ['the disabled attribute', '<button disabled>Delete</button>'],
+      ['an ancestor fieldset', '<fieldset disabled><button>Save</button></fieldset>'],
+      // A disabled control with an explicit tabindex would otherwise slip
+      // through the trailing [tabindex] clause and re-create the bug.
+      ['disabled plus an explicit tabindex', '<button disabled tabindex="0">Delete</button>']
+    ])('makes the wrapper the tab stop when the control is disabled by %s', async (_label, slot) => {
+      const wrapper = mount(CatTooltip, {
+        attachTo: document.body,
+        props: { text: 'Needs an admin role' },
+        slots: { default: slot }
+      })
+      await wrapper.vm.$nextTick()
+      const root = wrapper.find('.cat-tooltip')
+      expect(root.attributes('tabindex')).toBe('0')
+      expect(root.attributes('aria-describedby')).toBeDefined()
+      // The describedby is applied to the DOM directly, so this assertion is
+      // what actually discriminates: hanging it on an unreachable control is
+      // the bug.
+      expect(wrapper.find('button').attributes('aria-describedby')).toBeUndefined()
+      wrapper.unmount()
+    })
+
+    it('still defers to an enabled control in the slot', async () => {
+      const wrapper = mount(CatTooltip, {
+        attachTo: document.body,
+        props: { text: 'Save your work' },
+        slots: { default: '<button>Save</button>' }
+      })
+      // aria-describedby is applied programmatically after mount.
+      await wrapper.vm.$nextTick()
+      expect(wrapper.find('.cat-tooltip').attributes('tabindex')).toBeUndefined()
+      expect(wrapper.find('button').attributes('aria-describedby')).toBeDefined()
+      wrapper.unmount()
+    })
+  })
 })

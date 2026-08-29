@@ -1,5 +1,9 @@
 <template>
-  <div class="control" :class="controlClasses">
+  <div
+    class="control"
+    :class="controlClasses"
+    v-bind="rootAttrs"
+  >
     <div
       class="select cat-select"
       :class="selectClasses"
@@ -26,10 +30,40 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | null | string[] = string | null">
-import { computed, ref, watch, onMounted, nextTick, inject } from 'vue'
+import { computed, ref, watch, onMounted, nextTick, inject, useAttrs } from 'vue'
+import { filterAttrs, isPresentationalAttr } from '../util/attrs'
 import type { SelectVariant, SelectSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
+// Fallthrough *attributes* go to the native element only. Without this, Vue
+// also applied them to the root `.control` wrapper, so a consumer's `id`
+// landed on both — and since the wrapper precedes the control in document
+// order, a `<label for>` resolved to that wrapper, which is not a labelable
+// element, and silently stopped labelling anything. Undeclared `aria-*` was
+// duplicated onto a wrapper with no role the same way.
+//
+// This component declares `id` as a prop, so the `id` case never reached it —
+// but every undeclared attribute did.
+//
+// `class`, `style` and event listeners still reach the root as well, which is
+// what they did before and what callers depend on:
+//   - layout utilities (`mt-2`, `mr-2`) act on the wrapper, while typography
+//     (`is-family-monospace`) only works on the native element — Bulma's base
+//     stylesheet sets `font-family` directly on input/select/textarea, so it
+//     cannot be inherited from the wrapper.
+//   - a listener on the root sees events from the icons and the clear button,
+//     which are siblings of the native element rather than inside it, while
+//     one on the native element is what non-bubbling `@focus` / `@blur` need.
+//     Both destinations are load-bearing; see cat-search-bar's Escape handler,
+//     which stops propagation to collapse the resulting duplicate keydown.
+defineOptions({
+  inheritAttrs: false
+})
+
+const attrs = useAttrs()
+
+// class, style and on* listeners — the subset that keeps reaching the wrapper.
+const rootAttrs = computed(() => filterAttrs(attrs, isPresentationalAttr))
 const fieldId = inject(FieldIdKey, undefined)
 
 /**

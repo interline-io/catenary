@@ -107,8 +107,16 @@ function detectFocusableSlot () {
     applyDescribedBy(null)
     return
   }
+  // `:disabled`, not `[disabled]`: the pseudo-class also matches a control
+  // disabled by an ancestor `<fieldset disabled>`, which is what cat-fieldset
+  // renders. A disabled control is not in the tab order, so treating it as the
+  // tab stop left the wrapper without a tabindex of its own and hung
+  // aria-describedby on something unreachable — making the tooltip
+  // keyboard-invisible in the case that needs it most, explaining why an
+  // action is unavailable. Excluding it makes the wrapper take the tabindex.
   const focusable = wrapper.querySelector<HTMLElement>(
-    'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    'button:not(:disabled), a[href], input:not(:disabled), select:not(:disabled), '
+    + 'textarea:not(:disabled), [tabindex]:not([tabindex="-1"]):not(:disabled)'
   )
   // The tooltip bubble itself contains no focusable elements by design, so
   // any focusable here is from the user's slot.
