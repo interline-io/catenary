@@ -371,6 +371,29 @@ describe('cat-tooltip', () => {
       wrapper.unmount()
     })
 
+    // The bubble is inside the wrapper and is a pointer target now, so a
+    // pointerdown on it reached the wrapper's handler and re-labelled a
+    // keyboard-driven focus as pointer-driven — the tooltip then dismissed on
+    // the next mouseleave despite the trigger still holding focus.
+    it('does not treat a press on the bubble as pointer-driven focus', async () => {
+      const wrapper = mount(CatTooltip, {
+        attachTo: document.body,
+        props: { text: 'Selectable hint text' },
+        slots: { default: '<span>plain text</span>' }
+      })
+      const tooltip = wrapper.find('.cat-tooltip')
+      ;(tooltip.element as HTMLElement).focus()
+      await tooltip.trigger('focusin')
+      expect(tooltip.classes()).toContain('is-visible')
+
+      // Select text in the bubble, then move the pointer away.
+      await wrapper.find('[role="tooltip"]').trigger('pointerdown')
+      await tooltip.trigger('mouseleave')
+      await new Promise(resolve => setTimeout(resolve, 250))
+      expect(tooltip.classes()).toContain('is-visible')
+      wrapper.unmount()
+    })
+
     it('still keeps the bubble up for keyboard focus when the pointer leaves', async () => {
       const wrapper = mount(CatTooltip, {
         attachTo: document.body,

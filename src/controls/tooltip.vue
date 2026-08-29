@@ -226,7 +226,12 @@ function onMouseenter () {
 // between environments.
 let focusFromPointer = false
 
-function onPointerdown () {
+function onPointerdown (event: PointerEvent) {
+  // Only a press on the trigger counts. The bubble is inside the wrapper and
+  // is now a pointer target itself, so selecting the tooltip's text would
+  // otherwise re-label a keyboard-driven focus as pointer-driven and start
+  // dismissing on the next mouseleave, with the trigger still focused.
+  if (bubbleRef.value?.contains(event.target as Node)) return
   focusFromPointer = true
 }
 
@@ -509,11 +514,6 @@ $tooltip-offset: 8px;
     text-underline-offset: 0.2em;
   }
 
-  // `animated="false"`, and the reduced-motion block below, both land here.
-  &.cat-tooltip-static .cat-tooltip-bubble {
-    transition: none;
-  }
-
   // Top-layer rendering (Popover API): fixed coordinates are set inline by
   // the component; reset the UA popover centering and keep the arrow
   // (positioned outside the bubble box) unclipped.
@@ -524,6 +524,17 @@ $tooltip-offset: 8px;
     border: 0;
     overflow: visible;
     transition: opacity 0.2s, visibility 0.2s, display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+  }
+
+  // Both of these have to name [popover] explicitly and sit after the rule
+  // above: `.cat-tooltip .cat-tooltip-bubble[popover]` is (0,4,0), so a plain
+  // `.cat-tooltip-static .cat-tooltip-bubble` ties it and loses on order,
+  // leaving the fade in place on every browser with the Popover API.
+  &.cat-tooltip-static {
+    .cat-tooltip-bubble,
+    .cat-tooltip-bubble[popover] {
+      transition: none;
+    }
   }
 
   // Matches the convention in cat-collapse, cat-steps and cat-msg: the fade is
