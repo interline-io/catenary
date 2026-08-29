@@ -1,5 +1,100 @@
 # @interline-io/catenary
 
+## 0.13.0
+
+### Minor Changes
+
+- [#84](https://github.com/interline-io/catenary/pull/84) [`f088f54`](https://github.com/interline-io/catenary/commit/f088f54afa357168c0525ffb9c9e2303bd6e3aad) Thanks [@drewda](https://github.com/drewda)! - `cat-theme-toggle` becomes a real toggle button, and `cat-safelink` names and announces its actions. Closes the remaining findings in [#51](https://github.com/interline-io/catenary/issues/51).
+
+  ## `cat-theme-toggle`
+
+  The label named the _current_ state ("Dark Mode" while dark) with no `aria-pressed`, which is ambiguous with the opposite convention where a label names the action — a screen reader user heard "Dark Mode, button" and could not tell whether pressing it turned dark mode on or off. It actually turned it off, the inverse of the Play/Pause convention.
+
+  Now the standard toggle-button shape: a fixed label naming what the button controls, with `aria-pressed` carrying the state. Uses the `ariaPressed` prop added to `cat-button` in [#82](https://github.com/interline-io/catenary/issues/82).
+
+  **Visible change:** the button now reads "Dark mode" in both states rather than "Light Mode" / "Dark Mode". A new `label` prop overrides it for translation. The sun/moon icon still indicates the state visually and remains `aria-hidden`.
+
+  ## `cat-safelink`
+
+  - **Both actions are named after their subject** — `Copy https://example.com/… to clipboard` and `Open https://example.com/… in new tab` — instead of the constant `"Copy to clipboard"` / `"Open URL in new tab"`. A safelink is usually rendered once per row of a table, so identical names left a screen reader's elements list showing N indistinguishable buttons, and the link's name never said where it went (WCAG 2.4.4). The display `text` is preferred over the URL when present.
+  - **Copy results are announced.** The clipboard write produces no visible change, so success and failure now go to a visually hidden `role="status"`; failures previously only reached `console.error`. The region is rendered from mount and only its text changes, because a live region inserted together with its content is announced unreliably. `copiedLabel` and `copyFailedLabel` are props for translation, and the `copy` event still fires for consumers wiring their own UI.
+
+  ## `cat-search-bar`
+
+  `type="search"` rather than `type="text"`, giving the input its implicit `searchbox` role.
+
+  `cat-input` now suppresses WebKit's native search clear affordance, since it draws its own whenever `clearable` is set and `cat-search-bar` always sets it. Chrome already dropped the native one because Bulma's control mixin sets `appearance: none` on `.input` — verified that layout is byte-identical between `type="text"` and `type="search"` there — but Safari keeps it unless the pseudo-element is suppressed explicitly, which would have shown two clear buttons in the same field.
+
+  ## Tests and docs
+
+  New `safelink.test.ts` and `theme-toggle.test.ts` (neither component had tests), covering the naming, the live region in all three outcomes, and the pressed state. `cat-theme-toggle`'s playground page gains the `demo-a11y` section it lacked, which also takes one component off the list in [#64](https://github.com/interline-io/catenary/issues/64).
+
+  Playground: `demo-a11y` now underlines links in its intro paragraph, not just in the reference list. [#70](https://github.com/interline-io/catenary/issues/70) fixed the list; the intro needed it for the same reason and only surfaced once a page put enough prose around the pattern link for axe to treat it as a text block (measured 1.13:1 against the surrounding text).
+
+- [#80](https://github.com/interline-io/catenary/pull/80) [`8412d46`](https://github.com/interline-io/catenary/commit/8412d46f0c5ea703bed8b9f2e3298618e525351d) Thanks [@drewda](https://github.com/drewda)! - New `cat-split-button`: a primary action with an attached dropdown of related actions.
+
+  Bulma has no split button. `.buttons.has-addons` joins adjacent `.button` siblings, but a dropdown trigger sits inside `.dropdown > .dropdown-trigger`, so it is the only child of its own parent and matches both `:first-child` and `:last-child` — none of Bulma's corner or border-collapse rules ever reach it. The component composes `cat-button` and `cat-dropdown` and supplies the missing CSS.
+
+  ## API
+
+  - Action half: `label` (or the `label` slot), `variant`, `size`, `icon-left`, `loading`, `disabled`, `outlined`, `inverted`, `fullwidth`, `type`. Emits `click`.
+  - Dropdown half: `toggle-icon` (default `menu-down`), `toggle-label`, `toggle-disabled`. The default slot takes `cat-dropdown-item`s and emits `select` with the activated item's value, plus `open` / `close`. Exposes `open()`, `close()`, `toggle()`.
+  - `position` (default `bottom-right`) and `menu-width` control the menu; right-aligned by default so it lines up with the right edge of the whole control rather than hanging off the caret.
+  - `loading` spins the action half and leaves the menu usable; `disabled` disables both halves, `toggle-disabled` only the caret.
+
+  ## CSS
+
+  - The facing corners are squared and the halves pulled together by 1px against the component's own classes, since Bulma's sibling-based rules cannot match through the two wrapper elements.
+  - The filled variants register `--bulma-button-border-width: 0`, so with no border to collapse the two halves render as one unbroken block of color and the split disappears. A 1px seam is drawn from `currentcolor`, which tracks both the variant and the light/dark scheme — `is-light` gets a dark seam, `is-primary` a light one, with no color hardcoded per theme. Its opacity is set for WCAG 1.4.11 (3:1 non-text contrast), since on a filled variant the seam is the only thing identifying the control as two independently actionable buttons. Only `is-outlined` is excluded, because only it restores a real border: `is-inverted` sets background and color alone, so an inverted button needs the seam just as much.
+  - The root is `inline-flex` rather than the block-level `.buttons` default, and drops the `%block` spacing `.buttons` inherits. Both matter: the component is one control, and a full-width block that sits 1.5rem proud of its neighbors misaligns any toolbar it is dropped into.
+
+  ## Accessibility
+
+  Modeled on the [Menu Button](https://www.w3.org/WAI/ARIA/apg/patterns/menu-button/) pattern. The two halves are separately focusable controls — a single element cannot expose both an action and a popup. `aria-haspopup` / `aria-controls` / `aria-expanded` sit on the caret only.
+
+  The caret renders no text, so it takes an accessible name from `toggle-label`, defaulting to `"More <label> options"` so several split buttons on one page stay distinguishable. The derived form is used only when `label` is the text actually on screen — if the `label` slot has replaced it, the caret falls back to `"More options"` rather than naming itself after something invisible (WCAG 2.5.3).
+
+  Fallthrough attributes (`id`, `form`, `aria-describedby`, `data-*`) land on the action button; `class` and `style` stay on the wrapper, which is the control as a whole. Without that split a stray `tabindex` would add a phantom tab stop ahead of both real buttons and `form` would never associate. The exposed `open()` / `close()` / `toggle()` forward their arguments to `cat-dropdown` and no-op while the caret is disabled, so the menu cannot be opened against a control that cannot be focused.
+
+  Checked with axe-core in the playground in both light and dark themes; the automated suite scans the open menu under jsdom, where contrast rules cannot run.
+
+  ## Fix: `cat-dropdown` menu placement classes
+
+  `position` interpolated straight into the class name, emitting `is-bottom-right` / `is-top-left` / `is-top-right` — none of which Bulma has a rule for, so the CSS fallback always rendered bottom-left regardless of the prop. Now maps to Bulma's actual `is-right` and `is-up`, matching what `cat-datepicker` already did, with test coverage that neither name drifts again.
+
+  Emitting the real class names activates Bulma placement rules that tie the `[popover]` reset in `cat-dropdown` and `cat-datepicker` on specificity, which would have left menu geometry depending on the order a consumer imports the `bulma` peerDependency. Both resets are now scoped a class deeper so they win outright.
+
+  Also in `cat-dropdown`: `focusableTrigger()` skips disabled elements — including one disabled by an ancestor `<fieldset disabled>`, which is what `cat-fieldset` renders — so a trigger holding more than one focusable element restores focus to the next candidate rather than returning one that cannot take it; and `open()` no longer re-emits `open` for a menu that is already open (clicking a trigger and then pressing ArrowDown fired it twice).
+
+### Patch Changes
+
+- [#82](https://github.com/interline-io/catenary/pull/82) [`aeac433`](https://github.com/interline-io/catenary/commit/aeac4338504fe10f1f00b1e1c2da4f9b40fa6e4b) Thanks [@drewda](https://github.com/drewda)! - Fallthrough attributes, disabled tooltip triggers, and typed ARIA state props — the three fixes `cat-split-button` surfaced, applied where the same bugs already lived.
+
+  ## `cat-input` / `cat-textarea` / `cat-select` route attributes to the native element
+
+  All three bound `v-bind="$attrs"` onto the native control without `inheritAttrs: false`, so Vue _also_ applied every fallthrough attribute to the root `.control` wrapper. On `cat-input` and `cat-textarea` a consumer's `id` landed on both, and because the wrapper precedes the control in document order, a `<label for>` resolved to that wrapper, which is not a labelable element, and silently stopped labelling anything. (`cat-select` already declared `id` as a prop, so it escaped that one.) Undeclared `aria-*` and `data-*` were duplicated onto a wrapper with no role on all three.
+
+  `class`, `style` and event listeners deliberately still reach the wrapper as well, because both destinations turned out to be load-bearing:
+
+  - Layout utilities (`mt-2`, `mr-2` — both in real consumer code) style the wrapper, while typography (`is-family-monospace`) only takes effect on the native element: Bulma's base stylesheet sets `font-family` directly on `input, select, textarea`, so it cannot be inherited from an ancestor.
+  - A listener on the wrapper sees events from the icons and the clear button, which are siblings of the native element rather than inside it; one on the native element is what non-bubbling `@focus` / `@blur` need. `cat-search-bar`'s Escape-to-clear depends on the former — routing listeners to the native element alone broke it, because the clear button is not inside the input.
+
+  Regression tests per component assert that `id`, `aria-*` and `data-*` reach the native element only, and that `class` still reaches both.
+
+  ## `cat-tooltip` keeps disabled triggers keyboard-reachable
+
+  `detectFocusableSlot` matched `button, input, select, textarea` without excluding disabled ones, so wrapping a disabled control — the commonest reason to use a tooltip at all, explaining why an action is unavailable — made the tooltip keyboard-invisible: the wrapper skipped its own `tabindex` and hung `aria-describedby` on an element that is not in the tab order.
+
+  Uses `:disabled` rather than `[disabled]` so it also covers a control disabled by an ancestor `<fieldset disabled>`, which is what `cat-fieldset` renders. Same correction Copilot caught on `cat-dropdown`'s `focusableTrigger()`.
+
+  ## `cat-button` gains typed ARIA state props
+
+  `ariaPressed`, `ariaExpanded`, `ariaHaspopup` and `ariaControls`, following the existing `ariaLabel` convention. Attribute fallthrough already worked at runtime, but failed consumer typechecks under `strictTemplates`, which steered callers to a raw `<button>` and away from the shared `:focus-visible` styling — `cat-datepicker`'s toggle is written that way for exactly this reason.
+
+  `false` renders rather than dropping the attribute: "not pressed" is what distinguishes an un-pressed toggle from a plain button. The prop docs record the convention that a toggle keeps a fixed label naming what it controls and lets `aria-pressed` carry the state, since a label naming the current state is ambiguous with one naming the action.
+
+  Addresses parts of [#49](https://github.com/interline-io/catenary/issues/49), [#50](https://github.com/interline-io/catenary/issues/50) and [#51](https://github.com/interline-io/catenary/issues/51); each issue has further findings still open — including, on `cat-input` / `cat-textarea`, that a consumer `id` still overrides the one `cat-field` injects, so `<label for>` inside a field breaks the same way. `cat-select`'s `id ?? fieldId` prop is the shape the other two need.
+
 ## 0.12.0
 
 ### Minor Changes
