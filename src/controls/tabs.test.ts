@@ -313,7 +313,7 @@ describe('cat-tabs WAI-ARIA tablist', () => {
       const Host = defineComponent({
         setup: () => () => h(CatTabs, {
           'modelValue': model.value,
-          'onUpdate:modelValue': (v: string) => { model.value = v }
+          'onUpdate:modelValue': (v: string | number) => { model.value = String(v) }
         }, {
           default: () => [
             h(CatTabItem, { label: 'A', value: 'a' }, () => 'A'),

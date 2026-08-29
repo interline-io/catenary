@@ -568,7 +568,7 @@ describe('cat-steps accessibility', () => {
         slots: {
           default: () => [
             h(CatStepItem, { label: 'One', value: 'one' }, () => '1'),
-            h(CatStepItem, { label: 'Two', value: 'two', clickable: '' }, () => '2')
+            h(CatStepItem, { label: 'Two', value: 'two', clickable: '' as unknown as boolean }, () => '2')
           ]
         }
       })
