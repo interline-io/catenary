@@ -273,7 +273,7 @@ interface ResolvedStep extends StepDescriptor {
  * slot can have changed.
  */
 function resolveSteps () {
-  const items: StepDescriptor[] = collectSlotItems(slots.default?.(), CatStepItem).map((node) => {
+  const items: StepDescriptor[] = collectSlotItems(slots.default?.(), CatStepItem, 'cat-step-item').map((node) => {
     const p = (node.props ?? {}) as Record<string, unknown>
     const value = p.value as string | number
     const fragment = idFragment(value)

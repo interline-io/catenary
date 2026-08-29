@@ -148,7 +148,7 @@ provide('activeTab', computed(() => props.modelValue))
  * hydration.
  */
 function tabItems (): TabItem[] {
-  const nodes = collectSlotItems(slots.default?.(), CatTabItem)
+  const nodes = collectSlotItems(slots.default?.(), CatTabItem, 'cat-tab-item')
   const items = nodes.map((node) => {
     const p = (node.props ?? {}) as Record<string, unknown>
     const value = p.value as string | number

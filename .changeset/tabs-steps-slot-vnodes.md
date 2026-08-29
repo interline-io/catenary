@@ -24,6 +24,28 @@ Worth being precise about the scope: this fixes the component's half. A page who
 
 Both sides derive the id pair from one `useId()` on the parent plus the item's own `value` — `${base}-tab-${value}` / `${base}-panel-${value}` — rather than from a position. Deriving from an index would mean parent and child had to agree on one, and inserting an item would renumber everything after it; deriving from `value` means neither side needs to know where an item sits. `value` already had to be unique within a group, which is what the registration keyed on.
 
+## Upgrading
+
+One behaviour goes away, and it is worth checking for before you upgrade.
+
+**`cat-tab-item` and `cat-step-item` must be direct children of their parent's default slot.** `v-for` and `<template>` are fine — those produce Fragments, which are flattened — and a `v-if` that renders nothing is fine. What no longer works is wrapping an item in a component of your own:
+
+```vue
+<!-- Worked before, does not now -->
+<cat-tabs v-model="tab">
+  <my-tab-wrapper label="Details" value="details">…</my-tab-wrapper>
+</cat-tabs>
+```
+
+Under the registration model the item registered itself from wherever it mounted, so the parent found it at any depth. Reading the slot only sees direct children. A wrapped item still renders its panel, but never appears in the header — a silent, half-working failure, so development builds now warn once per offending component naming what to move. Have the wrapper render *into* the slot rather than around the item.
+
+None of the catenary consumer apps do this today; the constraint is stated because the failure is quiet rather than because it is likely.
+
+Two smaller things, neither of which needs action unless you have gone out of your way:
+
+- **Tab and panel ids changed shape**, from an opaque `useId()` value to `${base}-tab-${value}`. They were never documented as stable, but code that hardcodes or scrapes them will need updating.
+- **`value` must be unique within a group.** The registration keyed on it, so this was already true in practice; it is now also what the ids derive from.
+
 ## Notes
 
 Slot VNodes are not a reactive dependency, so everything read from them is resolved in a function called during render rather than cached in a computed — Vue warns that a slot invoked outside a render "will not track dependencies used in the slot", and a computed would go stale exactly when a `v-if` adds or removes an item. In `cat-steps` that means one resolver returns the list along with the active index and each item's completed/current/upcoming state, so the template makes a single pass.
