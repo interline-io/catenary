@@ -1,5 +1,9 @@
 <template>
-  <div class="control" :class="controlClasses">
+  <div
+    class="control"
+    :class="controlClasses"
+    v-bind="rootAttrs"
+  >
     <input
       :id="fieldId"
       ref="inputRef"
@@ -52,10 +56,42 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string">
-import { computed, inject, ref } from 'vue'
+import { computed, inject, ref, useAttrs } from 'vue'
 import type { InputVariant, InputSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
+// Fallthrough *attributes* go to the native element only. Without this, Vue
+// also applied them to the root `.control` wrapper, so a consumer's `id`
+// landed on both — and since the wrapper precedes the control in document
+// order, a `<label for>` resolved to a non-labelable div and silently stopped
+// labelling anything. Undeclared `aria-*` was duplicated onto a role-less div
+// the same way.
+//
+// `class`, `style` and event listeners still reach the root as well, which is
+// what they did before and what callers depend on:
+//   - layout utilities (`mt-2`, `mr-2`) act on the wrapper, while typography
+//     (`is-family-monospace`) only works on the native element — Bulma's base
+//     stylesheet sets `font-family` directly on input/select/textarea, so it
+//     cannot be inherited from the wrapper.
+//   - a listener on the root sees events from the icons and the clear button,
+//     which are siblings of the native element rather than inside it, while
+//     one on the native element is what non-bubbling `@focus` / `@blur` need.
+//     Both destinations are load-bearing; see cat-search-bar's Escape handler,
+//     which stops propagation to collapse the resulting duplicate keydown.
+defineOptions({
+  inheritAttrs: false
+})
+
+const attrs = useAttrs()
+
+// class, style and on* listeners — the subset that keeps reaching the wrapper.
+const rootAttrs = computed(() => {
+  const forwarded: Record<string, unknown> = {}
+  for (const [key, value] of Object.entries(attrs)) {
+    if (key === 'class' || key === 'style' || /^on[A-Z]/.test(key)) forwarded[key] = value
+  }
+  return forwarded
+})
 const fieldId = inject(FieldIdKey, undefined)
 const inputRef = ref<HTMLInputElement | null>(null)
 

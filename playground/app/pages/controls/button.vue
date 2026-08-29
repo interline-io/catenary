@@ -141,6 +141,40 @@
         </cat-field>
       </demo-box>
 
+      <demo-box label="Toggle and Popup Buttons">
+        <p class="mb-3">
+          <code>aria-pressed</code>, <code>aria-expanded</code>, <code>aria-haspopup</code> and
+          <code>aria-controls</code> are declared props, so a toggle or a popup trigger typechecks
+          under <code>strictTemplates</code> without dropping to a raw <code>&lt;button&gt;</code>.
+        </p>
+        <div class="buttons">
+          <cat-button
+            :variant="pinned ? 'primary' : undefined"
+            :aria-pressed="pinned"
+            icon-left="pin"
+            @click="pinned = !pinned"
+          >
+            Pin to top
+          </cat-button>
+          <cat-button
+            :aria-expanded="detailsOpen"
+            aria-controls="button-demo-details"
+            :icon-right="detailsOpen ? 'menu-up' : 'menu-down'"
+            @click="detailsOpen = !detailsOpen"
+          >
+            Details
+          </cat-button>
+        </div>
+        <p class="mt-2">
+          The toggle keeps one fixed label and reports <code>aria-pressed="{{ pinned }}"</code>. A
+          label that names the current state instead ("Pinned" / "Not pinned") is ambiguous with one
+          naming the action, so a screen reader user cannot tell which the button means.
+        </p>
+        <div v-show="detailsOpen" id="button-demo-details" class="mt-3 p-3 has-background-light">
+          Region controlled by the Details button.
+        </div>
+      </demo-box>
+
       <demo-a11y
         pattern-name="Button"
         pattern-url="https://www.w3.org/WAI/ARIA/apg/patterns/button/"
@@ -161,6 +195,9 @@
           <p class="mt-3">
             Icon-only buttons render no text, so they need an explicit accessible name: pass <code>aria-label</code> (declared as a prop, so it typechecks under <code>strictTemplates</code>). Use the <code>title</code> prop for an advisory native tooltip when helpful.
           </p>
+          <p class="mt-3">
+            A toggle button carries its state in <code>aria-pressed</code> and keeps a fixed label naming what it controls. The <code>false</code> state is rendered rather than omitted, since "not pressed" is what distinguishes an un-pressed toggle from a plain button. Pair <code>aria-expanded</code> with <code>aria-controls</code> pointing at the region the button shows and hides.
+          </p>
         </template>
       </demo-a11y>
     </section>
@@ -180,6 +217,8 @@ const sizes = ButtonSizes
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 
 const clickCount = ref(0)
+const pinned = ref(false)
+const detailsOpen = ref(false)
 
 const handleClick = () => {
   clickCount.value++

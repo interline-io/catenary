@@ -6,6 +6,10 @@
       :disabled="disabled || loading"
       :type="type"
       :aria-label="ariaLabel"
+      :aria-pressed="ariaPressed"
+      :aria-expanded="ariaExpanded"
+      :aria-haspopup="ariaHaspopup"
+      :aria-controls="ariaControls"
       :aria-busy="loading || undefined"
       :title="title"
       v-bind="$attrs"
@@ -158,6 +162,36 @@ interface Props {
   ariaLabel?: string
 
   /**
+   * Toggle state, bound as `aria-pressed`. Use for a button that turns
+   * something on and off in place (a theme switch, a "pin" control) rather
+   * than one that navigates or submits.
+   *
+   * Give a toggle button a label that names what it controls and keep it
+   * fixed — `aria-pressed` carries the state. A label that instead names the
+   * current state ("Dark Mode") is ambiguous with one naming the action, and
+   * screen reader users cannot tell which convention a given button follows.
+   */
+  ariaPressed?: boolean
+
+  /**
+   * Disclosure state, bound as `aria-expanded`, for a button that shows and
+   * hides a region. Pair with `ariaControls` pointing at that region's id.
+   */
+  ariaExpanded?: boolean
+
+  /**
+   * Bound as `aria-haspopup`, for a button that opens a popup. Name the kind
+   * of popup it opens; `true` is equivalent to `'menu'`.
+   */
+  ariaHaspopup?: 'dialog' | 'menu' | 'listbox' | 'tree' | 'grid' | 'true' | boolean
+
+  /**
+   * Id of the element this button controls, bound as `aria-controls`. Goes
+   * with `ariaExpanded` or `ariaHaspopup`.
+   */
+  ariaControls?: string
+
+  /**
    * Advisory text, bound as `title` on the native button element (shown as
    * the browser's native tooltip). Declared as a prop for the same
    * `strictTemplates` reason as `ariaLabel`.
@@ -187,6 +221,10 @@ const props = withDefaults(defineProps<Props>(), {
   iconRight: undefined,
   label: undefined,
   ariaLabel: undefined,
+  ariaPressed: undefined,
+  ariaExpanded: undefined,
+  ariaHaspopup: undefined,
+  ariaControls: undefined,
   title: undefined,
   ariaLoadingLabel: 'Loading'
 })

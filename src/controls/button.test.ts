@@ -178,4 +178,46 @@ describe('CatButton', () => {
     expect(button.attributes('aria-label')).toBeUndefined()
     expect(button.attributes('title')).toBeUndefined()
   })
+
+  describe('typed ARIA state props', () => {
+    // Declared as props rather than left to attribute fallthrough so consumers
+    // with strictTemplates can build a toggle or a popup trigger with
+    // cat-button instead of dropping to a raw <button> and losing the shared
+    // focus-visible styling.
+    it('binds aria-pressed / aria-expanded / aria-haspopup / aria-controls', () => {
+      const wrapper = mountComponent(CatButton, {
+        props: {
+          ariaPressed: true,
+          ariaExpanded: true,
+          ariaHaspopup: 'menu' as const,
+          ariaControls: 'panel-1'
+        }
+      })
+      const button = wrapper.find('button')
+      expect(button.attributes('aria-pressed')).toBe('true')
+      expect(button.attributes('aria-expanded')).toBe('true')
+      expect(button.attributes('aria-haspopup')).toBe('menu')
+      expect(button.attributes('aria-controls')).toBe('panel-1')
+    })
+
+    // The off state of a toggle has to be announced as "not pressed", so false
+    // must render rather than drop the attribute — the distinction between an
+    // un-pressed toggle and a plain button.
+    it('renders the false state rather than omitting the attribute', () => {
+      const wrapper = mountComponent(CatButton, {
+        props: { ariaPressed: false, ariaExpanded: false }
+      })
+      const button = wrapper.find('button')
+      expect(button.attributes('aria-pressed')).toBe('false')
+      expect(button.attributes('aria-expanded')).toBe('false')
+    })
+
+    it('omits them entirely when not set', () => {
+      const wrapper = mountComponent(CatButton)
+      const button = wrapper.find('button')
+      for (const attr of ['aria-pressed', 'aria-expanded', 'aria-haspopup', 'aria-controls']) {
+        expect(button.attributes(attr)).toBeUndefined()
+      }
+    })
+  })
 })
