@@ -35,7 +35,7 @@
       ref="bubbleRef"
       class="cat-tooltip-bubble"
       role="tooltip"
-      @mouseenter="cancelClose"
+      @mouseenter="onBubbleMouseenter"
       @mouseleave="onBubbleMouseleave"
     >
       {{ text }}
@@ -224,26 +224,41 @@ function onMouseenter () {
 // distinction but only as a rendering hint: jsdom reports it false for a
 // synthetic focus, so the behaviour would be untestable and would differ
 // between environments.
-let focusFromPointer = false
+//
+// Recorded as a timestamp and resolved at focusin, rather than latched on
+// press. A latching flag is only correct when every press moves focus into
+// the wrapper, and plenty do not — Safari and Firefox do not focus a button
+// on click, and touch taps and right-clicks do not either. The flag then
+// stayed set with nothing to clear it (only focusout did), and the tooltip
+// stopped appearing on keyboard focus for the rest of the component's life.
+const POINTER_FOCUS_WINDOW_MS = 300
+let lastPointerDownAt = 0
+let focusIsPointerDerived = false
 
 function onPointerdown (event: PointerEvent) {
   // Only a press on the trigger counts. The bubble is inside the wrapper and
-  // is now a pointer target itself, so selecting the tooltip's text would
-  // otherwise re-label a keyboard-driven focus as pointer-driven and start
-  // dismissing on the next mouseleave, with the trigger still focused.
+  // is a pointer target itself now, so selecting the tooltip's text would
+  // otherwise re-label a keyboard-driven focus as pointer-driven.
   if (bubbleRef.value?.contains(event.target as Node)) return
-  focusFromPointer = true
+  lastPointerDownAt = Date.now()
 }
 
 function onFocusin () {
+  focusIsPointerDerived = Date.now() - lastPointerDownAt < POINTER_FOCUS_WINDOW_MS
   // A pointer press has already shown the bubble via mouseenter; showing it
   // again here is what would make it outlast the pointer.
-  if (focusFromPointer) return
+  if (focusIsPointerDerived) return
   show()
 }
 
 function show () {
   cancelClose()
+  // Crossing onto the bubble fires the wrapper's mouseenter again, because the
+  // bubble is a descendant even in the top layer. Without this guard that
+  // re-entered show() and re-ran adjustPosition(), which clears the flipped
+  // side for a frame — the arrow jumps, and in the non-Popover fallback the
+  // bubble moves out from under the pointer and dismisses itself.
+  if (isVisible.value) return
   isVisible.value = true
   nextTick(() => {
     if (popoverSupported && bubbleRef.value) {
@@ -261,22 +276,35 @@ function onMouseleave (event: MouseEvent) {
   if (relatedTargetInside(event)) return
   // Keyboard focus inside keeps it open; focus the pointer itself just put
   // there does not, or the bubble outlives the pointer that summoned it.
-  if (isFocusInside() && !focusFromPointer) return
+  if (isFocusInside() && !focusIsPointerDerived) return
   scheduleHide()
 }
 
 function onFocusout (event: FocusEvent) {
   if (relatedTargetInside(event)) return
-  focusFromPointer = false
+  focusIsPointerDerived = false
+  // Pressing the bubble to select its text blurs the focused trigger, and the
+  // new focus target is outside the wrapper — so this fired mid-selection and
+  // dismissed the very content the hoverable bubble exists to let people read.
+  // The bubble's own mouseleave takes over from here.
+  if (pointerInBubble) return
   hide()
 }
 
 // Leaving the bubble for anywhere outside the component dismisses; moving
 // back onto the trigger does not, and the wrapper's own mouseleave takes over
 // from there.
+let pointerInBubble = false
+
+function onBubbleMouseenter () {
+  pointerInBubble = true
+  cancelClose()
+}
+
 function onBubbleMouseleave (event: MouseEvent) {
+  pointerInBubble = false
   if (relatedTargetInside(event)) return
-  if (isFocusInside() && !focusFromPointer) return
+  if (isFocusInside() && !focusIsPointerDerived) return
   scheduleHide()
 }
 
@@ -395,8 +423,10 @@ function adjustPosition () {
 // Top-layer bubbles are position: fixed, so compute viewport coordinates
 // directly. Both axes are clamped to the viewport: the flip logic handles
 // the main axis in normal cases, but a bubble too large for either side
-// would otherwise still run off-screen (it's pointer-events: none, so
-// overlapping the trigger in that degenerate case causes no hover flicker).
+// would otherwise still run off-screen. A clamped bubble can end up
+// overlapping its own trigger; the bubble is a pointer target now, so that
+// no longer passes hover through, but it keeps the wrapper's mouseenter
+// alive rather than flickering — the bubble is a descendant of it.
 // When clamping shifts the bubble off the trigger's center, a CSS variable
 // keeps the arrow pointing at the trigger.
 const BUBBLE_OFFSET = 8 // matches $tooltip-offset
@@ -512,6 +542,13 @@ $tooltip-offset: 8px;
     cursor: help;
     text-decoration: underline dotted;
     text-underline-offset: 0.2em;
+
+    // `cursor` inherits, and the bubble is a descendant, so without this the
+    // help cursor follows into text the hoverable bubble now lets people
+    // select.
+    .cat-tooltip-bubble {
+      cursor: auto;
+    }
   }
 
   // Top-layer rendering (Popover API): fixed coordinates are set inline by

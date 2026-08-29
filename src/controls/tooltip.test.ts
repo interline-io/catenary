@@ -394,6 +394,61 @@ describe('cat-tooltip', () => {
       wrapper.unmount()
     })
 
+    // Latching the pointer flag on pointerdown was only correct if every press
+    // moves focus into the wrapper. Safari and Firefox do not focus a button on
+    // click, and touch taps and right-clicks do not either — the flag then had
+    // nothing to clear it and the tooltip stopped appearing on keyboard focus
+    // for the rest of the component's life.
+    it('still shows on keyboard focus after a press that never moved focus', async () => {
+      const wrapper = mount(CatTooltip, {
+        attachTo: document.body,
+        props: { text: 'Hint' },
+        slots: { default: '<button class="button">Trigger</button>' }
+      })
+      const tooltip = wrapper.find('.cat-tooltip')
+      await tooltip.trigger('pointerdown')
+      await tooltip.trigger('mouseenter')
+      await tooltip.trigger('mouseleave')
+      await new Promise(resolve => setTimeout(resolve, 350))
+      expect(tooltip.classes()).not.toContain('is-visible')
+
+      ;(wrapper.find('button').element as HTMLElement).focus()
+      await tooltip.trigger('focusin')
+      expect(tooltip.classes()).toContain('is-visible')
+      wrapper.unmount()
+    })
+
+    // Pressing the bubble blurs the focused trigger and the new focus target is
+    // outside the wrapper, so focusout fired mid-selection and dismissed the
+    // very content the hoverable bubble exists to let people read.
+    it('survives a press on the bubble that blurs the trigger', async () => {
+      const wrapper = mount(CatTooltip, {
+        attachTo: document.body,
+        props: { text: 'A long hint worth selecting' },
+        slots: { default: '<button class="button">Trigger</button>' }
+      })
+      const tooltip = wrapper.find('.cat-tooltip')
+      const bubble = wrapper.find('[role="tooltip"]')
+      ;(wrapper.find('button').element as HTMLElement).focus()
+      await tooltip.trigger('focusin')
+      expect(tooltip.classes()).toContain('is-visible')
+
+      // A real press on the bubble blurs the button, so focus genuinely leaves
+      // the wrapper — triggering focusout synthetically while activeElement
+      // stayed on the button would not reproduce the bug.
+      await bubble.trigger('mouseenter')
+      await bubble.trigger('pointerdown')
+      ;(wrapper.find('button').element as HTMLElement).blur()
+      await wrapper.vm.$nextTick()
+      expect(tooltip.classes()).toContain('is-visible')
+
+      // Leaving the bubble still dismisses.
+      await bubble.trigger('mouseleave', { relatedTarget: document.body })
+      await new Promise(resolve => setTimeout(resolve, 250))
+      expect(tooltip.classes()).not.toContain('is-visible')
+      wrapper.unmount()
+    })
+
     it('still keeps the bubble up for keyboard focus when the pointer leaves', async () => {
       const wrapper = mount(CatTooltip, {
         attachTo: document.body,
