@@ -21,6 +21,7 @@ import {
   nextTick,
   useId,
   ref,
+  watch,
   type ComputedRef
 } from 'vue'
 
@@ -53,7 +54,8 @@ type RegisterTabFn = (
   value: string | number,
   icon: string | undefined,
   tabId: string,
-  panelId: string
+  panelId: string,
+  el: HTMLElement | null
 ) => void
 type DeregisterTabFn = (value: string | number) => void
 
@@ -80,12 +82,31 @@ function detectFocusableChild () {
   hasFocusableChild.value = focusable !== null
 }
 
+function register () {
+  registerTab?.(props.label, props.value, props.icon, tabId, panelId, panelRef.value)
+}
+
 onMounted(() => {
-  if (registerTab) {
-    registerTab(props.label, props.value, props.icon, tabId, panelId)
-  }
+  register()
   nextTick(detectFocusableChild)
 })
+
+// The tablist is rendered from the registration, so anything shown there has
+// to be pushed up again when it changes — a tab whose label is edited after
+// mount is the case that matters.
+watch(
+  () => [props.value, props.label, props.icon],
+  (_current, [oldValue]) => {
+    // `value` is the key the parent registers under, so changing it makes this
+    // a different tab as far as the tablist is concerned. Drop the old entry
+    // first, or the list keeps a tab whose panel is gone and unmounting only
+    // ever removes the current one. Same fix cat-step-item got in #66.
+    if (oldValue !== props.value) {
+      deregisterTab?.(oldValue as string | number)
+    }
+    register()
+  }
+)
 
 onUpdated(() => {
   // Slot content can change after mount (v-if/v-for inside, async data).

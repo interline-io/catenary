@@ -114,19 +114,46 @@ interface TabItem {
   icon?: string
   tabId: string
   panelId: string
+  /**
+   * The panel element. Registrations arrive in mount order, which is document
+   * order for a static list but not for a tab revealed later by v-if — the
+   * elements are compared to keep the tablist in the order it renders.
+   */
+  el: HTMLElement | null
 }
 
 const tabs = ref<TabItem[]>([])
 const tablistRef = ref<HTMLElement | null>(null)
 const tabRefs = ref<HTMLButtonElement[]>([])
 
-function registerTab (label: string, value: string | number, icon: string | undefined, tabId: string, panelId: string) {
-  // Re-register: replace if value already known (covers hot-reload / dynamic tabs).
+function registerTab (
+  label: string,
+  value: string | number,
+  icon: string | undefined,
+  tabId: string,
+  panelId: string,
+  el: HTMLElement | null
+) {
+  const entry: TabItem = { label, value, icon, tabId, panelId, el }
+  // Re-register: replace if value already known. Covers hot-reload, and a
+  // label or icon edited after mount, which would otherwise leave the tablist
+  // showing what the item looked like when it registered.
   const existing = tabs.value.findIndex(t => t.value === value)
   if (existing >= 0) {
-    tabs.value[existing] = { label, value, icon, tabId, panelId }
+    tabs.value[existing] = entry
+    return
+  }
+  // Mount order is document order for a static list, but a tab revealed later
+  // by v-if mounts last and would otherwise appear at the end of the tablist
+  // while its panel renders in the middle. Compare elements instead — the same
+  // fix cat-steps has carried since #66.
+  const before = tabs.value.findIndex(t =>
+    t.el && el && (t.el.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_PRECEDING) !== 0
+  )
+  if (before >= 0) {
+    tabs.value.splice(before, 0, entry)
   } else {
-    tabs.value.push({ label, value, icon, tabId, panelId })
+    tabs.value.push(entry)
   }
 }
 

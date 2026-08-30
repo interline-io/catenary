@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { defineComponent, h, ref } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 import CatTabs from './tabs.vue'
 import CatTabItem from './tab-item.vue'
 import { expectNoAxeViolations } from '../testutil/component-helpers'
@@ -254,6 +254,100 @@ describe('cat-tabs WAI-ARIA tablist', () => {
     expect(tabindexes.filter(t => t === '0')).toHaveLength(1)
     expect(tabindexes.filter(t => t === '-1')).toHaveLength(1)
 
+    wrapper.unmount()
+  })
+})
+
+describe('cat-tabs dynamic children', () => {
+// Registrations arrive in mount order, so a tab revealed later by v-if used
+// to append to the end of the tablist regardless of where it sat in the
+// template. cat-steps has compared panel elements since #66; cat-tabs never
+// got the fix. Live in production: a conditional tab in the middle of a list
+// rendered after the ones following it.
+  it('keeps template order when a middle tab appears after mount', async () => {
+    const showMiddle = ref(false)
+    const Host = defineComponent({
+      setup: () => () => h(CatTabs, { modelValue: 'a', ariaLabel: 'Sections' }, {
+        default: () => [
+          h(CatTabItem, { label: 'A', value: 'a' }, () => 'A'),
+          showMiddle.value ? h(CatTabItem, { label: 'B', value: 'b' }, () => 'B') : null,
+          h(CatTabItem, { label: 'C', value: 'c' }, () => 'C')
+        ]
+      })
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    // Children register in onMounted, so the parent's tab buttons are a tick away.
+    await nextTick()
+    expect(wrapper.findAll('[role="tab"]').map(t => t.text())).toEqual(['A', 'C'])
+
+    showMiddle.value = true
+    await nextTick()
+    await nextTick()
+    expect(wrapper.findAll('[role="tab"]').map(t => t.text())).toEqual(['A', 'B', 'C'])
+    wrapper.unmount()
+  })
+
+  it('places a late tab at the end when that is where it belongs', async () => {
+    const showLast = ref(false)
+    const Host = defineComponent({
+      setup: () => () => h(CatTabs, { modelValue: 'a', ariaLabel: 'Sections' }, {
+        default: () => [
+          h(CatTabItem, { label: 'A', value: 'a' }, () => 'A'),
+          h(CatTabItem, { label: 'B', value: 'b' }, () => 'B'),
+          showLast.value ? h(CatTabItem, { label: 'C', value: 'c' }, () => 'C') : null
+        ]
+      })
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    await nextTick()
+    showLast.value = true
+    await nextTick()
+    await nextTick()
+    expect(wrapper.findAll('[role="tab"]').map(t => t.text())).toEqual(['A', 'B', 'C'])
+    wrapper.unmount()
+  })
+
+  // deregister ran with the *current* props.value and nothing watched it, so
+  // changing a value left the old entry in place and added a second.
+  it('does not strand an entry when a value changes', async () => {
+    const value = ref('before')
+    const Host = defineComponent({
+      setup: () => () => h(CatTabs, { modelValue: 'first', ariaLabel: 'Sections' }, {
+        default: () => [
+          h(CatTabItem, { label: 'First', value: 'first' }, () => 'one'),
+          h(CatTabItem, { label: 'Second', value: value.value }, () => 'two')
+        ]
+      })
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    await nextTick()
+    expect(wrapper.findAll('[role="tab"]')).toHaveLength(2)
+
+    value.value = 'after'
+    await nextTick()
+    await nextTick()
+    expect(wrapper.findAll('[role="tab"]')).toHaveLength(2)
+    wrapper.unmount()
+  })
+
+  // The tablist is drawn from the registration, so a label edited after mount
+  // has to reach it.
+  it('reflects a label edited after mount', async () => {
+    const label = ref('Before')
+    const Host = defineComponent({
+      setup: () => () => h(CatTabs, { modelValue: 'a', ariaLabel: 'Sections' }, {
+        default: () => [
+          h(CatTabItem, { label: 'A', value: 'a' }, () => 'A'),
+          h(CatTabItem, { label: label.value, value: 'b' }, () => 'B')
+        ]
+      })
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    await nextTick()
+    label.value = 'After'
+    await nextTick()
+    await nextTick()
+    expect(wrapper.findAll('[role="tab"]').map(t => t.text())).toEqual(['A', 'After'])
     wrapper.unmount()
   })
 })
