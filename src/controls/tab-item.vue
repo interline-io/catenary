@@ -21,6 +21,7 @@ import {
   nextTick,
   useId,
   ref,
+  watch,
   type ComputedRef
 } from 'vue'
 
@@ -53,9 +54,10 @@ type RegisterTabFn = (
   value: string | number,
   icon: string | undefined,
   tabId: string,
-  panelId: string
+  panelId: string,
+  el: HTMLElement | null
 ) => void
-type DeregisterTabFn = (value: string | number) => void
+type DeregisterTabFn = (tabId: string) => void
 
 const registerTab = inject<RegisterTabFn>('registerTab')
 const deregisterTab = inject<DeregisterTabFn>('deregisterTab')
@@ -80,12 +82,21 @@ function detectFocusableChild () {
   hasFocusableChild.value = focusable !== null
 }
 
+function register () {
+  registerTab?.(props.label, props.value, props.icon, tabId, panelId, panelRef.value)
+}
+
 onMounted(() => {
-  if (registerTab) {
-    registerTab(props.label, props.value, props.icon, tabId, panelId)
-  }
+  register()
   nextTick(detectFocusableChild)
 })
+
+// The tablist is drawn from the registration, so anything it shows has to be
+// pushed up again when it changes: a label edited after mount, or a `value`
+// the consumer swapped. No deregister-then-register dance is needed, because
+// the registry is keyed on this item's own `tabId` — re-registering updates
+// this entry and cannot collide with a sibling's.
+watch(() => [props.value, props.label, props.icon], register)
 
 onUpdated(() => {
   // Slot content can change after mount (v-if/v-for inside, async data).
@@ -94,11 +105,11 @@ onUpdated(() => {
 
 // Drop the registration when the tab-item unmounts (e.g., v-if toggles a tab
 // off). Without this, stale entries accumulate and the parent's keyboard nav
-// can land on a value with no rendered panel.
+// can land on a value with no rendered panel. Deregistered by `tabId`, so an
+// item leaving cannot remove a sibling that happens to share its current
+// `value` mid-update.
 onBeforeUnmount(() => {
-  if (deregisterTab) {
-    deregisterTab(props.value)
-  }
+  deregisterTab?.(tabId)
 })
 
 const isActive = computed(() => {

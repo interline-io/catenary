@@ -15,13 +15,12 @@
         <button
           v-for="(tab, index) in tabs"
           :id="tab.tabId"
-          :key="tab.value"
-          ref="tabRefs"
+          :key="tab.tabId"
           type="button"
           role="tab"
           class="cat-tab"
-          :class="{ 'is-active': modelValue === tab.value }"
-          :aria-selected="modelValue === tab.value"
+          :class="{ 'is-active': activeValue === tab.value }"
+          :aria-selected="activeValue === tab.value"
           :aria-controls="tab.panelId"
           :tabindex="index === selectedIndex ? 0 : -1"
           :data-index="index"
@@ -112,38 +111,95 @@ interface TabItem {
   label: string
   value: string | number
   icon?: string
+  /** Identity. Minted once per item with useId(), so it survives a value change. */
   tabId: string
   panelId: string
+  /** The panel element, compared to keep the tablist in document order. */
+  el: HTMLElement | null
 }
 
 const tabs = ref<TabItem[]>([])
 const tablistRef = ref<HTMLElement | null>(null)
-const tabRefs = ref<HTMLButtonElement[]>([])
 
-function registerTab (label: string, value: string | number, icon: string | undefined, tabId: string, panelId: string) {
-  // Re-register: replace if value already known (covers hot-reload / dynamic tabs).
-  const existing = tabs.value.findIndex(t => t.value === value)
-  if (existing >= 0) {
-    tabs.value[existing] = { label, value, icon, tabId, panelId }
+/**
+ * Register or update a tab.
+ *
+ * Keyed on `tabId`, not on `value`. `value` is a prop the consumer can change,
+ * and keying the registry on it meant a changed value read as a different tab:
+ * two siblings exchanging values deleted each other's entry, an unkeyed v-for
+ * shrinking emptied the tablist, and re-registering under a value a sibling
+ * still owned overwrote it. `tabId` is minted once per item with useId() and
+ * outlives every prop change, so identity and content stay separate concerns.
+ */
+function registerTab (
+  label: string,
+  value: string | number,
+  icon: string | undefined,
+  tabId: string,
+  panelId: string,
+  el: HTMLElement | null
+) {
+  const entry: TabItem = { label, value, icon, tabId, panelId, el }
+  const existing = tabs.value.findIndex(t => t.tabId === tabId)
+  if (existing >= 0) tabs.value.splice(existing, 1)
+  insertInDocumentOrder(entry)
+}
+
+/**
+ * Place a registration where its panel sits in the DOM.
+ *
+ * Registrations arrive in mount order, which is document order for a static
+ * list but not for a tab revealed later by v-if — that one mounts last and
+ * would otherwise sit at the end of the tablist while its panel renders in the
+ * middle. Re-registrations are re-placed rather than assigned in position, so
+ * a reordered list settles too.
+ */
+function insertInDocumentOrder (entry: TabItem) {
+  const before = entry.el
+    ? tabs.value.findIndex(t =>
+        t.el && (t.el.compareDocumentPosition(entry.el as Node) & Node.DOCUMENT_POSITION_PRECEDING) !== 0
+      )
+    : -1
+  if (before >= 0) {
+    tabs.value.splice(before, 0, entry)
   } else {
-    tabs.value.push({ label, value, icon, tabId, panelId })
+    tabs.value.push(entry)
   }
 }
 
-function deregisterTab (value: string | number) {
-  const idx = tabs.value.findIndex(t => t.value === value)
+function deregisterTab (tabId: string) {
+  const idx = tabs.value.findIndex(t => t.tabId === tabId)
   if (idx >= 0) tabs.value.splice(idx, 1)
 }
 
 provide('registerTab', registerTab)
 provide('deregisterTab', deregisterTab)
-provide('activeTab', computed(() => props.modelValue))
+
+/**
+ * The value actually shown, which is `modelValue` whenever it names a real
+ * tab and the first tab otherwise.
+ *
+ * Without the fallback a model naming no tab — a stale value, or the active
+ * item's `value` edited out from under it — leaves a tablist with nothing
+ * selected and every panel hidden, so the content simply disappears. cat-steps
+ * has carried the same fallback since #66.
+ */
+const activeValue = computed(() => {
+  // An unbound tablist is left alone: the consumer has not chosen a tab, and
+  // the documented behaviour is that none is selected while the first stays
+  // keyboard-reachable. A bound value that matches nothing is different — it
+  // is a broken state, not an unmade choice.
+  if (props.modelValue === undefined || props.modelValue === null) return props.modelValue
+  const match = tabs.value.some(t => t.value === props.modelValue)
+  return match ? props.modelValue : tabs.value[0]?.value
+})
+provide('activeTab', activeValue)
 
 // Roving tabindex anchor. Falls back to the first tab when modelValue matches
 // no registered tab (stale value, or the active tab-item was removed via v-if)
 // so the tablist never drops out of the page tab order entirely.
 const selectedIndex = computed(() => {
-  const i = tabs.value.findIndex(t => t.value === props.modelValue)
+  const i = tabs.value.findIndex(t => t.value === activeValue.value)
   return i >= 0 ? i : 0
 })
 
@@ -152,7 +208,12 @@ function selectTab (value: string | number) {
 }
 
 function focusTabAt (index: number) {
-  const next = tabRefs.value[index]
+  // Resolved from the DOM rather than a `v-for` template-ref array. Vue fills
+  // those by pushing on mount and removing on unmount, so the array is in
+  // mount order — once the tablist is ordered by document position instead,
+  // indexing one by the other moves focus to a different tab than the one it
+  // activates.
+  const next = tablistRef.value?.children[index] as HTMLElement | undefined
   if (!next) return
   next.focus()
   const value = tabs.value[index]?.value
