@@ -21,9 +21,9 @@ import {
   nextTick,
   useId,
   ref,
-  watch,
-  type ComputedRef
+  watch
 } from 'vue'
+import { TabsContextKey } from './types'
 
 /**
  * Tab panel — child of cat-tabs. Content is only displayed when the tab is active.
@@ -49,19 +49,7 @@ const props = defineProps<{
   icon?: string
 }>()
 
-type RegisterTabFn = (
-  label: string,
-  value: string | number,
-  icon: string | undefined,
-  tabId: string,
-  panelId: string,
-  el: HTMLElement | null
-) => void
-type DeregisterTabFn = (tabId: string) => void
-
-const registerTab = inject<RegisterTabFn>('registerTab')
-const deregisterTab = inject<DeregisterTabFn>('deregisterTab')
-const activeTab = inject<ComputedRef<string | number | undefined>>('activeTab')
+const tabs = inject(TabsContextKey, undefined)
 
 // Pair of IDs that bind tab button ↔ tabpanel via aria-controls / aria-labelledby.
 const tabId = useId()
@@ -83,7 +71,14 @@ function detectFocusableChild () {
 }
 
 function register () {
-  registerTab?.(props.label, props.value, props.icon, tabId, panelId, panelRef.value)
+  tabs?.register({
+    label: props.label,
+    value: props.value,
+    icon: props.icon,
+    tabId,
+    panelId,
+    el: panelRef.value
+  })
 }
 
 onMounted(() => {
@@ -109,13 +104,8 @@ onUpdated(() => {
 // item leaving cannot remove a sibling that happens to share its current
 // `value` mid-update.
 onBeforeUnmount(() => {
-  deregisterTab?.(tabId)
+  tabs?.deregister(tabId)
 })
 
-const isActive = computed(() => {
-  if (activeTab) {
-    return activeTab.value === props.value
-  }
-  return false
-})
+const isActive = computed(() => tabs?.activeValue.value === props.value)
 </script>

@@ -16,4 +16,6 @@ Fixed:
 
 Also: a bound `modelValue` that names no tab now falls back to the first tab rather than leaving a tablist with nothing selected and every panel hidden. An unbound tablist is unchanged — none selected, first still keyboard-reachable — since that is an unmade choice rather than a broken state.
 
+The parent/child contract moved to a typed `InjectionKey`, matching `cat-steps`. The string-keyed `provide`/`inject` it replaces carried the registration signature hand-copied into the child, so the two sides were asserted to agree rather than checked — and this change alters that signature.
+
 `cat-steps` shares this registry's shape and most of these faults; it is not changed here. Extracting the two into one implementation is the real fix and is worth doing separately, since porting between them by hand is what let `cat-tabs` ship the ordering bug for months after `cat-steps` fixed it in #66.

@@ -156,6 +156,36 @@ export const FieldDescribedbyKey: InjectionKey<ComputedRef<string | undefined>> 
 export const FieldVariantKey: InjectionKey<ComputedRef<'success' | 'warning' | 'danger' | 'info' | undefined>> = Symbol('fieldVariant')
 
 /**
+ * Contract between cat-tabs and its cat-tab-item children.
+ *
+ * A typed InjectionKey rather than bare string keys: `provide('registerTab',
+ * fn)` and `inject<RegisterTabFn>('registerTab')` with the signature
+ * hand-copied into the child is an assertion, not a comparison — the arity
+ * could change on one side and compile clean on the other. cat-steps has used
+ * this shape since #66.
+ */
+export interface TabRegistration {
+  label: string
+  value: string | number
+  icon?: string
+  /** Identity. Minted once per item with useId(), so it survives a value change. */
+  tabId: string
+  panelId: string
+  /** The panel element, compared to keep the tablist in document order. */
+  el: HTMLElement | null
+}
+
+export interface TabsContext {
+  register: (tab: TabRegistration) => void
+  /** Deregisters by `tabId`, so an item leaving cannot remove a sibling. */
+  deregister: (tabId: string) => void
+  /** The value actually shown, which may differ from a stale modelValue. */
+  activeValue: ComputedRef<string | number | undefined>
+}
+
+export const TabsContextKey: InjectionKey<TabsContext> = Symbol('catTabs')
+
+/**
  * Injection key for a route map used by cat-link.
  * Consumers provide a Record<string, string> mapping route keys to vue-router route names.
  */

@@ -66,7 +66,8 @@ import { computed, provide, ref, watch, nextTick } from 'vue'
  * </cat-tabs>
  */
 
-import type { TabsSize, TabsPosition, TabsType } from './types'
+import type { TabsSize, TabsPosition, TabsType, TabRegistration } from './types'
+import { TabsContextKey } from './types'
 
 const props = withDefaults(defineProps<{
   /** The active tab value (v-model) */
@@ -107,18 +108,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: T]
 }>()
 
-interface TabItem {
-  label: string
-  value: string | number
-  icon?: string
-  /** Identity. Minted once per item with useId(), so it survives a value change. */
-  tabId: string
-  panelId: string
-  /** The panel element, compared to keep the tablist in document order. */
-  el: HTMLElement | null
-}
-
-const tabs = ref<TabItem[]>([])
+const tabs = ref<TabRegistration[]>([])
 const tablistRef = ref<HTMLElement | null>(null)
 
 /**
@@ -131,16 +121,8 @@ const tablistRef = ref<HTMLElement | null>(null)
  * still owned overwrote it. `tabId` is minted once per item with useId() and
  * outlives every prop change, so identity and content stay separate concerns.
  */
-function registerTab (
-  label: string,
-  value: string | number,
-  icon: string | undefined,
-  tabId: string,
-  panelId: string,
-  el: HTMLElement | null
-) {
-  const entry: TabItem = { label, value, icon, tabId, panelId, el }
-  const existing = tabs.value.findIndex(t => t.tabId === tabId)
+function registerTab (entry: TabRegistration) {
+  const existing = tabs.value.findIndex(t => t.tabId === entry.tabId)
   if (existing >= 0) tabs.value.splice(existing, 1)
   insertInDocumentOrder(entry)
 }
@@ -154,11 +136,18 @@ function registerTab (
  * middle. Re-registrations are re-placed rather than assigned in position, so
  * a reordered list settles too.
  */
-function insertInDocumentOrder (entry: TabItem) {
+function insertInDocumentOrder (entry: TabRegistration) {
   const before = entry.el
-    ? tabs.value.findIndex(t =>
-        t.el && (t.el.compareDocumentPosition(entry.el as Node) & Node.DOCUMENT_POSITION_PRECEDING) !== 0
-      )
+    ? tabs.value.findIndex((t) => {
+        if (!t.el) return false
+        const position = t.el.compareDocumentPosition(entry.el as Node)
+        // Across disconnected trees the mask is implementation-defined, and a
+        // PRECEDING or FOLLOWING bit is still set — so trusting it would place
+        // the tab arbitrarily. A KeepAlive'd or teleported panel is the case
+        // that produces this. Appending is the honest answer there.
+        if (position & Node.DOCUMENT_POSITION_DISCONNECTED) return false
+        return (position & Node.DOCUMENT_POSITION_PRECEDING) !== 0
+      })
     : -1
   if (before >= 0) {
     tabs.value.splice(before, 0, entry)
@@ -171,9 +160,6 @@ function deregisterTab (tabId: string) {
   const idx = tabs.value.findIndex(t => t.tabId === tabId)
   if (idx >= 0) tabs.value.splice(idx, 1)
 }
-
-provide('registerTab', registerTab)
-provide('deregisterTab', deregisterTab)
 
 /**
  * The value actually shown, which is `modelValue` whenever it names a real
@@ -191,9 +177,20 @@ const activeValue = computed(() => {
   // is a broken state, not an unmade choice.
   if (props.modelValue === undefined || props.modelValue === null) return props.modelValue
   const match = tabs.value.some(t => t.value === props.modelValue)
-  return match ? props.modelValue : tabs.value[0]?.value
+  if (match) return props.modelValue
+  // Falling back to the raw model when nothing has registered is what makes
+  // this safe on the server: children register in onMounted, which never runs
+  // during renderToString, so `tabs` is empty there and a bound value would
+  // otherwise match nothing and hide every panel — shipping the active tab's
+  // content behind display:none. cat-steps carries the same tail for the same
+  // reason (steps.vue: `?? model.value`).
+  return tabs.value[0]?.value ?? props.modelValue
 })
-provide('activeTab', activeValue)
+provide(TabsContextKey, {
+  register: registerTab,
+  deregister: deregisterTab,
+  activeValue
+})
 
 // Roving tabindex anchor. Falls back to the first tab when modelValue matches
 // no registered tab (stale value, or the active tab-item was removed via v-if)
@@ -280,7 +277,12 @@ const tabsClasses = computed(() => {
 })
 
 // Trigger resize event when tab changes (for maps and other components that need to resize)
-watch(() => props.modelValue, () => {
+// Anything that can change the tablist's height, not just the active tab:
+// `.cat-tablist` wraps, so revealing a tab or lengthening a label can gain a
+// row and shift the panel below it.
+const tablistShape = computed(() => tabs.value.map(t => t.label).join('\u0000'))
+
+watch([() => props.modelValue, tablistShape], () => {
   nextTick(() => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('resize'))
