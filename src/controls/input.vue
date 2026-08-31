@@ -5,7 +5,7 @@
     v-bind="rootAttrs"
   >
     <input
-      :id="fieldId"
+      :id="id ?? fieldId"
       ref="inputRef"
       class="input"
       :class="inputClasses"
@@ -103,6 +103,17 @@ const inputRef = ref<HTMLInputElement | null>(null)
  */
 
 const props = withDefaults(defineProps<{
+  /**
+   * Explicit id for the native element. Overrides the id injected by a
+   * wrapping cat-field.
+   *
+   * A cat-field provides one id, so a grouped field containing more than one
+   * control gives them all the same one — duplicate DOM ids, and a `<label
+   * for>` that resolves to whichever comes first. cat-select has carried this
+   * escape hatch; input and textarea did not.
+   */
+  id?: string
+
   /** Input value (v-model). Type is inferred from the binding: string for text inputs, number for numeric inputs. For type="number", bind to a number variable to get automatic number conversion. */
   modelValue?: T
   /** Input type attribute. @default 'text' */
@@ -150,6 +161,7 @@ const props = withDefaults(defineProps<{
   /** Make input take full width (expanded). @default false */
   expanded?: boolean
 }>(), {
+  id: undefined,
   modelValue: undefined,
   type: 'text',
   placeholder: undefined,

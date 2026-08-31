@@ -10,7 +10,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useSlots } from 'vue'
+import { computed, useSlots, provide, useId } from 'vue'
+
+import { RadioGroupNameKey } from './types'
 
 /**
  * Fieldset wrapper for grouping related form controls under a single descriptive
@@ -35,6 +37,11 @@ import { computed, useSlots } from 'vue'
  */
 
 const slots = useSlots()
+
+// Radios inside a fieldset are a group, so give them the shared `name` that
+// actually makes them one natively. A radio with its own `name` keeps it —
+// see RadioGroupNameKey for why sharing a v-model is not enough.
+provide(RadioGroupNameKey, useId())
 
 const props = withDefaults(defineProps<{
   /** Group label rendered inside `<legend>`. */

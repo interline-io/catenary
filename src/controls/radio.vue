@@ -4,7 +4,7 @@
       type="radio"
       :checked="modelValue === nativeValue"
       :disabled="disabled"
-      :name="name"
+      :name="groupName"
       :value="nativeValue"
       @change="handleChange"
     >
@@ -13,7 +13,8 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number | boolean | null = string">
-import { computed } from 'vue'
+import { computed, inject } from 'vue'
+import { RadioGroupNameKey } from './types'
 import type { RadioVariant, RadioSize } from './types'
 
 /**
@@ -55,6 +56,31 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: T]
 }>()
+
+const injectedGroupName = inject(RadioGroupNameKey, undefined)
+
+/**
+ * The `name` that groups this radio with its peers.
+ *
+ * Falls back to the one a wrapping cat-fieldset provides. Sharing a `v-model`
+ * does not group radios — only a shared `name` does — so without either, each
+ * radio is a group of one: arrow keys do not move between them, each is its
+ * own tab stop, and a screen reader announces "1 of 1". A mouse user sees
+ * nothing wrong, which is why it goes unnoticed.
+ */
+const groupName = computed(() => props.name ?? injectedGroupName)
+
+if (typeof process === 'undefined' || process.env?.NODE_ENV !== 'production') {
+  if (!props.name && !injectedGroupName) {
+    console.warn(
+      '[catenary] <cat-radio> has no `name` and is not inside a <cat-fieldset>, '
+      + 'so it forms a radio group of its own: arrow keys will not move between '
+      + 'it and its peers, and a screen reader will announce it as "1 of 1". '
+      + 'Give the radios in a group the same `name`, or wrap them in a '
+      + '<cat-fieldset>.'
+    )
+  }
+}
 
 const radioClasses = computed(() => {
   const classes: string[] = []

@@ -15,10 +15,13 @@
         :aria-describedby="mergedDescribedby"
         :aria-invalid="ariaInvalid"
         :value="modelValue"
-        :disabled="disabled || readonly"
+        :disabled="disabled"
+        :aria-readonly="readonly ? 'true' : undefined"
         :multiple="multiple"
         v-bind="$attrs"
         @change="handleChange"
+        @mousedown="onReadonlyGuard"
+        @keydown="onReadonlyKeydown"
       >
         <slot />
       </select>
@@ -215,7 +218,32 @@ const selectClasses = computed(() => {
   return classes
 })
 
+/**
+ * `readonly` used to be implemented as `disabled`, which made the select
+ * unfocusable: a keyboard or screen reader user could not Tab to it to read the
+ * value, and it was announced as unavailable rather than read-only. It stays in
+ * the tab order now, carries `aria-readonly`, and simply refuses to change.
+ */
+function onReadonlyGuard (event: Event) {
+  if (props.readonly) event.preventDefault()
+}
+
+function onReadonlyKeydown (event: KeyboardEvent) {
+  if (!props.readonly) return
+  // Everything that could pick a different option. Tab, arrows for scrolling a
+  // closed select, and copy shortcuts are left alone.
+  const changes = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', ' ', 'Enter']
+  if (changes.includes(event.key) || event.key.length === 1) event.preventDefault()
+}
+
 function handleChange (event: Event) {
+  // A readonly select is no longer `disabled`, so a change can still reach us
+  // (a browser autofill, or a key we did not guard). Put the value back.
+  if (props.readonly) {
+    const target = event.target as HTMLSelectElement
+    target.value = String(props.modelValue ?? '')
+    return
+  }
   const target = event.target as HTMLSelectElement
 
   // Handle multiple select

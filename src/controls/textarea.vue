@@ -5,8 +5,9 @@
     v-bind="rootAttrs"
   >
     <textarea
-      :id="fieldId"
+      :id="id ?? fieldId"
       ref="textareaRef"
+      :aria-label="ariaLabel"
       :aria-describedby="mergedDescribedby"
       :aria-invalid="ariaInvalid"
       class="textarea"
@@ -62,6 +63,17 @@ const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
 interface Props {
   /**
+   * Explicit id for the native element. Overrides the id injected by a
+   * wrapping cat-field.
+   *
+   * A cat-field provides one id, so a grouped field containing more than one
+   * control gives them all the same one — duplicate DOM ids, and a `<label
+   * for>` that resolves to whichever comes first. cat-select has carried this
+   * escape hatch; input and textarea did not.
+   */
+  id?: string
+
+  /**
    * The v-model value of the textarea.
    * @default ''
    */
@@ -83,6 +95,13 @@ interface Props {
    * @values primary, link, info, success, warning, danger, white, light, dark
    */
   variant?: TextareaVariant
+  /**
+   * Accessible name, bound as `aria-label`. Declared as a prop (rather than
+   * relying on attribute fallthrough) so consumers with `strictTemplates`
+   * can pass it without a type error, matching cat-input and cat-select.
+   */
+  ariaLabel?: string
+
   /** id of an element describing the control (bound as aria-describedby), merged with a wrapping cat-field's message id. */
   ariaDescribedby?: string
 
@@ -146,6 +165,8 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
+  id: undefined,
+  ariaLabel: undefined,
   modelValue: '',
   placeholder: undefined,
   size: undefined,

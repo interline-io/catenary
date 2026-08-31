@@ -17,6 +17,7 @@
           type="button"
           class="button"
           :class="{ [`is-${variant || 'dark'} is-selected`]: selectAllState === 'all' }"
+          :aria-pressed="selectAllState === 'all'"
           :disabled="disabled || options.length === 0"
           @click="handleSelectAll"
         >
@@ -28,6 +29,7 @@
           type="button"
           class="button"
           :class="{ [`is-${variant || 'dark'} is-selected`]: selectAllState === 'none' }"
+          :aria-pressed="selectAllState === 'none'"
           :disabled="disabled || options.length === 0"
           @click="handleSelectNone"
         >

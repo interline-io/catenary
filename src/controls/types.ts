@@ -193,6 +193,18 @@ export interface TabsContext {
 export const TabsContextKey: InjectionKey<TabsContext> = Symbol('catTabs')
 
 /**
+ * Injection key provided by cat-fieldset: a generated `name` for the radios
+ * inside it.
+ *
+ * Radios are grouped by their shared `name` attribute, not by sharing a
+ * `v-model` — without one each radio is its own group of one, so arrow keys do
+ * not move between them, every radio is a separate tab stop, and a screen
+ * reader reports "1 of 1". A fieldset already marks the boundary of a group,
+ * so it can supply the name that makes it one.
+ */
+export const RadioGroupNameKey: InjectionKey<string> = Symbol('radioGroupName')
+
+/**
  * Injection key for a route map used by cat-link.
  * Consumers provide a Record<string, string> mapping route keys to vue-router route names.
  */
