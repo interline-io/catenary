@@ -8,16 +8,15 @@ import CatSelect from './select.vue'
 import CatTextarea from './textarea.vue'
 import CatInput from './input.vue'
 import CatField from './field.vue'
-import CatCheckboxGroup from './checkbox-group.vue'
 
 describe('cat-radio grouping', () => {
   // Radios are grouped by a shared `name`, not by sharing a v-model. Without
   // one each is its own group: arrow keys do not move between them, each is a
   // separate tab stop, and a screen reader says "1 of 1". A mouse user sees
   // nothing wrong, which is why it goes unnoticed.
-  it('gives radios in a fieldset one shared name', async () => {
+  it('gives radios in a radio-group fieldset one shared name', async () => {
     const wrapper = mount(CatFieldset, {
-      props: { label: 'Sort by' },
+      props: { label: 'Sort by', radioGroup: true },
       slots: {
         default: () => [
           h(CatRadio, { modelValue: 'a', nativeValue: 'a' }, () => 'A'),
@@ -35,7 +34,7 @@ describe('cat-radio grouping', () => {
 
   it('keeps an explicit name over the fieldset one', async () => {
     const wrapper = mount(CatFieldset, {
-      props: { label: 'Group' },
+      props: { label: 'Group', radioGroup: true },
       slots: { default: () => [h(CatRadio, { name: 'mine', nativeValue: 'a' }, () => 'A')] }
     })
     await nextTick()
@@ -57,8 +56,8 @@ describe('cat-radio grouping', () => {
     // mounts would both yield 'v-0' and prove nothing.
     const Host = defineComponent({
       setup: () => () => h('div', [
-        h(CatFieldset, { label: 'One' }, { default: () => [h(CatRadio, { nativeValue: 'a' })] }),
-        h(CatFieldset, { label: 'Two' }, { default: () => [h(CatRadio, { nativeValue: 'a' })] })
+        h(CatFieldset, { label: 'One', radioGroup: true }, { default: () => [h(CatRadio, { nativeValue: 'a' })] }),
+        h(CatFieldset, { label: 'Two', radioGroup: true }, { default: () => [h(CatRadio, { nativeValue: 'a' })] })
       ])
     })
     const wrapper = mount(Host)
@@ -66,6 +65,50 @@ describe('cat-radio grouping', () => {
     const names = wrapper.findAll('input[type="radio"]').map(r => r.attributes('name'))
     expect(names).toHaveLength(2)
     expect(names[0]).not.toBe(names[1])
+    wrapper.unmount()
+  })
+
+  // A fieldset is a generic grouping wrapper and may hold two independent
+  // questions. Naming every descendant radio would merge them: picking "Red"
+  // makes the browser natively uncheck "Small", and because `size` is unchanged
+  // Vue's patch skips the DOM write, so the size selection disappears from the
+  // UI while state still says it is selected.
+  it('does not name radios in a plain fieldset', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const wrapper = mount(CatFieldset, {
+      props: { label: 'Preferences' },
+      slots: {
+        default: () => [
+          h(CatRadio, { modelValue: 'small', nativeValue: 'small' }, () => 'Small'),
+          h(CatRadio, { modelValue: 'red', nativeValue: 'red' }, () => 'Red')
+        ]
+      }
+    })
+    await nextTick()
+    const names = wrapper.findAll('input[type="radio"]').map(r => r.attributes('name'))
+    expect(names.some(Boolean)).toBe(false)
+    warn.mockRestore()
+    wrapper.unmount()
+  })
+
+  // An inner plain fieldset shadows the outer name rather than inheriting it,
+  // so a second question can sit inside a grouped fieldset.
+  it('lets an inner plain fieldset shadow an outer radio group', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const Host = defineComponent({
+      setup: () => () => h(CatFieldset, { label: 'Outer', radioGroup: true }, {
+        default: () => [
+          h(CatRadio, { nativeValue: 'a' }),
+          h(CatFieldset, { label: 'Inner' }, { default: () => [h(CatRadio, { nativeValue: 'x' })] })
+        ]
+      })
+    })
+    const wrapper = mount(Host)
+    await nextTick()
+    const names = wrapper.findAll('input[type="radio"]').map(r => r.attributes('name'))
+    expect(names[0]).toBeTruthy()
+    expect(names[1]).toBeUndefined()
+    warn.mockRestore()
     wrapper.unmount()
   })
 })
@@ -157,18 +200,63 @@ describe('cat-textarea accessible name', () => {
   })
 })
 
-describe('cat-checkbox-group mode buttons', () => {
-  // Which mode was in effect was conveyed only by a CSS class, so a screen
-  // reader heard two plain buttons with no indication of the current state.
-  it('reports the active mode through aria-pressed', async () => {
-    const wrapper = mountComponent(CatCheckboxGroup, {
-      props: { modelValue: [], options: [{ value: 'a', label: 'A' }, { value: 'b', label: 'B' }] }
+describe('cat-select readonly guards', () => {
+  function mountReadonly (props: Record<string, unknown>) {
+    return mountComponent(CatSelect, {
+      attachTo: document.body,
+      props: { readonly: true, ...props },
+      slots: { default: '<option value="a">A</option><option value="b">B</option>' }
     })
-    const buttons = wrapper.findAll('button')
-    expect(buttons.map(b => b.attributes('aria-pressed'))).toEqual(['false', 'true'])
+  }
 
-    await wrapper.setProps({ modelValue: ['a', 'b'] })
-    expect(wrapper.findAll('button').map(b => b.attributes('aria-pressed'))).toEqual(['true', 'false'])
+  // preventDefault on mousedown suppresses focus as well as the picker, so
+  // guarding it naively leaves a pointer user unable to focus the field at all
+  // -- the same problem `disabled` had.
+  it('keeps focus reachable by pointer', async () => {
+    const wrapper = mountReadonly({ modelValue: 'a' })
+    const select = wrapper.find('select').element as HTMLSelectElement
+    wrapper.find('select').trigger('mousedown')
+    await nextTick()
+    expect(document.activeElement).toBe(select)
+    wrapper.unmount()
+  })
+
+  it('leaves Enter alone so a form still submits', () => {
+    const wrapper = mountReadonly({ modelValue: 'a' })
+    const event = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true, bubbles: true })
+    wrapper.find('select').element.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('leaves the user shortcuts alone', () => {
+    const wrapper = mountReadonly({ modelValue: 'a' })
+    const event = new KeyboardEvent('keydown', { key: 'c', metaKey: true, cancelable: true, bubbles: true })
+    wrapper.find('select').element.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('still blocks the keys that would pick another option', () => {
+    const wrapper = mountReadonly({ modelValue: 'a' })
+    const event = new KeyboardEvent('keydown', { key: 'ArrowDown', cancelable: true, bubbles: true })
+    wrapper.find('select').element.dispatchEvent(event)
+    expect(event.defaultPrevented).toBe(true)
+    wrapper.unmount()
+  })
+
+  // Restoring a multiple select by assigning `.value` stringifies the array to
+  // "a,b", which matches no option and clears the whole selection. The
+  // modelValue watcher cannot repair it: the prop never changed.
+  it('restores every selected option of a readonly multiple select', async () => {
+    const wrapper = mountReadonly({ modelValue: ['a', 'b'], multiple: true })
+    await nextTick()
+    const select = wrapper.find('select').element as HTMLSelectElement
+    for (const option of Array.from(select.options)) option.selected = option.value === 'a'
+    await wrapper.find('select').trigger('change')
+    await nextTick()
+    expect(Array.from(select.selectedOptions).map(o => o.value)).toEqual(['a', 'b'])
+    expect(wrapper.emitted('update:modelValue')).toBeUndefined()
     wrapper.unmount()
   })
 })

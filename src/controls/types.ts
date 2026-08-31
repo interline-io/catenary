@@ -199,10 +199,13 @@ export const TabsContextKey: InjectionKey<TabsContext> = Symbol('catTabs')
  * Radios are grouped by their shared `name` attribute, not by sharing a
  * `v-model` — without one each radio is its own group of one, so arrow keys do
  * not move between them, every radio is a separate tab stop, and a screen
- * reader reports "1 of 1". A fieldset already marks the boundary of a group,
- * so it can supply the name that makes it one.
+ * reader reports "1 of 1". `<cat-fieldset radio-group>` supplies the name that
+ * makes its radios one group; it is opt-in because a fieldset is a generic
+ * wrapper and may hold two independent questions. Resolves to `undefined` when
+ * the nearest fieldset is not a radio group, so an inner fieldset shadows an
+ * outer one rather than silently merging the two.
  */
-export const RadioGroupNameKey: InjectionKey<string> = Symbol('radioGroupName')
+export const RadioGroupNameKey: InjectionKey<ComputedRef<string | undefined>> = Symbol('radioGroupName')
 
 /**
  * Injection key for a route map used by cat-link.

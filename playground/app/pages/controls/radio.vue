@@ -310,7 +310,7 @@
         ]"
       >
         <template #intro>
-          <code>&lt;cat-radio&gt;</code> renders a native <code>&lt;input type="radio"&gt;</code>; group all radios that share a <code>v-model</code> inside a <code>&lt;cat-fieldset&gt;</code> so screen readers announce the group's name when focus enters it.
+          <code>&lt;cat-radio&gt;</code> renders a native <code>&lt;input type="radio"&gt;</code>; give every radio that shares a <code>v-model</code> the same <code>name</code> — that, not the shared <code>v-model</code>, is what makes them one native group — or wrap them in a <code>&lt;cat-fieldset radio-group&gt;</code>, which supplies the name and announces the group's label when focus enters it.
         </template>
       </demo-a11y>
     </section>

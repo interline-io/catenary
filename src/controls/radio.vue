@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number | boolean | null = string">
-import { computed, inject } from 'vue'
+import { computed, inject, onMounted } from 'vue'
 import { RadioGroupNameKey } from './types'
 import type { RadioVariant, RadioSize } from './types'
 
@@ -62,24 +62,37 @@ const injectedGroupName = inject(RadioGroupNameKey, undefined)
 /**
  * The `name` that groups this radio with its peers.
  *
- * Falls back to the one a wrapping cat-fieldset provides. Sharing a `v-model`
+ * Falls back to the one a wrapping <cat-fieldset radio-group> provides. Sharing a `v-model`
  * does not group radios — only a shared `name` does — so without either, each
  * radio is a group of one: arrow keys do not move between them, each is its
  * own tab stop, and a screen reader announces "1 of 1". A mouse user sees
  * nothing wrong, which is why it goes unnoticed.
  */
-const groupName = computed(() => props.name ?? injectedGroupName)
+const groupName = computed(() => props.name ?? injectedGroupName?.value)
 
-if (typeof process === 'undefined' || process.env?.NODE_ENV !== 'production') {
-  if (!props.name && !injectedGroupName) {
+/*
+ * Bare `process.env.NODE_ENV`, deliberately not wrapped in a `typeof process`
+ * check. Bundlers replace this expression textually, so the whole block is
+ * eliminated from a production build. Guarding it with `typeof process` instead
+ * leaves a *runtime* test behind that no bundler can fold away, and `process`
+ * is undefined in every browser — so `typeof process === 'undefined' || ...`
+ * warns in production, and `typeof process !== 'undefined' && ...` never warns
+ * at all. Vue itself ships the bare form for the same reason.
+ */
+if (process.env.NODE_ENV !== 'production') {
+  // On mount, not during setup: this way it does not fire on the server for
+  // every SSR render, and a `name` bound to a value that resolves during setup
+  // has settled by the time we look.
+  onMounted(() => {
+    if (groupName.value) return
     console.warn(
-      '[catenary] <cat-radio> has no `name` and is not inside a <cat-fieldset>, '
-      + 'so it forms a radio group of its own: arrow keys will not move between '
-      + 'it and its peers, and a screen reader will announce it as "1 of 1". '
-      + 'Give the radios in a group the same `name`, or wrap them in a '
-      + '<cat-fieldset>.'
+      '[catenary] <cat-radio> has no `name`, so it forms a radio group of its '
+      + 'own: arrow keys will not move between it and its peers, each is a '
+      + 'separate tab stop, and a screen reader will announce it as "1 of 1". '
+      + 'Give every radio in a group the same `name`, or wrap the group in '
+      + '<cat-fieldset radio-group>.'
     )
-  }
+  })
 }
 
 const radioClasses = computed(() => {

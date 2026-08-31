@@ -18,7 +18,7 @@ const archivedColors = ref<string[]>(['blue'])
       </p>
 
       <demo-box label="Radio group">
-        <cat-fieldset label="Newsletter frequency">
+        <cat-fieldset label="Newsletter frequency" radio-group>
           <cat-radio v-model="newsletter" native-value="daily">
             Daily
           </cat-radio>

@@ -215,6 +215,10 @@ const selectClasses = computed(() => {
     classes.push('is-multiple')
   }
 
+  if (props.readonly) {
+    classes.push('is-readonly')
+  }
+
   return classes
 })
 
@@ -225,14 +229,26 @@ const selectClasses = computed(() => {
  * the tab order now, carries `aria-readonly`, and simply refuses to change.
  */
 function onReadonlyGuard (event: Event) {
-  if (props.readonly) event.preventDefault()
+  if (!props.readonly) return
+  // preventDefault on mousedown suppresses focus as well as the picker, which
+  // would leave a pointer user unable to focus the field at all — the same
+  // problem `disabled` had. Put the focus back explicitly.
+  // Note this covers mouse only; a touch device may still open the picker,
+  // where the change handler below is the backstop.
+  event.preventDefault()
+  selectRef.value?.focus()
 }
 
 function onReadonlyKeydown (event: KeyboardEvent) {
   if (!props.readonly) return
-  // Everything that could pick a different option. Tab, arrows for scrolling a
-  // closed select, and copy shortcuts are left alone.
-  const changes = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', ' ', 'Enter']
+  // Leave the user's own shortcuts alone: Cmd/Ctrl with anything is copy,
+  // select-all, find, reload — none of which can change the value.
+  if (event.ctrlKey || event.metaKey) return
+  // Everything that could pick a different option on a closed select. Tab is
+  // absent so the field stays traversable, and so is Enter: it cannot change a
+  // closed select, and blocking it would break implicit form submission, which
+  // a natively readonly control still does.
+  const changes = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Home', 'End', ' ']
   if (changes.includes(event.key) || event.key.length === 1) event.preventDefault()
 }
 
@@ -240,8 +256,15 @@ function handleChange (event: Event) {
   // A readonly select is no longer `disabled`, so a change can still reach us
   // (a browser autofill, or a key we did not guard). Put the value back.
   if (props.readonly) {
-    const target = event.target as HTMLSelectElement
-    target.value = String(props.modelValue ?? '')
+    if (Array.isArray(props.modelValue)) {
+      // `.value = String(['a','b'])` is "a,b", which matches no option and so
+      // clears the entire selection. The modelValue watcher cannot repair it
+      // either, because the prop never changed.
+      syncMultipleSelect()
+    } else {
+      const target = event.target as HTMLSelectElement
+      target.value = String(props.modelValue ?? '')
+    }
     return
   }
   const target = event.target as HTMLSelectElement
@@ -266,6 +289,24 @@ defineExpose({
 </script>
 
 <style lang="scss" scoped>
+/*
+ * `readonly` is no longer rendered as `disabled` (that made it unfocusable), so
+ * it needs an affordance of its own. Without one it looks editable, and
+ * clicking does nothing with no explanation. Muted surface and default cursor,
+ * but full-contrast text: the point of a readonly field is that you can read it.
+ */
+.cat-select.is-readonly {
+  select {
+    background-color: var(--bulma-background);
+    cursor: default;
+  }
+
+  /* Fade the chevron; it promises a picker that will not open. */
+  &::after {
+    opacity: 0.5;
+  }
+}
+
 /* Make select expand to fill container by default, like input */
 .cat-select {
   width: 100%;

@@ -23,8 +23,10 @@ import { RadioGroupNameKey } from './types'
  * is the semantic primitive screen readers expect.
  *
  * @component cat-fieldset
- * @example
- * <cat-fieldset label="Notifications">
+ * @example Radio group -- `radio-group` supplies the shared `name` that makes
+ * the radios one native group. It is opt-in: without it a fieldset holding two
+ * separate questions would merge them into a single group.
+ * <cat-fieldset label="Notifications" radio-group>
  *   <cat-radio v-model="freq" native-value="daily">Daily</cat-radio>
  *   <cat-radio v-model="freq" native-value="weekly">Weekly</cat-radio>
  * </cat-fieldset>
@@ -38,11 +40,6 @@ import { RadioGroupNameKey } from './types'
 
 const slots = useSlots()
 
-// Radios inside a fieldset are a group, so give them the shared `name` that
-// actually makes them one natively. A radio with its own `name` keeps it —
-// see RadioGroupNameKey for why sharing a v-model is not enough.
-provide(RadioGroupNameKey, useId())
-
 const props = withDefaults(defineProps<{
   /** Group label rendered inside `<legend>`. */
   label?: string
@@ -50,11 +47,29 @@ const props = withDefaults(defineProps<{
   disabled?: boolean
   /** Visually hide the legend while keeping it readable by assistive technology. */
   hiddenLegend?: boolean
+  /**
+   * Treat every nested `cat-radio` as one radio group, supplying the shared
+   * `name` that natively makes it one. Opt-in: a fieldset is a generic grouping
+   * wrapper, so naming its radios automatically would merge two independent
+   * questions in the same fieldset into a single group. Radios that carry their
+   * own `name` keep it.
+   */
+  radioGroup?: boolean
 }>(), {
   label: undefined,
   disabled: false,
-  hiddenLegend: false
+  hiddenLegend: false,
+  radioGroup: false
 })
+
+/*
+ * Sharing a `v-model` does not group radios — only a shared `name` does; see
+ * RadioGroupNameKey. Provided unconditionally so that a nested fieldset without
+ * `radio-group` shadows an outer one's name rather than inheriting it, which
+ * is what lets a second question sit inside a grouped fieldset.
+ */
+const groupName = useId()
+provide(RadioGroupNameKey, computed(() => (props.radioGroup ? groupName : undefined)))
 
 const hasLegend = computed(() => Boolean(props.label || slots.label))
 
