@@ -10,13 +10,25 @@
 
       <demo-box label="Basic Radio Group">
         <cat-field>
-          <cat-radio v-model="basic" native-value="option1">
+          <cat-radio
+            v-model="basic"
+            name="demo-basic"
+            native-value="option1"
+          >
             Option 1
           </cat-radio>
-          <cat-radio v-model="basic" native-value="option2">
+          <cat-radio
+            v-model="basic"
+            name="demo-basic"
+            native-value="option2"
+          >
             Option 2
           </cat-radio>
-          <cat-radio v-model="basic" native-value="option3">
+          <cat-radio
+            v-model="basic"
+            name="demo-basic"
+            native-value="option3"
+          >
             Option 3
           </cat-radio>
         </cat-field>
@@ -27,7 +39,14 @@
 
       <demo-box label="Variants">
         <cat-field>
-          <cat-radio v-for="variant in variants" :key="variant" :model-value="true" :native-value="true" :variant="variant">
+          <cat-radio
+            v-for="variant in variants"
+            :key="variant"
+            :name="`demo-variant-${variant}`"
+            :model-value="true"
+            :native-value="true"
+            :variant="variant"
+          >
             {{ capitalize(variant) }}
           </cat-radio>
         </cat-field>
@@ -35,7 +54,14 @@
 
       <demo-box label="Sizes">
         <cat-field>
-          <cat-radio v-for="size in sizes" :key="size" :model-value="true" :native-value="true" :size="size">
+          <cat-radio
+            v-for="size in sizes"
+            :key="size"
+            :name="`demo-size-${size}`"
+            :model-value="true"
+            :native-value="true"
+            :size="size"
+          >
             {{ capitalize(size) }} radio
           </cat-radio>
         </cat-field>
@@ -43,13 +69,26 @@
 
       <demo-box label="Disabled State">
         <cat-field>
-          <cat-radio v-model="disabledDemo" native-value="enabled">
+          <cat-radio
+            v-model="disabledDemo"
+            name="demo-disabledDemo"
+            native-value="enabled"
+          >
             Enabled option
           </cat-radio>
-          <cat-radio v-model="disabledDemo" native-value="disabled" disabled>
+          <cat-radio
+            v-model="disabledDemo"
+            name="demo-disabledDemo"
+            native-value="disabled"
+            disabled
+          >
             Disabled option
           </cat-radio>
-          <cat-radio v-model="disabledDemo" native-value="another">
+          <cat-radio
+            v-model="disabledDemo"
+            name="demo-disabledDemo"
+            native-value="another"
+          >
             Another enabled option
           </cat-radio>
         </cat-field>
@@ -57,7 +96,11 @@
 
       <demo-box label="With Additional Content">
         <cat-field>
-          <cat-radio v-model="contentDemo" native-value="option1">
+          <cat-radio
+            v-model="contentDemo"
+            name="demo-contentDemo"
+            native-value="option1"
+          >
             <div>
               <strong>Option 1</strong>
               <p class="help">
@@ -65,7 +108,11 @@
               </p>
             </div>
           </cat-radio>
-          <cat-radio v-model="contentDemo" native-value="option2">
+          <cat-radio
+            v-model="contentDemo"
+            name="demo-contentDemo"
+            native-value="option2"
+          >
             <div>
               <strong>Option 2</strong>
               <p class="help">
@@ -73,7 +120,11 @@
               </p>
             </div>
           </cat-radio>
-          <cat-radio v-model="contentDemo" native-value="option3">
+          <cat-radio
+            v-model="contentDemo"
+            name="demo-contentDemo"
+            native-value="option3"
+          >
             <div>
               <strong>Option 3</strong>
               <p class="help">
@@ -86,7 +137,11 @@
 
       <demo-box label="Example: Payment Method Selection" example>
         <cat-field label="Choose payment method:">
-          <cat-radio v-model="payment" native-value="credit">
+          <cat-radio
+            v-model="payment"
+            name="demo-payment"
+            native-value="credit"
+          >
             <div>
               <strong>Credit Card</strong>
               <p class="help">
@@ -94,7 +149,11 @@
               </p>
             </div>
           </cat-radio>
-          <cat-radio v-model="payment" native-value="paypal">
+          <cat-radio
+            v-model="payment"
+            name="demo-payment"
+            native-value="paypal"
+          >
             <div>
               <strong>PayPal</strong>
               <p class="help">
@@ -102,7 +161,11 @@
               </p>
             </div>
           </cat-radio>
-          <cat-radio v-model="payment" native-value="bank">
+          <cat-radio
+            v-model="payment"
+            name="demo-payment"
+            native-value="bank"
+          >
             <div>
               <strong>Bank Transfer</strong>
               <p class="help">
@@ -118,13 +181,25 @@
 
       <demo-box label="Example: Shipping Options" example>
         <cat-field label="Select shipping speed:">
-          <cat-radio v-model="shipping" native-value="standard">
+          <cat-radio
+            v-model="shipping"
+            name="demo-shipping"
+            native-value="standard"
+          >
             <span><strong>Standard Shipping</strong> - FREE (5-7 days)</span>
           </cat-radio>
-          <cat-radio v-model="shipping" native-value="express">
+          <cat-radio
+            v-model="shipping"
+            name="demo-shipping"
+            native-value="express"
+          >
             <span><strong>Express Shipping</strong> - $9.99 (2-3 days)</span>
           </cat-radio>
-          <cat-radio v-model="shipping" native-value="overnight">
+          <cat-radio
+            v-model="shipping"
+            name="demo-shipping"
+            native-value="overnight"
+          >
             <span><strong>Overnight Shipping</strong> - $24.99 (next day)</span>
           </cat-radio>
         </cat-field>
@@ -135,19 +210,44 @@
           <strong>How satisfied are you with our service?</strong>
         </p>
         <cat-field>
-          <cat-radio v-model="satisfaction" native-value="very-satisfied" variant="success">
+          <cat-radio
+            v-model="satisfaction"
+            name="demo-satisfaction"
+            native-value="very-satisfied"
+            variant="success"
+          >
             Very Satisfied
           </cat-radio>
-          <cat-radio v-model="satisfaction" native-value="satisfied" variant="success">
+          <cat-radio
+            v-model="satisfaction"
+            name="demo-satisfaction"
+            native-value="satisfied"
+            variant="success"
+          >
             Satisfied
           </cat-radio>
-          <cat-radio v-model="satisfaction" native-value="neutral" variant="warning">
+          <cat-radio
+            v-model="satisfaction"
+            name="demo-satisfaction"
+            native-value="neutral"
+            variant="warning"
+          >
             Neutral
           </cat-radio>
-          <cat-radio v-model="satisfaction" native-value="dissatisfied" variant="danger">
+          <cat-radio
+            v-model="satisfaction"
+            name="demo-satisfaction"
+            native-value="dissatisfied"
+            variant="danger"
+          >
             Dissatisfied
           </cat-radio>
-          <cat-radio v-model="satisfaction" native-value="very-dissatisfied" variant="danger">
+          <cat-radio
+            v-model="satisfaction"
+            name="demo-satisfaction"
+            native-value="very-dissatisfied"
+            variant="danger"
+          >
             Very Dissatisfied
           </cat-radio>
         </cat-field>
@@ -158,19 +258,39 @@
           <strong>Rate this product (1-5 stars):</strong>
         </p>
         <cat-field>
-          <cat-radio v-model="rating" :native-value="1">
+          <cat-radio
+            v-model="rating"
+            name="demo-rating"
+            :native-value="1"
+          >
             ⭐ 1 Star
           </cat-radio>
-          <cat-radio v-model="rating" :native-value="2">
+          <cat-radio
+            v-model="rating"
+            name="demo-rating"
+            :native-value="2"
+          >
             ⭐⭐ 2 Stars
           </cat-radio>
-          <cat-radio v-model="rating" :native-value="3">
+          <cat-radio
+            v-model="rating"
+            name="demo-rating"
+            :native-value="3"
+          >
             ⭐⭐⭐ 3 Stars
           </cat-radio>
-          <cat-radio v-model="rating" :native-value="4">
+          <cat-radio
+            v-model="rating"
+            name="demo-rating"
+            :native-value="4"
+          >
             ⭐⭐⭐⭐ 4 Stars
           </cat-radio>
-          <cat-radio v-model="rating" :native-value="5">
+          <cat-radio
+            v-model="rating"
+            name="demo-rating"
+            :native-value="5"
+          >
             ⭐⭐⭐⭐⭐ 5 Stars
           </cat-radio>
         </cat-field>
@@ -190,7 +310,7 @@
         ]"
       >
         <template #intro>
-          <code>&lt;cat-radio&gt;</code> renders a native <code>&lt;input type="radio"&gt;</code>; group all radios that share a <code>v-model</code> inside a <code>&lt;cat-fieldset&gt;</code> so screen readers announce the group's name when focus enters it.
+          <code>&lt;cat-radio&gt;</code> renders a native <code>&lt;input type="radio"&gt;</code>; give every radio that shares a <code>v-model</code> the same <code>name</code> — that, not the shared <code>v-model</code>, is what makes them one native group — or wrap them in a <code>&lt;cat-fieldset radio-group&gt;</code>, which supplies the name and announces the group's label when focus enters it.
         </template>
       </demo-a11y>
     </section>

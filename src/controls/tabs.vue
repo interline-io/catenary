@@ -161,7 +161,9 @@ function registerTab (entry: TabRegistration) {
 const warnedValues = new Set<string>()
 
 function warnOnDuplicateValue () {
-  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') return
+  // Bare, so bundlers strip it; see the note in radio.vue for why a
+  // `typeof process` guard would make this warn in production instead.
+  if (process.env.NODE_ENV === 'production') return
   const seen = new Set<string | number>()
   for (const tab of tabs.value) {
     if (!seen.has(tab.value)) { seen.add(tab.value); continue }
