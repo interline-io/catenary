@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import CatTabs from './tabs.vue'
@@ -215,6 +215,95 @@ describe('cat-tabs dynamic children', () => {
     await nextTick(); await nextTick()
     expect(seen).toHaveLength(0)
     window.removeEventListener('resize', onResize)
+    wrapper.unmount()
+  })
+
+  // Placing each new entry relative to the others is only correct if the array
+  // is already in document order — which it is not after a keyed reorder, since
+  // that moves the DOM without changing a prop. Inserting against that stale
+  // array produced a third order belonging to neither.
+  it('re-sorts the whole tablist on any later registration', async () => {
+    const items = ref(['a', 'b', 'c'])
+    const label = ref('B')
+    const Host = defineComponent({
+      setup: () => () => h(CatTabs, { modelValue: 'a', ariaLabel: 'Sections' }, () =>
+        items.value.map(v => h(CatTabItem, {
+          key: v,
+          label: v === 'b' ? label.value : v.toUpperCase(),
+          value: v
+        }, () => v)))
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    await nextTick()
+    items.value = ['c', 'a', 'b']
+    await nextTick(); await nextTick()
+    // An unrelated label edit must correct the order, never invent a new one.
+    label.value = 'B2'
+    await nextTick(); await nextTick()
+    const panels = wrapper.findAll('[role="tabpanel"]').map(p => p.text())
+    expect(wrapper.findAll('[role="tab"]').map(t => t.text())).toEqual(panels.map(t => t === 'b' ? 'B2' : t.toUpperCase()))
+    wrapper.unmount()
+  })
+
+  // Falling back without telling the consumer leaves a highlighted tab over a
+  // blank region for anyone rendering content from the model.
+  it('emits update:modelValue when the fallback changes what is shown', async () => {
+    const show = ref(true)
+    const model = ref('b')
+    const Host = defineComponent({
+      setup: () => () => h(CatTabs, {
+        'modelValue': model.value,
+        'ariaLabel': 'Sections',
+        'onUpdate:modelValue': (v: string | number) => { model.value = String(v) }
+      }, () => [
+        h(CatTabItem, { label: 'A', value: 'a' }, () => 'A'),
+        show.value ? h(CatTabItem, { label: 'B', value: 'b' }, () => 'B') : null
+      ])
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    await nextTick()
+    expect(model.value).toBe('b')
+
+    show.value = false
+    await nextTick(); await nextTick()
+    // The model follows what is displayed, rather than naming a gone tab.
+    expect(model.value).toBe('a')
+    expect(wrapper.findAll('[role="tab"]').filter(t => t.attributes('aria-selected') === 'true'))
+      .toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('broadcasts a resize when the fallback changes the visible panel', async () => {
+    const seen: Event[] = []
+    const onResize = () => seen.push(new Event('resize'))
+    window.addEventListener('resize', onResize)
+    const show = ref(true)
+    const { wrapper } = host(() => [
+      h(CatTabItem, { label: 'A', value: 'a' }, () => 'A'),
+      show.value ? h(CatTabItem, { label: 'B', value: 'b' }, () => 'B') : null
+    ], 'b')
+    await nextTick(); await nextTick()
+    seen.length = 0
+
+    show.value = false
+    await nextTick(); await nextTick(); await new Promise(r => setTimeout(r, 20))
+    // A chart inside the newly-visible panel was display:none and laid out 0x0.
+    expect(seen.length).toBeGreaterThan(0)
+    window.removeEventListener('resize', onResize)
+    wrapper.unmount()
+  })
+
+  it('warns once when two tabs share a value', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { wrapper } = host(() => [
+      h(CatTabItem, { label: 'One', value: 'a' }, () => '1'),
+      h(CatTabItem, { label: 'Two', value: 'a' }, () => '2')
+    ])
+    await nextTick(); await nextTick()
+    const mine = warn.mock.calls.filter((c: unknown[]) => String(c[0]).includes('[catenary]'))
+    expect(mine.length).toBeGreaterThan(0)
+    expect(String(mine[0]?.[0])).toContain('unique value')
+    warn.mockRestore()
     wrapper.unmount()
   })
 })

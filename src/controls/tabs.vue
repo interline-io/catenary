@@ -123,37 +123,73 @@ const tablistRef = ref<HTMLElement | null>(null)
  */
 function registerTab (entry: TabRegistration) {
   const existing = tabs.value.findIndex(t => t.tabId === entry.tabId)
-  if (existing >= 0) tabs.value.splice(existing, 1)
-  insertInDocumentOrder(entry)
-}
-
-/**
- * Place a registration where its panel sits in the DOM.
- *
- * Registrations arrive in mount order, which is document order for a static
- * list but not for a tab revealed later by v-if — that one mounts last and
- * would otherwise sit at the end of the tablist while its panel renders in the
- * middle. Re-registrations are re-placed rather than assigned in position, so
- * a reordered list settles too.
- */
-function insertInDocumentOrder (entry: TabRegistration) {
-  const before = entry.el
-    ? tabs.value.findIndex((t) => {
-        if (!t.el) return false
-        const position = t.el.compareDocumentPosition(entry.el as Node)
-        // Across disconnected trees the mask is implementation-defined, and a
-        // PRECEDING or FOLLOWING bit is still set — so trusting it would place
-        // the tab arbitrarily. A KeepAlive'd or teleported panel is the case
-        // that produces this. Appending is the honest answer there.
-        if (position & Node.DOCUMENT_POSITION_DISCONNECTED) return false
-        return (position & Node.DOCUMENT_POSITION_PRECEDING) !== 0
-      })
-    : -1
-  if (before >= 0) {
-    tabs.value.splice(before, 0, entry)
+  if (existing >= 0) {
+    tabs.value[existing] = entry
   } else {
     tabs.value.push(entry)
   }
+  sortByDocumentOrder()
+  warnOnDuplicateValue()
+}
+
+/**
+ * Sort the registry by where each panel sits in the DOM.
+ *
+ * Registrations arrive in mount order, which is document order for a static
+ * list but not for a tab revealed later by `v-if` — that one mounts last and
+ * would otherwise sit at the end of the tablist while its panel renders in the
+ * middle.
+ *
+ * A full sort rather than placing each new entry relative to the others:
+ * incremental insertion is only correct if the array is already in document
+ * order, and it is not after a keyed `v-for` reorder, which moves the DOM
+ * without changing any prop and so registers nothing. Inserting against that
+ * stale array produced a third order belonging to neither the template nor the
+ * previous render — reachable from an unrelated label edit. Sorting means any
+ * later registration corrects the whole list.
+ */
+/**
+ * Two tabs cannot share a `value`.
+ *
+ * Selection resolves a value to the first tab carrying it, while focus moves
+ * by index — so with a duplicate, arrow-keying to the second one puts DOM
+ * focus on it while marking the first selected, and its panel stays hidden.
+ * That is unfixable from inside the component: `v-model` carries a value, so
+ * two tabs sharing one are indistinguishable to it. Saying so is the honest
+ * response. Warned once per value, since this runs on every registration.
+ */
+const warnedValues = new Set<string>()
+
+function warnOnDuplicateValue () {
+  if (typeof process !== 'undefined' && process.env?.NODE_ENV === 'production') return
+  const seen = new Set<string | number>()
+  for (const tab of tabs.value) {
+    if (!seen.has(tab.value)) { seen.add(tab.value); continue }
+    const key = String(tab.value)
+    if (warnedValues.has(key)) continue
+    warnedValues.add(key)
+    console.warn(
+      `[catenary] <cat-tabs> has two tabs with value "${key}". Values identify a `
+      + `tab to v-model, so duplicates cannot both be selected: the second is `
+      + `unreachable, and arrow-keying to it moves focus there while selecting `
+      + `the first. Give each cat-tab-item a unique value.`
+    )
+  }
+}
+
+function sortByDocumentOrder () {
+  const sorted = [...tabs.value].sort((a, b) => {
+    if (!a.el || !b.el) return 0
+    const position = a.el.compareDocumentPosition(b.el)
+    // Across disconnected trees the mask is implementation-defined and still
+    // carries a PRECEDING or FOLLOWING bit, so treat the pair as unordered
+    // rather than trusting it. A KeepAlive'd or teleported panel gets here.
+    if (position & Node.DOCUMENT_POSITION_DISCONNECTED) return 0
+    return (position & Node.DOCUMENT_POSITION_FOLLOWING) ? -1 : 1
+  })
+  // Only write when the order actually moved: an unconditional assignment
+  // would invalidate every dependent on each registration.
+  if (sorted.some((t, i) => t !== tabs.value[i])) tabs.value = sorted
 }
 
 function deregisterTab (tabId: string) {
@@ -197,6 +233,22 @@ const activeValue = computed(() => {
  */
 const activeTabId = computed(() =>
   tabs.value.find(t => t.value === activeValue.value)?.tabId)
+
+/**
+ * Reconcile the model when the fallback above takes effect.
+ *
+ * Without this the tablist highlights a tab the consumer's `v-model` does not
+ * name, and a consumer that renders its content from the model — panels
+ * outside the tabs gated on `activeTab === '...'`, which is how the consumer
+ * apps do it — shows a selected tab above an empty region. Emitting keeps the
+ * two in step. Safe against loops: if the consumer ignores the emit,
+ * `activeValue` does not change and the watcher does not refire.
+ */
+watch(activeValue, (value) => {
+  if (value !== undefined && value !== props.modelValue) {
+    emit('update:modelValue', value as T)
+  }
+})
 
 provide(TabsContextKey, {
   register: registerTab,
@@ -295,14 +347,17 @@ const tabsClasses = computed(() => {
 })
 
 // Trigger resize event when tab changes (for maps and other components that need to resize)
-// Deliberately watches only the active tab. Widening this to the tablist's
-// shape was tried and reverted: children registering on mount counts as a
-// change, so every instance dispatched a page-wide resize while mounting, and
-// a label bound to live data ("Results (12)") dispatched one per tick. A tab
-// revealed later can rewrap the flex tablist and shift the panel below it,
-// which this does not catch — measuring the tablist's height would, and is
-// the right shape for that if it becomes a real problem.
-watch(() => props.modelValue, () => {
+// Keyed on the resolved active value, not on `modelValue`: the visible panel
+// can change without the model moving — the active item removed by a `v-if`
+// engages the fallback, and a late-registering tab can make a previously
+// unmatched model start matching. A map rendered inside a panel that was
+// display:none lays out at 0x0 and needs the nudge either way.
+//
+// Not widened further. Watching the tablist's shape was tried and reverted:
+// children registering on mount counts as a change, so every instance
+// dispatched a page-wide resize while mounting, and a label bound to live data
+// dispatched one per tick.
+watch(activeValue, () => {
   nextTick(() => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('resize'))

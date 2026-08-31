@@ -8,7 +8,7 @@ The registry was keyed on `value` — a prop the consumer can change — so a ch
 
 Fixed:
 
-- **A tab revealed after mount lands in template order.** Registrations arrive in mount order, so a `v-if` tab in the middle of a list appended to the end of the tablist while its panel rendered in the middle. Live in production. Placed by comparing panel elements. An unkeyed list that grows, shrinks or inserts mid-way settles correctly; a **keyed** list reordered without any prop change does not re-register at all, so its tablist keeps the old order — unchanged from before, and not fixed here.
+- **A tab revealed after mount lands in template order.** Registrations arrive in mount order, so a `v-if` tab in the middle of a list appended to the end of the tablist while its panel rendered in the middle. Live in production. The registry is sorted by panel document position after each registration, so an unkeyed list that grows, shrinks or inserts mid-way settles correctly — and a **keyed** list reordered without any prop change corrects itself as soon as anything registers again.
 - **Arrow keys focus the tab they activate.** `focusTabAt` indexed a `v-for` template-ref array, which Vue fills in mount order. Once the tablist is ordered by document position, indexing one by the other moves DOM focus to one button while activating another — the worse half of the ordering bug. Resolved from the DOM instead.
 - **An unkeyed `v-for` shrinking no longer empties the tablist.** Re-registering under a value a sibling still owned overwrote that sibling's entry, which unmounting then deleted; `['a','b','c']` → `['b','c']` left zero tabs and two orphaned panels.
 - **Two siblings exchanging values keep both tabs**, instead of deleting each other's registration and leaving a panel whose `aria-labelledby` names a tab that is not rendered.
@@ -20,6 +20,10 @@ Also: a bound `modelValue` that names no tab now falls back to the first tab rat
 
 The parent/child contract moved to a typed `InjectionKey`, matching `cat-steps`. The string-keyed `provide`/`inject` it replaces carried the registration signature hand-copied into the child, so the two sides were asserted to agree rather than checked — and this change alters that signature.
 
-Two known gaps, both unchanged from before and neither fixed here: a keyed list reordered without a prop change keeps its old tablist order, and the fallback above displays the first tab without emitting `update:modelValue`, so `v-model` reads a value that is not on screen until the user clicks. `cat-steps` has the same emit behaviour.
+The fallback emits `update:modelValue`, so `v-model` follows what is displayed. Without it, a consumer that renders content from the model — panels outside the tabs gated on `activeTab === '...'` — showed a highlighted tab above an empty region once the active tab unmounted. `cat-steps` does not emit; the two differ here deliberately.
+
+Two tabs sharing a `value` now warn in development. Selection resolves a value to the first tab carrying it while focus moves by index, so a duplicate leaves the second unreachable and puts focus and selection on different buttons. That is not fixable from inside the component, since `v-model` carries a value and two tabs sharing one are indistinguishable to it.
+
+One known gap: a keyed list reordered with no other change re-sorts only once something registers again, so a pure reorder with no accompanying prop change is corrected on the next registration rather than immediately.
 
 `cat-steps` shares this registry's shape and most of these faults; it is not changed here. Extracting the two into one implementation is the real fix and is worth doing separately, since porting between them by hand is what let `cat-tabs` ship the ordering bug for months after `cat-steps` fixed it in #66.
