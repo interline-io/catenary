@@ -19,8 +19,8 @@
           type="button"
           role="tab"
           class="cat-tab"
-          :class="{ 'is-active': activeValue === tab.value }"
-          :aria-selected="activeValue === tab.value"
+          :class="{ 'is-active': tab.tabId === activeTabId }"
+          :aria-selected="tab.tabId === activeTabId"
           :aria-controls="tab.panelId"
           :tabindex="index === selectedIndex ? 0 : -1"
           :data-index="index"
@@ -186,10 +186,23 @@ const activeValue = computed(() => {
   // reason (steps.vue: `?? model.value`).
   return tabs.value[0]?.value ?? props.modelValue
 })
+/**
+ * The `tabId` of the one tab that is active.
+ *
+ * Selection is resolved by identity, not by value: keying the registry on
+ * `tabId` removed the de-duplication that keying on `value` used to provide,
+ * so two items sharing a value both matched and the tablist rendered two
+ * `aria-selected="true"` tabs with two visible panels. A single-select
+ * tablist must have exactly one.
+ */
+const activeTabId = computed(() =>
+  tabs.value.find(t => t.value === activeValue.value)?.tabId)
+
 provide(TabsContextKey, {
   register: registerTab,
   deregister: deregisterTab,
-  activeValue
+  activeValue,
+  activeTabId
 })
 
 // Roving tabindex anchor. Falls back to the first tab when modelValue matches
@@ -210,7 +223,12 @@ function focusTabAt (index: number) {
   // mount order — once the tablist is ordered by document position instead,
   // indexing one by the other moves focus to a different tab than the one it
   // activates.
-  const next = tablistRef.value?.children[index] as HTMLElement | undefined
+  // Selected by role rather than raw child index: the tablist's children are
+  // only the tab buttons today, but anything else landing inside it (an
+  // overflow menu, a scroll affordance) would silently move focus to a
+  // non-tab while a different tab activated — the bug this lookup exists to
+  // prevent.
+  const next = tablistRef.value?.querySelectorAll<HTMLElement>('[role="tab"]')[index]
   if (!next) return
   next.focus()
   const value = tabs.value[index]?.value
@@ -277,12 +295,14 @@ const tabsClasses = computed(() => {
 })
 
 // Trigger resize event when tab changes (for maps and other components that need to resize)
-// Anything that can change the tablist's height, not just the active tab:
-// `.cat-tablist` wraps, so revealing a tab or lengthening a label can gain a
-// row and shift the panel below it.
-const tablistShape = computed(() => tabs.value.map(t => t.label).join('\u0000'))
-
-watch([() => props.modelValue, tablistShape], () => {
+// Deliberately watches only the active tab. Widening this to the tablist's
+// shape was tried and reverted: children registering on mount counts as a
+// change, so every instance dispatched a page-wide resize while mounting, and
+// a label bound to live data ("Results (12)") dispatched one per tick. A tab
+// revealed later can rewrap the flex tablist and shift the panel below it,
+// which this does not catch — measuring the tablist's height would, and is
+// the right shape for that if it becomes a real problem.
+watch(() => props.modelValue, () => {
   nextTick(() => {
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('resize'))

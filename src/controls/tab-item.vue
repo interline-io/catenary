@@ -107,5 +107,12 @@ onBeforeUnmount(() => {
   tabs?.deregister(tabId)
 })
 
-const isActive = computed(() => tabs?.activeValue.value === props.value)
+const isActive = computed(() => {
+  // Identity once the parent has registered this item, so two items sharing a
+  // `value` cannot both be active. Before registration the registry is empty —
+  // which is every server render, since children register in onMounted — so
+  // fall back to the value, keeping the active panel visible in server HTML.
+  if (tabs?.activeTabId.value !== undefined) return tabs.activeTabId.value === tabId
+  return tabs?.activeValue.value === props.value
+})
 </script>

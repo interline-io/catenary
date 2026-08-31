@@ -181,6 +181,13 @@ export interface TabsContext {
   deregister: (tabId: string) => void
   /** The value actually shown, which may differ from a stale modelValue. */
   activeValue: ComputedRef<string | number | undefined>
+  /**
+   * `tabId` of the active tab. Selection is resolved by identity so that two
+   * items sharing a `value` cannot both render as selected. Undefined before
+   * anything has registered, including during SSR, where the child falls back
+   * to comparing values.
+   */
+  activeTabId: ComputedRef<string | undefined>
 }
 
 export const TabsContextKey: InjectionKey<TabsContext> = Symbol('catTabs')

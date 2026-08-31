@@ -177,4 +177,44 @@ describe('cat-tabs dynamic children', () => {
     expect(labels(wrapper)).toEqual(['A', 'After'])
     wrapper.unmount()
   })
+
+  it('selects exactly one tab when two items share a value', async () => {
+    // Keying the registry on tabId removed the de-duplication that keying on
+    // value used to provide, so both matched and the tablist rendered two
+    // aria-selected="true" tabs with two visible panels. A single-select
+    // tablist must have exactly one (APG).
+    const { wrapper } = host(() => [
+      h(CatTabItem, { label: 'One', value: 'a' }, () => '1'),
+      h(CatTabItem, { label: 'Two', value: 'a' }, () => '2')
+    ])
+    await nextTick()
+    expect(wrapper.findAll('[role="tab"]')).toHaveLength(2)
+    expect(wrapper.findAll('[role="tab"]').filter(t => t.attributes('aria-selected') === 'true'))
+      .toHaveLength(1)
+    expect(wrapper.findAll('[role="tabpanel"]')
+      .filter(p => (p.element as HTMLElement).style.display !== 'none')).toHaveLength(1)
+    wrapper.unmount()
+  })
+
+  it('does not broadcast a resize while mounting or on a label edit', async () => {
+    // Watching the tablist's shape made every instance dispatch a page-wide
+    // resize as its children registered, and once per tick for a label bound
+    // to live data — forcing maps and charts to relayout for nothing.
+    const seen: Event[] = []
+    const onResize = (e: Event) => seen.push(e)
+    window.addEventListener('resize', onResize)
+    const label = ref('A')
+    const { wrapper } = host(() => [
+      h(CatTabItem, { label: label.value, value: 'a' }, () => 'A'),
+      h(CatTabItem, { label: 'B', value: 'b' }, () => 'B')
+    ])
+    await nextTick(); await nextTick()
+    expect(seen).toHaveLength(0)
+
+    label.value = 'A (12)'
+    await nextTick(); await nextTick()
+    expect(seen).toHaveLength(0)
+    window.removeEventListener('resize', onResize)
+    wrapper.unmount()
+  })
 })
