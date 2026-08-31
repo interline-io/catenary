@@ -21,8 +21,9 @@ import {
   nextTick,
   useId,
   ref,
-  type ComputedRef
+  watch
 } from 'vue'
+import { TabsContextKey } from './types'
 
 /**
  * Tab panel — child of cat-tabs. Content is only displayed when the tab is active.
@@ -48,18 +49,7 @@ const props = defineProps<{
   icon?: string
 }>()
 
-type RegisterTabFn = (
-  label: string,
-  value: string | number,
-  icon: string | undefined,
-  tabId: string,
-  panelId: string
-) => void
-type DeregisterTabFn = (value: string | number) => void
-
-const registerTab = inject<RegisterTabFn>('registerTab')
-const deregisterTab = inject<DeregisterTabFn>('deregisterTab')
-const activeTab = inject<ComputedRef<string | number | undefined>>('activeTab')
+const tabs = inject(TabsContextKey, undefined)
 
 // Pair of IDs that bind tab button ↔ tabpanel via aria-controls / aria-labelledby.
 const tabId = useId()
@@ -80,12 +70,28 @@ function detectFocusableChild () {
   hasFocusableChild.value = focusable !== null
 }
 
+function register () {
+  tabs?.register({
+    label: props.label,
+    value: props.value,
+    icon: props.icon,
+    tabId,
+    panelId,
+    el: panelRef.value
+  })
+}
+
 onMounted(() => {
-  if (registerTab) {
-    registerTab(props.label, props.value, props.icon, tabId, panelId)
-  }
+  register()
   nextTick(detectFocusableChild)
 })
+
+// The tablist is drawn from the registration, so anything it shows has to be
+// pushed up again when it changes: a label edited after mount, or a `value`
+// the consumer swapped. No deregister-then-register dance is needed, because
+// the registry is keyed on this item's own `tabId` — re-registering updates
+// this entry and cannot collide with a sibling's.
+watch(() => [props.value, props.label, props.icon], register)
 
 onUpdated(() => {
   // Slot content can change after mount (v-if/v-for inside, async data).
@@ -94,17 +100,19 @@ onUpdated(() => {
 
 // Drop the registration when the tab-item unmounts (e.g., v-if toggles a tab
 // off). Without this, stale entries accumulate and the parent's keyboard nav
-// can land on a value with no rendered panel.
+// can land on a value with no rendered panel. Deregistered by `tabId`, so an
+// item leaving cannot remove a sibling that happens to share its current
+// `value` mid-update.
 onBeforeUnmount(() => {
-  if (deregisterTab) {
-    deregisterTab(props.value)
-  }
+  tabs?.deregister(tabId)
 })
 
 const isActive = computed(() => {
-  if (activeTab) {
-    return activeTab.value === props.value
-  }
-  return false
+  // Identity once the parent has registered this item, so two items sharing a
+  // `value` cannot both be active. Before registration the registry is empty —
+  // which is every server render, since children register in onMounted — so
+  // fall back to the value, keeping the active panel visible in server HTML.
+  if (tabs?.activeTabId.value !== undefined) return tabs.activeTabId.value === tabId
+  return tabs?.activeValue.value === props.value
 })
 </script>
