@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="root"
     class="field"
     :class="fieldClasses"
   >
@@ -15,7 +16,7 @@
 
     <div v-if="horizontal" class="field-body">
       <div class="field" :class="{ 'has-addons': addons }">
-        <slot />
+        <slot :id="fieldId" :describedby="describedbyId" />
         <p v-if="message || $slots.message" :id="messageId" class="help" :class="messageClass">
           <slot name="message">
             {{ message }}
@@ -27,10 +28,10 @@
     <template v-else>
       <!-- Wrap controls in nested field if we have a label and grouped/addons controls -->
       <div v-if="(grouped || addons) && hasLabel" class="field" :class="{ 'is-grouped': grouped, 'has-addons': addons }">
-        <slot />
+        <slot :id="fieldId" :describedby="describedbyId" />
       </div>
       <template v-else>
-        <slot />
+        <slot :id="fieldId" :describedby="describedbyId" />
       </template>
       <p v-if="message || $slots.message" :id="messageId" class="help" :class="messageClass">
         <slot name="message">
@@ -42,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useId, useSlots, provide } from 'vue'
+import { computed, ref, onMounted, useId, useSlots, provide } from 'vue'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
 const slots = useSlots()
@@ -53,19 +54,26 @@ provide(FieldIdKey, fieldId)
  * Form field wrapper component following Bulma field structure.
  * Supports labels, horizontal layout, addons, grouping, and validation messages.
  *
+ * The label is a real `<label for>`, so it names exactly one control. Catenary
+ * controls that inject `FieldIdKey` claim the generated id automatically; give
+ * anything else the id from the default slot. For a *group* of controls reach
+ * for `cat-fieldset`, whose `<legend>` can name a set.
+ *
  * @component cat-field
- * @example
+ * @example A catenary control claims the id on its own:
  * <cat-field label="Name">
- *   <input class="input" type="text">
+ *   <cat-input v-model="name" />
  * </cat-field>
  *
- * <cat-field label="Email" horizontal>
- *   <input class="input" type="email">
+ * @example A raw control takes it from the slot, otherwise the label names nothing:
+ * <cat-field v-slot="{ id, describedby }" label="Email" message="We never share it.">
+ *   <input :id="id" :aria-describedby="describedby" class="input" type="email">
  * </cat-field>
  *
- * <cat-field addons>
+ * @example Addons -- the label names the text input, and the button carries its own name:
+ * <cat-field v-slot="{ id }" addons label="Search">
  *   <div class="control">
- *     <input class="input" type="text">
+ *     <input :id="id" class="input" type="text">
  *   </div>
  *   <div class="control">
  *     <button class="button">Search</button>
@@ -129,7 +137,8 @@ const props = withDefaults(defineProps<Props>(), {
 // control. Both are provided as computeds (provide must run unconditionally
 // in setup) that resolve to undefined when there is nothing to convey.
 const messageId = `${fieldId}-help`
-provide(FieldDescribedbyKey, computed(() => (props.message || slots.message) ? messageId : undefined))
+const describedbyId = computed(() => (props.message || slots.message) ? messageId : undefined)
+provide(FieldDescribedbyKey, describedbyId)
 provide(FieldVariantKey, computed(() => props.variant))
 
 // Check if label exists via prop or slot
@@ -162,4 +171,91 @@ const messageClass = computed(() => {
 const labelSizeClass = computed(() => {
   return `is-${props.labelSize}`
 })
+
+const root = ref<HTMLElement | null>(null)
+
+/*
+ * A visible label that names nothing is the failure this component is most
+ * prone to: it renders `<label :for="fieldId">` unconditionally, but only the
+ * controls that inject FieldIdKey (input, select, textarea, slider, taginput,
+ * and anything built on them) ever carry that id. Wrap a raw `<input>`, a
+ * cat-checkbox, a cat-dropdown or a group of controls and the label silently
+ * attaches to nothing -- visually fine, and unnamed to a screen reader.
+ *
+ * Checked in the DOM rather than by inspecting slot VNodes, so it sees through
+ * wrapper components, v-if and fragments alike. See radio.vue for why the
+ * `process.env.NODE_ENV` guard is bare.
+ */
+if (process.env.NODE_ENV !== 'production') {
+  // <label for> associates only with a *labelable* element, so an id sitting on
+  // a wrapper <div> looks claimed while doing nothing at all.
+  const LABELABLE = 'input:not([type="hidden"]), select, textarea, button, meter, output, progress'
+
+  onMounted(() => {
+    if (!root.value) return
+    const claimed = Array.from(root.value.querySelectorAll<HTMLElement>('[id]'))
+      .filter(el => el.id === fieldId)
+    if (claimed.length === 1 && claimed[0]!.matches(LABELABLE)) return
+    // Duplicate ids are invalid whether or not the field renders a label, so
+    // this check runs first and unconditionally; only the association warnings
+    // below depend on there being a label to associate.
+    if (claimed.length > 1) {
+      console.warn(
+        `[catenary] <cat-field${props.label ? ` label="${props.label}"` : ''}> has ${claimed.length} `
+        + `elements sharing the id "${fieldId}", so the DOM has duplicate ids`
+        + (hasLabel.value ? ' and the label resolves to whichever comes first' : '')
+        + '. Give every control after the first an explicit `id`.'
+      )
+      return
+    }
+
+    if (!hasLabel.value) return
+
+    if (claimed.length === 1) {
+      console.warn(
+        `[catenary] <cat-field label="${props.label ?? ''}"> put its id on a `
+        + `<${claimed[0]!.tagName.toLowerCase()}>, which <label for> cannot associate with. `
+        + 'Move the id onto the form control itself -- only input, select, textarea, button, '
+        + 'meter, output and progress can be labelled.'
+      )
+      return
+    }
+
+    const controls = root.value.querySelectorAll(
+      'input:not([type="hidden"]), select, textarea, button, meter, output, progress'
+    )
+    if (controls.length === 0) {
+      console.warn(
+        `[catenary] <cat-field label="${props.label ?? ''}"> renders a <label> but wraps no form `
+        + 'control, so the label names nothing. Use a heading or plain text for a caption, or '
+        + 'drop `label` and let the content speak for itself.'
+      )
+    } else if (controls.length > 1) {
+      console.warn(
+        `[catenary] <cat-field label="${props.label ?? ''}"> wraps ${controls.length} controls and `
+        + 'its label is not associated with any control. A <label> can only name one, so a label '
+        + 'over a group is orphaned -- use <cat-fieldset label="..."> instead, which names the '
+        + 'group with a <legend>.'
+      )
+    } else if (controls[0]?.closest('label')) {
+      // cat-checkbox, cat-radio and cat-switch wrap their input in their own
+      // <label>, so they are already named by their slot content. Handing them
+      // the field id would not fix the association, it would give them a second
+      // name concatenated onto the first.
+      console.warn(
+        `[catenary] <cat-field label="${props.label ?? ''}"> has a label that is not associated `
+        + 'with any control, because the control it wraps names itself: cat-checkbox, cat-radio '
+        + 'and cat-switch render their own <label>. Drop the field `label` and name the control '
+        + 'through its own slot, or use <cat-fieldset label="..."> to name a group of them.'
+      )
+    } else {
+      console.warn(
+        `[catenary] <cat-field label="${props.label ?? ''}"> has a label that is not associated `
+        + 'with any control. Bind the id from the default slot -- '
+        + '<cat-field v-slot="{ id }"><input :id="id"></cat-field> -- or, if the control names '
+        + 'itself the way cat-dropdown does, drop the field `label`.'
+      )
+    }
+  })
+}
 </script>

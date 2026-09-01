@@ -136,7 +136,7 @@
       </demo-box>
 
       <demo-box label="Example: Payment Method Selection" example>
-        <cat-field label="Choose payment method:">
+        <cat-fieldset label="Choose payment method:">
           <cat-radio
             v-model="payment"
             name="demo-payment"
@@ -173,14 +173,14 @@
               </p>
             </div>
           </cat-radio>
-        </cat-field>
+        </cat-fieldset>
         <p class="has-text-grey mt-3">
           Selected method: {{ payment }}
         </p>
       </demo-box>
 
       <demo-box label="Example: Shipping Options" example>
-        <cat-field label="Select shipping speed:">
+        <cat-fieldset label="Select shipping speed:">
           <cat-radio
             v-model="shipping"
             name="demo-shipping"
@@ -202,7 +202,7 @@
           >
             <span><strong>Overnight Shipping</strong> - $24.99 (next day)</span>
           </cat-radio>
-        </cat-field>
+        </cat-fieldset>
       </demo-box>
 
       <demo-box label="Example: Survey Question" example>

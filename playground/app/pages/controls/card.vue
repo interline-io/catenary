@@ -157,10 +157,10 @@
             <p>
               When collapsed, both content and footer are hidden.
             </p>
-            <cat-field label="Option 1">
+            <cat-field>
               <cat-checkbox>Enable feature</cat-checkbox>
             </cat-field>
-            <cat-field label="Option 2">
+            <cat-field>
               <cat-checkbox>Another option</cat-checkbox>
             </cat-field>
           </div>
