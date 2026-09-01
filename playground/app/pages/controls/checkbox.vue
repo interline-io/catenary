@@ -160,6 +160,104 @@
           </cat-checkbox>
         </cat-field>
       </demo-box>
+      <demo-box label="Accessible name without a visible label">
+        <p class="content is-small">
+          A checkbox that selects a row has no visible text of its own. Give it
+          <code>aria-label</code> so it is not announced as an unnamed checkbox.
+        </p>
+        <table class="table is-narrow">
+          <caption class="is-sr-only">
+            Shapes
+          </caption>
+          <thead>
+            <tr><th><span class="is-sr-only">Select</span></th><th>Shape</th></tr>
+          </thead>
+          <tbody>
+            <tr v-for="row in shapeRows" :key="row.id">
+              <td>
+                <cat-checkbox
+                  :model-value="selectedShapes.includes(row.id)"
+                  :aria-label="`Select ${row.name}`"
+                  @update:model-value="toggleShape(row.id)"
+                />
+              </td>
+              <td>{{ row.name }}</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="content is-small">
+          Selected: <code>{{ selectedShapes }}</code>
+        </p>
+      </demo-box>
+
+      <demo-box label="Custom true/false values">
+        <p class="content is-small">
+          <code>true-value</code> and <code>false-value</code> emit something other
+          than a boolean, for a model that stores a string or a number.
+        </p>
+        <cat-checkbox v-model="consent" true-value="granted" false-value="denied">
+          Share usage data
+        </cat-checkbox>
+        <p class="content is-small mt-2">
+          Emitted: <code>{{ consent }}</code>
+        </p>
+      </demo-box>
+
+      <demo-box label="Native form submission">
+        <p class="content is-small">
+          <code>name</code> and <code>value</code> put the checkbox in a native form's
+          payload; <code>required</code> makes the browser enforce it.
+        </p>
+        <form class="cat-demo-form" @submit.prevent="onSubmit">
+          <cat-checkbox name="terms" value="accepted" required>
+            I accept the terms
+          </cat-checkbox>
+          <div class="mt-2">
+            <cat-button type="submit" variant="primary" size="small">
+              Submit
+            </cat-button>
+          </div>
+        </form>
+        <p class="content is-small mt-2">
+          Submitted: <code>{{ submitted ?? '(nothing yet)' }}</code>
+        </p>
+      </demo-box>
+
+      <demo-a11y
+        :references="[
+          { label: 'W3C Tutorial: Checkboxes', url: 'https://www.w3.org/WAI/tutorials/forms/checkbox/' },
+          { label: 'WCAG SC 4.1.2: Name, Role, Value', url: 'https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html' },
+          { label: 'WCAG SC 1.3.1: Info and Relationships', url: 'https://www.w3.org/WAI/WCAG21/Understanding/info-and-relationships.html' },
+        ]"
+        :keyboard="[
+          { key: 'Tab / Shift+Tab', description: 'Moves focus to and from the checkbox.' },
+          { key: 'Space', description: 'Toggles the checkbox. Native behavior; nothing is intercepted.' },
+        ]"
+      >
+        <template #intro>
+          Renders a native <code>&lt;input type="checkbox"&gt;</code> inside its own <code>&lt;label&gt;</code>, so the slot content or the <code>label</code> prop <em>is</em> the accessible name and standard keyboard behavior applies unmodified. Because it names itself, do not also put a <code>&lt;cat-field label="…"&gt;</code> around it — that label would associate with nothing, and <code>cat-field</code> warns about it in development.
+        </template>
+        <template #notes>
+          <p class="mt-3">
+            <strong>A checkbox with no visible text needs <code>aria-label</code>.</strong> A row selector in a table is the usual case. Without it the control is announced as just "checkbox", with nothing to distinguish it from the others in the column. <code>aria-label</code> and <code>aria-describedby</code> are routed to the native input; <code>class</code> and <code>style</code> stay on the wrapping label, where they already applied.
+          </p>
+          <p class="mt-3">
+            <strong>The mixed state is native.</strong> <code>indeterminate</code> sets the DOM property, which the browser maps to a mixed state in the accessibility tree — no <code>aria-checked</code> is set, because redundant ARIA over working native semantics is a regression, not an improvement. The APG's <code>aria-checked="mixed"</code> example is for custom <code>role="checkbox"</code> widgets, not native inputs.
+          </p>
+          <p class="mt-3">
+            The browser clears <code>indeterminate</code> the moment the box is clicked. If the owner still considers the state mixed — a parent checkbox whose children have not changed — the component restores it, so the accessibility tree keeps reporting mixed rather than silently dropping to unchecked.
+          </p>
+          <p class="mt-3">
+            <strong>Grouping.</strong> Several related checkboxes belong in a <code>&lt;cat-fieldset label="…"&gt;</code>, whose <code>&lt;legend&gt;</code> names the set. <code>cat-checkbox-group</code> does this for you and adds select-all/none controls.
+          </p>
+          <p class="mt-3">
+            <strong>Disabled</strong> renders the native <code>disabled</code> attribute, so the control leaves the tab order and is announced as unavailable. It is dimmed to 50% opacity; WCAG's contrast minimum exempts disabled controls, but do not rely on the dimming alone to convey why something cannot be used.
+          </p>
+          <p class="mt-3">
+            <code>data-state</code> (<code>checked</code> / <code>unchecked</code> / <code>indeterminate</code>) and <code>data-disabled</code> are on the wrapper for styling and test hooks, following the same convention as Reka UI.
+          </p>
+        </template>
+      </demo-a11y>
     </section>
   </div>
 </template>
@@ -168,6 +266,7 @@
 import { ref, computed, reactive } from 'vue'
 import { CoreVariants, CheckboxSizes } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
+import DemoA11y from '../../components/demo-a11y.vue'
 
 const variants = CoreVariants
 const sizes = CheckboxSizes
@@ -175,6 +274,26 @@ const sizes = CheckboxSizes
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1)
 
 const basic = ref<boolean>(false)
+
+const shapeRows = [
+  { id: 'shp_1', name: 'Route 12 — Northbound' },
+  { id: 'shp_2', name: 'Route 12 — Southbound' },
+  { id: 'shp_3', name: 'Route 40 — Loop' }
+]
+const selectedShapes = ref<string[]>(['shp_2'])
+function toggleShape (id: string) {
+  const i = selectedShapes.value.indexOf(id)
+  if (i > -1) selectedShapes.value.splice(i, 1)
+  else selectedShapes.value.push(id)
+}
+
+const consent = ref<string>('denied')
+
+const submitted = ref<string | null>(null)
+function onSubmit (event: Event) {
+  const data = new FormData(event.target as HTMLFormElement)
+  submitted.value = JSON.stringify(Object.fromEntries(data.entries()))
+}
 const option1 = ref<boolean>(false)
 const option2 = ref<boolean>(true)
 const option3 = ref<boolean>(false)

@@ -1,18 +1,30 @@
 <template>
-  <label class="checkbox cat-checkbox" :class="checkboxClasses">
+  <label
+    class="checkbox cat-checkbox"
+    :class="checkboxClasses"
+    :data-state="dataState"
+    :data-disabled="disabled ? '' : undefined"
+    v-bind="rootAttrs"
+  >
     <input
       ref="inputRef"
       type="checkbox"
       :checked="isChecked"
       :disabled="disabled"
+      :name="name"
+      :value="value"
+      :required="required"
+      :aria-label="ariaLabel"
+      v-bind="nativeAttrs"
       @change="handleChange"
     >
     <slot>{{ label }}</slot>
   </label>
 </template>
 
-<script setup lang="ts" generic="T extends boolean | any[] = boolean">
-import { ref, watch, onMounted, computed } from 'vue'
+<script setup lang="ts" generic="T extends boolean | string | number | any[] = boolean">
+import { ref, watch, onMounted, computed, nextTick, useAttrs } from 'vue'
+import { filterAttrs, isPresentationalAttr } from '../util/attrs'
 import type { CheckboxVariant, CheckboxSize } from './types'
 
 /**
@@ -41,6 +53,18 @@ const props = withDefaults(defineProps<{
   variant?: CheckboxVariant
   /** Size of the checkbox. */
   size?: CheckboxSize
+  /** Accessible name, for a checkbox with no visible label -- a row selector in a table, say. */
+  ariaLabel?: string
+  /** `name` on the native input, for native form submission. */
+  name?: string
+  /** `value` on the native input, for native form submission. */
+  value?: string
+  /** Mark the checkbox required. */
+  required?: boolean
+  /** Value emitted when checked. Defaults to `true`. */
+  trueValue?: T
+  /** Value emitted when unchecked. Defaults to `false`. */
+  falseValue?: T
 }>(), {
   modelValue: undefined,
   nativeValue: undefined,
@@ -48,8 +72,28 @@ const props = withDefaults(defineProps<{
   indeterminate: false,
   label: undefined,
   variant: undefined,
-  size: undefined
+  size: undefined,
+  ariaLabel: undefined,
+  name: undefined,
+  value: undefined,
+  required: false,
+  trueValue: undefined,
+  falseValue: undefined
 })
+
+defineOptions({ inheritAttrs: false })
+
+/*
+ * The root is the <label>, so undirected fallthrough attributes land there --
+ * where `aria-label` and `aria-describedby` do nothing for the input's
+ * accessible name. Route everything except class, style and listeners to the
+ * input instead. The presentational three stay on the wrapper alone, which is
+ * where they already applied: moving a consumer's spacing class onto the box
+ * would shift the layout of every existing call site.
+ */
+const attrs = useAttrs()
+const rootAttrs = computed(() => filterAttrs(attrs, isPresentationalAttr))
+const nativeAttrs = computed(() => filterAttrs(attrs, key => !isPresentationalAttr(key)))
 
 /**
  * Emitted when checkbox state changes.
@@ -61,11 +105,27 @@ const emit = defineEmits<{
 
 const inputRef = ref<HTMLInputElement | null>(null)
 
+/*
+ * `trueValue`/`falseValue` only take over when one of them is set. Comparing
+ * `modelValue === trueValue` unconditionally would change behaviour for every
+ * existing caller binding a truthy non-boolean, which today reads as checked.
+ */
+const usesCustomValues = computed(() => props.trueValue !== undefined || props.falseValue !== undefined)
+const checkedValue = computed(() => (props.trueValue !== undefined ? props.trueValue : true))
+const uncheckedValue = computed(() => (props.falseValue !== undefined ? props.falseValue : false))
+
 const isChecked = computed(() => {
   if (Array.isArray(props.modelValue)) {
     return props.nativeValue !== undefined && props.modelValue.includes(props.nativeValue)
   }
-  return props.modelValue as boolean
+  if (usesCustomValues.value) return props.modelValue === checkedValue.value
+  return Boolean(props.modelValue)
+})
+
+/** Reka-style state hook, so a consumer can style or query without internals. */
+const dataState = computed(() => {
+  if (props.indeterminate) return 'indeterminate'
+  return isChecked.value ? 'checked' : 'unchecked'
 })
 
 const checkboxClasses = computed(() => {
@@ -105,10 +165,19 @@ function handleChange (event: Event) {
       }
     }
     emit('update:modelValue', newValue as T)
+  } else if (usesCustomValues.value) {
+    emit('update:modelValue', (target.checked ? checkedValue.value : uncheckedValue.value) as T)
   } else {
     // Boolean binding mode
     emit('update:modelValue', target.checked as T)
   }
+
+  // The browser clears `.indeterminate` as soon as the box is clicked. If the
+  // owner still says indeterminate -- a parent checkbox whose children have not
+  // changed -- the DOM would silently disagree with the prop, and the mixed
+  // state would be gone from the accessibility tree. Put it back once the
+  // parent has had a chance to react to the emit above.
+  nextTick(updateIndeterminate)
 }
 
 function updateIndeterminate () {
