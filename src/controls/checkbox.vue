@@ -2,8 +2,6 @@
   <label
     class="checkbox cat-checkbox"
     :class="checkboxClasses"
-    :data-state="dataState"
-    :data-disabled="disabled ? '' : undefined"
     v-bind="rootAttrs"
   >
     <input
@@ -120,12 +118,6 @@ const isChecked = computed(() => {
   }
   if (usesCustomValues.value) return props.modelValue === checkedValue.value
   return Boolean(props.modelValue)
-})
-
-/** Reka-style state hook, so a consumer can style or query without internals. */
-const dataState = computed(() => {
-  if (props.indeterminate) return 'indeterminate'
-  return isChecked.value ? 'checked' : 'unchecked'
 })
 
 const checkboxClasses = computed(() => {

@@ -253,9 +253,6 @@
           <p class="mt-3">
             <strong>Disabled</strong> renders the native <code>disabled</code> attribute, so the control leaves the tab order and is announced as unavailable. It is dimmed to 50% opacity; WCAG's contrast minimum exempts disabled controls, but do not rely on the dimming alone to convey why something cannot be used.
           </p>
-          <p class="mt-3">
-            <code>data-state</code> (<code>checked</code> / <code>unchecked</code> / <code>indeterminate</code>) and <code>data-disabled</code> are on the wrapper for styling and test hooks, following the same convention as Reka UI.
-          </p>
         </template>
       </demo-a11y>
     </section>

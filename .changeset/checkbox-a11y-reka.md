@@ -13,9 +13,8 @@ No `aria-checked="mixed"` is set: a native checkbox maps `.indeterminate` to a m
 **Reka UI-style additions.**
 
 - `trueValue` / `falseValue` — emit something other than a boolean. They only take effect when set, so a caller binding a truthy non-boolean keeps reading as checked.
-- `data-state` (`checked` / `unchecked` / `indeterminate`) and `data-disabled` on the wrapper, for styling and test hooks.
 - `name`, `value` and `required` on the native input, so a checkbox can take part in native form submission and validation.
 
-Note that `data-state` is rendered on every `cat-checkbox`, so DOM snapshots that include the wrapper will need updating. It is inert otherwise: no layout, styling or behavior change.
+Existing usage renders byte-identically: every addition above is inert unless the corresponding prop is set.
 
 The playground page gains the `demo-a11y` section it was missing, along with demos for the unnamed-row-selector case, custom true/false values, and native form submission.

@@ -64,24 +64,6 @@ describe('cat-checkbox indeterminate', () => {
 })
 
 describe('cat-checkbox Reka-style API', () => {
-  it('exposes data-state', async () => {
-    const w = mountCb({ modelValue: false })
-    expect(w.find('label').attributes('data-state')).toBe('unchecked')
-    await w.setProps({ modelValue: true })
-    expect(w.find('label').attributes('data-state')).toBe('checked')
-    await w.setProps({ indeterminate: true })
-    expect(w.find('label').attributes('data-state')).toBe('indeterminate')
-    w.unmount()
-  })
-
-  it('exposes data-disabled only when disabled', async () => {
-    const w = mountCb({ disabled: false })
-    expect(w.find('label').attributes('data-disabled')).toBeUndefined()
-    await w.setProps({ disabled: true })
-    expect(w.find('label').attributes('data-disabled')).toBe('')
-    w.unmount()
-  })
-
   it('supports trueValue / falseValue', async () => {
     const w = mountCb({ modelValue: 'no', trueValue: 'yes', falseValue: 'no' })
     expect((w.find('input').element as HTMLInputElement).checked).toBe(false)
