@@ -10,7 +10,7 @@
       :checked="isChecked"
       :disabled="disabled"
       :name="name"
-      :value="value"
+      :value="nativeFormValue"
       :required="required"
       :aria-label="ariaLabel"
       v-bind="nativeAttrs"
@@ -55,7 +55,11 @@ const props = withDefaults(defineProps<{
   ariaLabel?: string
   /** `name` on the native input, for native form submission. */
   name?: string
-  /** `value` on the native input, for native form submission. */
+  /**
+   * `value` on the native input, for native form submission. Defaults to
+   * `nativeValue` in array-binding mode, where that is already the option's
+   * semantic value.
+   */
   value?: string
   /** Mark the checkbox required. */
   required?: boolean
@@ -111,6 +115,15 @@ const inputRef = ref<HTMLInputElement | null>(null)
 const usesCustomValues = computed(() => props.trueValue !== undefined || props.falseValue !== undefined)
 const checkedValue = computed(() => (props.trueValue !== undefined ? props.trueValue : true))
 const uncheckedValue = computed(() => (props.falseValue !== undefined ? props.falseValue : false))
+
+/*
+ * In array-binding mode `nativeValue` is already the option's value, and
+ * cat-radio binds it to the native `value` for exactly this reason. Without
+ * this, pairing `name` with the existing array API would submit the browser
+ * default of "on" for every checked box unless the caller also repeated the
+ * value in a second prop.
+ */
+const nativeFormValue = computed(() => props.value ?? props.nativeValue)
 
 const isChecked = computed(() => {
   if (Array.isArray(props.modelValue)) {

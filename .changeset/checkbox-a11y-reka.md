@@ -13,8 +13,8 @@ No `aria-checked="mixed"` is set: a native checkbox maps `.indeterminate` to a m
 **Reka UI-style additions.**
 
 - `trueValue` / `falseValue` — emit something other than a boolean. They only take effect when set, so a caller binding a truthy non-boolean keeps reading as checked.
-- `name`, `value` and `required` on the native input, so a checkbox can take part in native form submission and validation.
+- `name`, `value` and `required` on the native input, so a checkbox can take part in native form submission and validation. In array-binding mode the native `value` falls back to `nativeValue`, which is already the option's semantic value and is what `cat-radio` binds — otherwise pairing `name` with the existing array API would submit the browser default of `"on"` for every checked box.
 
-Existing usage renders byte-identically: every addition above is inert unless the corresponding prop is set.
+Existing usage renders byte-identically with one exception: an array-binding checkbox now carries `value="<nativeValue>"` on its input. That is inert unless the checkbox is inside a native `<form>`, but it will show up in a DOM snapshot.
 
 The playground page gains the `demo-a11y` section it was missing, along with demos for the unnamed-row-selector case, custom true/false values, and native form submission.

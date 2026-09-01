@@ -87,6 +87,25 @@ describe('cat-checkbox Reka-style API', () => {
     w.unmount()
   })
 
+  it('falls back to nativeValue for the native value, matching cat-radio', () => {
+    const w = mountCb({ modelValue: ['GTFS'], nativeValue: 'GTFS', name: 'specs' })
+    expect(w.find('input').attributes('value')).toBe('GTFS')
+    expect(w.find('input').attributes('name')).toBe('specs')
+    w.unmount()
+  })
+
+  it('lets an explicit value win over nativeValue', () => {
+    const w = mountCb({ modelValue: ['a'], nativeValue: 'a', value: 'explicit' })
+    expect(w.find('input').attributes('value')).toBe('explicit')
+    w.unmount()
+  })
+
+  it('renders no value attribute when neither is set', () => {
+    const w = mountCb({ modelValue: false })
+    expect(w.find('input').attributes('value')).toBeUndefined()
+    w.unmount()
+  })
+
   it('supports required', () => {
     const w = mountCb({ required: true })
     expect(w.find('input').attributes('required')).toBeDefined()
