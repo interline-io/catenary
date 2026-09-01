@@ -60,6 +60,23 @@ describe('cat-field label association', () => {
     w.unmount()
   })
 
+  // A self-labelling control cannot be fixed by handing it the id: that would
+  // concatenate a second name onto the one it already has.
+  it('tells a self-labelling control to drop the field label, not to take the id', () => {
+    const w = mountField({ label: 'Option 1' }, () => h(CatCheckbox, null, () => 'Enable feature'))
+    const text = catenaryWarnings().join('\n')
+    expect(text).toMatch(/names itself/i)
+    expect(text).not.toMatch(/v-slot/)
+    w.unmount()
+  })
+
+  it('tells a raw control to bind the id from the slot', () => {
+    const w = mountField({ label: 'Email' }, () => h('input', { class: 'input' }))
+    const text = catenaryWarnings().join('\n')
+    expect(text).toMatch(/v-slot/)
+    w.unmount()
+  })
+
   it('points a group of controls at cat-fieldset', () => {
     const w = mountField({ label: 'Data format' }, () => [h(CatCheckbox), h(CatCheckbox)])
     expect(catenaryWarnings().join('\n')).toMatch(/cat-fieldset/)
@@ -81,6 +98,13 @@ describe('cat-field label association', () => {
   it('warns when a label wraps no control at all', () => {
     const w = mountField({ label: 'Summary' }, () => h('span', 'just text'))
     expect(catenaryWarnings().join('\n')).toMatch(/no form control/i)
+    w.unmount()
+  })
+
+  // Duplicate ids are invalid regardless of labelling.
+  it('warns about duplicate ids even when the field has no label', () => {
+    const w = mountField({ grouped: true }, () => [h(CatInput), h(CatInput)])
+    expect(catenaryWarnings().join('\n')).toMatch(/duplicate ids/i)
     w.unmount()
   })
 

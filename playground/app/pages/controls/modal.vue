@@ -245,13 +245,13 @@
           Open Modal with Popups
         </cat-button>
         <cat-modal v-model="showLayered" title="Schedule a trip">
-          <cat-field label="Service day">
+          <cat-fieldset label="Service day">
             <cat-dropdown v-model="layeredData.day" selectable :label="layeredData.day || 'Choose a day'">
               <cat-dropdown-item v-for="day in weekdays" :key="day" :value="day">
                 {{ day }}
               </cat-dropdown-item>
             </cat-dropdown>
-          </cat-field>
+          </cat-fieldset>
           <cat-field label="Date">
             <cat-datepicker v-model="layeredData.date" />
           </cat-field>

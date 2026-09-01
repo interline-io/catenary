@@ -188,19 +188,24 @@ const root = ref<HTMLElement | null>(null)
  */
 if (process.env.NODE_ENV !== 'production') {
   onMounted(() => {
-    if (!hasLabel.value || !root.value) return
+    if (!root.value) return
     const claimed = Array.from(root.value.querySelectorAll<HTMLElement>('[id]'))
       .filter(el => el.id === fieldId)
     if (claimed.length === 1) return
-
+    // Duplicate ids are invalid whether or not the field renders a label, so
+    // this check runs first and unconditionally; only the association warnings
+    // below depend on there being a label to associate.
     if (claimed.length > 1) {
       console.warn(
-        `[catenary] <cat-field label="${props.label ?? ''}"> has ${claimed.length} elements sharing `
-        + `the id "${fieldId}", so the DOM has duplicate ids and the label resolves to whichever `
-        + 'comes first. Give every control after the first an explicit `id`.'
+        `[catenary] <cat-field${props.label ? ` label="${props.label}"` : ''}> has ${claimed.length} `
+        + `elements sharing the id "${fieldId}", so the DOM has duplicate ids`
+        + (hasLabel.value ? ' and the label resolves to whichever comes first' : '')
+        + '. Give every control after the first an explicit `id`.'
       )
       return
     }
+
+    if (!hasLabel.value) return
 
     const controls = root.value.querySelectorAll(
       'input:not([type="hidden"]), select, textarea, button, meter, output, progress'
@@ -218,12 +223,23 @@ if (process.env.NODE_ENV !== 'production') {
         + 'over a group is orphaned -- use <cat-fieldset label="..."> instead, which names the '
         + 'group with a <legend>.'
       )
+    } else if (controls[0]?.closest('label')) {
+      // cat-checkbox, cat-radio and cat-switch wrap their input in their own
+      // <label>, so they are already named by their slot content. Handing them
+      // the field id would not fix the association, it would give them a second
+      // name concatenated onto the first.
+      console.warn(
+        `[catenary] <cat-field label="${props.label ?? ''}"> has a label that is not associated `
+        + 'with any control, because the control it wraps names itself: cat-checkbox, cat-radio '
+        + 'and cat-switch render their own <label>. Drop the field `label` and name the control '
+        + 'through its own slot, or use <cat-fieldset label="..."> to name a group of them.'
+      )
     } else {
       console.warn(
         `[catenary] <cat-field label="${props.label ?? ''}"> has a label that is not associated `
-        + 'with any control. Controls like cat-checkbox, cat-radio, cat-switch and cat-dropdown do '
-        + 'not take the field id; bind it yourself from the default slot: '
-        + '<cat-field v-slot="{ id }"><input :id="id"></cat-field>.'
+        + 'with any control. Bind the id from the default slot -- '
+        + '<cat-field v-slot="{ id }"><input :id="id"></cat-field> -- or, if the control names '
+        + 'itself the way cat-dropdown does, drop the field `label`.'
       )
     }
   })

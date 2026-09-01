@@ -123,7 +123,7 @@
         <cat-fieldset label="Full name">
           <cat-field addons>
             <cat-input v-model="firstName" aria-label="First name" placeholder="First name" expanded />
-            <cat-input v-model="lastName" aria-label="Last name" placeholder="Last name" expanded />
+            <cat-input id="demo-last-name" v-model="lastName" aria-label="Last name" placeholder="Last name" expanded />
           </cat-field>
         </cat-fieldset>
 
@@ -133,7 +133,7 @@
             <div class="control">
               <span class="button is-static">to</span>
             </div>
-            <cat-input v-model="endDate" aria-label="End date" type="date" expanded />
+            <cat-input id="demo-end-date" v-model="endDate" aria-label="End date" type="date" expanded />
           </cat-field>
         </cat-fieldset>
       </demo-box>
