@@ -1,5 +1,115 @@
 # @interline-io/catenary
 
+## 0.14.0
+
+### Minor Changes
+
+- [#92](https://github.com/interline-io/catenary/pull/92) [`45df370`](https://github.com/interline-io/catenary/commit/45df37072f17193f188c5759b9f055275500a900) Thanks [@drewda](https://github.com/drewda)! - `cat-checkbox` accessibility review, plus API additions modelled on Reka UI. Part of [#64](https://github.com/interline-io/catenary/issues/64). All additive — no existing prop, event or behavior changes.
+
+  **`aria-label` and `aria-describedby` now reach the native input.** The component's root _is_ the `<label>`, so undirected fallthrough attributes landed there — where `aria-label` does nothing for the input's accessible name. A checkbox with no visible text was therefore impossible to name from outside, which matters for the common case of a row selector in a table. There is now an `ariaLabel` prop, and fallthrough `aria-*`/`data-*` are routed to the input. `class`, `style` and listeners stay on the wrapper, exactly where they already applied — moving a spacing class onto the box would shift the layout of existing call sites.
+
+  **The mixed state survives a click.** The browser clears the DOM `indeterminate` property as soon as the box is clicked. Since the `indeterminate` prop had not changed, the watcher never refired, so a parent checkbox whose children were unchanged silently lost its mixed state in the accessibility tree. It is now restored after the change event.
+
+  No `aria-checked="mixed"` is set: a native checkbox maps `.indeterminate` to a mixed state on its own, and redundant ARIA over working native semantics is a regression rather than an improvement. The APG example that sets `aria-checked` is for custom `role="checkbox"` widgets.
+
+  **Reka UI-style additions.**
+
+  - `trueValue` / `falseValue` — emit something other than a boolean. They only take effect when set, so a caller binding a truthy non-boolean keeps reading as checked.
+  - `name`, `value` and `required` on the native input, so a checkbox can take part in native form submission and validation. In array-binding mode the native `value` falls back to `nativeValue`, which is already the option's semantic value and is what `cat-radio` binds — otherwise pairing `name` with the existing array API would submit the browser default of `"on"` for every checked box.
+
+  Existing usage renders byte-identically with one exception: an array-binding checkbox now carries `value="<nativeValue>"` on its input. That is inert unless the checkbox is inside a native `<form>`, but it will show up in a DOM snapshot.
+
+  The playground page gains the `demo-a11y` section it was missing, along with demos for the unnamed-row-selector case, custom true/false values, and native form submission.
+
+- [#91](https://github.com/interline-io/catenary/pull/91) [`695bd54`](https://github.com/interline-io/catenary/commit/695bd549feed5c5f9ba554239f69d92adba8645d) Thanks [@drewda](https://github.com/drewda)! - `cat-field` accessibility review. Part of [#64](https://github.com/interline-io/catenary/issues/64).
+
+  **The default slot now exposes `id` and `describedby`.** `cat-field` renders a real `<label for>`, but only the controls that inject `FieldIdKey` — `cat-input`, `cat-select`, `cat-textarea`, `cat-slider`, `cat-taginput`, and anything built on them — ever carried that id. Wrapping anything else left the label attached to nothing: visually correct, and unnamed to a screen reader. There was no way for a raw control to reach the id, which made the component's own documented example (`<cat-field label="Name"><input class="input"></cat-field>`) one of the broken cases. Now:
+
+  ```vue
+  <cat-field
+    v-slot="{ id, describedby }"
+    label="Email"
+    message="We never share it."
+  >
+    <input :id="id" :aria-describedby="describedby" class="input" type="email">
+  </cat-field>
+  ```
+
+  **`cat-field` warns in development when its label names nothing.** Three distinct cases, each naming its own fix: the label resolves to no element (bind the id from the slot, or use `cat-fieldset`), to more than one (duplicate DOM ids — give every control after the first an explicit `id`), or the field wraps no form control at all (a `<label>` is the wrong element for a caption).
+
+  **Expect these warnings when you upgrade.** A label over a _group_ of controls is the common one — one `<label>` cannot name a set, so a label above several checkboxes, radios, switches or buttons is orphaned. `cat-fieldset` is the component for that: its `<legend>` names the group. `cat-checkbox`, `cat-radio` and `cat-switch` deliberately do not take the field id, since they render their own wrapping `<label>` and a second name would be concatenated onto the first.
+
+  The playground's own field page demonstrated three of these bugs — a label over three buttons, and two pairs of inputs sharing one id. All now use `cat-fieldset` with per-control names, and the registration form routes its validation error through `variant`/`message` instead of a hand-written `<p class="help">`, so the error is linked by `aria-describedby` and the input is marked `aria-invalid`. The page gains the `demo-a11y` section it was missing.
+
+- [#90](https://github.com/interline-io/catenary/pull/90) [`d989974`](https://github.com/interline-io/catenary/commit/d9899742390fcaafcfd820b0c271fa73ed59d369) Thanks [@drewda](https://github.com/drewda)! - Four form-control accessibility fixes. Closes [#49](https://github.com/interline-io/catenary/issues/49).
+
+  **`cat-radio` groups properly.** Radios are grouped by a shared `name`, not by sharing a `v-model` — without one, each radio is its own group of one: arrow keys do not move between them, every radio is a separate tab stop, and a screen reader announces each as "1 of 1". A mouse user sees nothing wrong, which is why it goes unnoticed.
+
+  A radio that resolves to no name warns in development, naming the two ways to fix it. **Expect this warning when you upgrade** — it is the point of the change, and it fires once per unnamed radio on mount. Either give every radio in a group the same `name`, or wrap the group in the new `<cat-fieldset radio-group>`, which supplies a generated one. An explicit `name` always wins.
+
+  `radio-group` is opt-in rather than automatic because a fieldset is a generic grouping wrapper: naming _every_ descendant radio would merge two independent questions under one legend into a single group, and the resulting bug is silent — picking "Red" makes the browser natively uncheck "Small", and since `size` never changed, Vue's patch skips the DOM write, so the size selection vanishes from the UI while state still says it is selected.
+
+  The playground's own radio demos shipped the ungrouped bug — 27 radios, none named. All are grouped now, which is also what the documentation should have been showing.
+
+  **`cat-select` `readonly` no longer removes the control from the tab order.** It was implemented as `disabled`, so a keyboard or screen reader user could not reach it to read the current value, and it was announced as unavailable rather than read-only. It now stays focusable, carries `aria-readonly`, gets a muted surface so it does not look editable, and refuses to change — while leaving Enter (so a form still submits) and Cmd/Ctrl shortcuts (copy, select-all) alone. If a change reaches it by another route it restores the previous selection, including every option of a `multiple` select.
+
+  **`cat-input` and `cat-textarea` accept an explicit `id`.** A `cat-field` provides one id, so a grouped field containing more than one control gave them all the same one: duplicate DOM ids, and a `<label for>` resolving to whichever came first. `cat-select` has carried this escape hatch; these two did not.
+
+  **`cat-textarea` accepts `ariaLabel`**, matching `cat-input` and `cat-select`, so a textarea used without a labelled `cat-field` can be named under `strictTemplates`.
+
+- [#89](https://github.com/interline-io/catenary/pull/89) [`3fc741c`](https://github.com/interline-io/catenary/commit/3fc741cc3192ba73bc305b12951a1d50c4d3e2c7) Thanks [@drewda](https://github.com/drewda)! - `cat-tabs` keys its tablist registry on each item's stable id rather than its `value`, which fixes five ways the tablist could drift from the template.
+
+  The registry was keyed on `value` — a prop the consumer can change — so a changed value read as a different tab. That single decision produced a cluster of failures, all of which go away when identity and content are separated: `tabId` is minted once per item with `useId()` and outlives every prop change.
+
+  Fixed:
+
+  - **A tab revealed after mount lands in template order.** Registrations arrive in mount order, so a `v-if` tab in the middle of a list appended to the end of the tablist while its panel rendered in the middle. Live in production. The registry is sorted by panel document position after each registration, so an unkeyed list that grows, shrinks or inserts mid-way settles correctly — and a **keyed** list reordered without any prop change corrects itself as soon as anything registers again.
+  - **Arrow keys focus the tab they activate.** `focusTabAt` indexed a `v-for` template-ref array, which Vue fills in mount order. Once the tablist is ordered by document position, indexing one by the other moves DOM focus to one button while activating another — the worse half of the ordering bug. Resolved from the DOM instead.
+  - **An unkeyed `v-for` shrinking no longer empties the tablist.** Re-registering under a value a sibling still owned overwrote that sibling's entry, which unmounting then deleted; `['a','b','c']` → `['b','c']` left zero tabs and two orphaned panels.
+  - **Two siblings exchanging values keep both tabs**, instead of deleting each other's registration and leaving a panel whose `aria-labelledby` names a tab that is not rendered.
+  - **A focused tab surviving a value change keeps focus.** The tablist keyed its buttons on `tab.value`, so changing one destroyed and recreated the button and dropped focus to `<body>`. Keyed on `tabId`, the button is patched in place.
+
+  Two tabs sharing a `value` now render one selected tab rather than two: selection is resolved by the item's `tabId`, since keying the registry on `tabId` removed the de-duplication that keying on `value` used to provide.
+
+  Also: a bound `modelValue` that names no tab now falls back to the first tab rather than leaving a tablist with nothing selected and every panel hidden. An unbound tablist is unchanged — none selected, first still keyboard-reachable — since that is an unmade choice rather than a broken state.
+
+  The parent/child contract moved to a typed `InjectionKey`, matching `cat-steps`. The string-keyed `provide`/`inject` it replaces carried the registration signature hand-copied into the child, so the two sides were asserted to agree rather than checked — and this change alters that signature.
+
+  The fallback emits `update:modelValue`, so `v-model` follows what is displayed. Without it, a consumer that renders content from the model — panels outside the tabs gated on `activeTab === '...'` — showed a highlighted tab above an empty region once the active tab unmounted. `cat-steps` does not emit; the two differ here deliberately.
+
+  Two tabs sharing a `value` now warn in development. Selection resolves a value to the first tab carrying it while focus moves by index, so a duplicate leaves the second unreachable and puts focus and selection on different buttons. That is not fixable from inside the component, since `v-model` carries a value and two tabs sharing one are indistinguishable to it.
+
+  One known gap: a keyed list reordered with no other change re-sorts only once something registers again, so a pure reorder with no accompanying prop change is corrected on the next registration rather than immediately.
+
+  `cat-steps` shares this registry's shape and most of these faults; it is not changed here. Extracting the two into one implementation is the real fix and is worth doing separately, since porting between them by hand is what let `cat-tabs` ship the ordering bug for months after `cat-steps` fixed it in [#66](https://github.com/interline-io/catenary/issues/66).
+
+- [#85](https://github.com/interline-io/catenary/pull/85) [`85940d2`](https://github.com/interline-io/catenary/commit/85940d22f2e399ea0391a4213714c1adae7136cb) Thanks [@drewda](https://github.com/drewda)! - `cat-tooltip` conforms to WCAG 1.4.13, gains an affordance and motion control, and stops sticking after a click. Closes [#50](https://github.com/interline-io/catenary/issues/50) and [#79](https://github.com/interline-io/catenary/issues/79).
+
+  ## Content on Hover or Focus (WCAG 1.4.13)
+
+  The success criterion asks for three things and the bubble now does all three.
+
+  **Hoverable.** The bubble carried `pointer-events: none`, so it was never a pointer target: any move toward it fired `mouseleave` on the wrapper and dismissed it. Anyone using magnification, or wanting to select a long tooltip's text, could not reach the content. It is now `pointer-events: auto` while visible, with a short close delay bridging the gap between trigger and bubble so crossing it does not dismiss — position-agnostic, unlike a transparent CSS bridge which would need geometry per side.
+
+  Making it hoverable moved the dismissal boundary, so the bubble also handles its own `mouseleave`. Without that the wrapper's `mouseleave` had already fired when the pointer crossed onto the bubble, and nothing was left to dismiss it once the pointer left again — a tooltip stuck open would have been worse than the bug being fixed.
+
+  **Dismissible without moving the pointer.** Escape was bound on the wrapper, so it only fired with focus inside; a tooltip opened by hover while focus sat elsewhere could only be dismissed by moving the pointer, which the criterion explicitly disallows. Escape now goes through the shared LIFO dismiss stack, which also means the keypress is consumed — a tooltip open inside a `cat-modal` takes the first press and the dialog stays open, instead of both closing at once.
+
+  ## No longer sticks after a click
+
+  When the slot has no focusable child the wrapper takes a `tabindex` of its own, so clicking it focused it and the bubble stayed up after the pointer had left. Focus now shows the tooltip only when the focus did not come from a pointer press, tracked from `pointerdown` rather than `:focus-visible` — the same distinction, but `:focus-visible` is a rendering hint that jsdom reports false for synthetic focus, which would make the behaviour untestable and environment-dependent. Keyboard focus still holds the bubble open when the pointer wanders away.
+
+  This is the dominant usage pattern in the consumer apps: 91 of their 129 `cat-tooltip` call sites wrap a non-focusable icon or span.
+
+  ## New props
+
+  - **`affordance`** — `cursor: help` and a dotted underline on the trigger. Opt-in, since it changes how slot content looks at every existing call site. Without it nothing on screen tells a pointer user a tooltip exists; two playground demos had already hand-rolled exactly these declarations inline.
+  - **`animated`** (default `true`) — turn the fade off. Suppressed automatically under `prefers-reduced-motion: reduce` regardless of the prop, matching `cat-collapse`, `cat-steps` and `cat-msg`, which had the block `cat-tooltip` lacked.
+
+  ## Playground
+
+  The tooltip page had **20 icon-only triggers with no accessible name at all** — a critical axe `button-name` violation on the page that documents the component, teaching the opposite of what `cat-button`'s own docs say. `aria-describedby` supplies a description, not a name. Each now uses `cat-button`'s `icon` prop with an `aria-label`, which is both the documented pattern and the correct icon sizing. With the two hand-rolled affordances replaced by the prop (removing a `has-text-info` span that failed contrast), the page goes from 21 axe violations to zero in both themes.
+
 ## 0.13.0
 
 ### Minor Changes
