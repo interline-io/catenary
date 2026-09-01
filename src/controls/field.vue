@@ -187,11 +187,15 @@ const root = ref<HTMLElement | null>(null)
  * `process.env.NODE_ENV` guard is bare.
  */
 if (process.env.NODE_ENV !== 'production') {
+  // <label for> associates only with a *labelable* element, so an id sitting on
+  // a wrapper <div> looks claimed while doing nothing at all.
+  const LABELABLE = 'input:not([type="hidden"]), select, textarea, button, meter, output, progress'
+
   onMounted(() => {
     if (!root.value) return
     const claimed = Array.from(root.value.querySelectorAll<HTMLElement>('[id]'))
       .filter(el => el.id === fieldId)
-    if (claimed.length === 1) return
+    if (claimed.length === 1 && claimed[0]!.matches(LABELABLE)) return
     // Duplicate ids are invalid whether or not the field renders a label, so
     // this check runs first and unconditionally; only the association warnings
     // below depend on there being a label to associate.
@@ -206,6 +210,16 @@ if (process.env.NODE_ENV !== 'production') {
     }
 
     if (!hasLabel.value) return
+
+    if (claimed.length === 1) {
+      console.warn(
+        `[catenary] <cat-field label="${props.label ?? ''}"> put its id on a `
+        + `<${claimed[0]!.tagName.toLowerCase()}>, which <label for> cannot associate with. `
+        + 'Move the id onto the form control itself -- only input, select, textarea, button, '
+        + 'meter, output and progress can be labelled.'
+      )
+      return
+    }
 
     const controls = root.value.querySelectorAll(
       'input:not([type="hidden"]), select, textarea, button, meter, output, progress'

@@ -77,6 +77,18 @@ describe('cat-field label association', () => {
     w.unmount()
   })
 
+  // <label for> only associates with labelable elements. Exposing the id as a
+  // slot prop is what makes it possible to put it somewhere it does nothing.
+  it('warns when the id lands on a non-labelable element', () => {
+    const w = mount(CatField, {
+      props: { label: 'Email' },
+      slots: { default: (p: { id: string }) => h('div', { id: p.id }, [h('input', { class: 'input' })]) },
+      attachTo: document.body
+    })
+    expect(catenaryWarnings().join('\n')).toMatch(/put its id on a <div>, which <label for> cannot associate/i)
+    w.unmount()
+  })
+
   it('points a group of controls at cat-fieldset', () => {
     const w = mountField({ label: 'Data format' }, () => [h(CatCheckbox), h(CatCheckbox)])
     expect(catenaryWarnings().join('\n')).toMatch(/cat-fieldset/)
