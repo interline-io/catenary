@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, inject, defineAsyncComponent } from 'vue'
+import { computed, getCurrentInstance, inject, onMounted, defineAsyncComponent } from 'vue'
 import type { Router, RouteLocationRaw, RouteLocationNamedRaw } from 'vue-router'
 import { LinkRoutesKey } from './types'
 
@@ -39,8 +39,15 @@ const resolvedTo = computed((): RouteLocationRaw | null => {
   let target: RouteLocationRaw | undefined
 
   if (props.routeKey) {
-    const name = routes[props.routeKey]
-    if (!name) return null
+    /*
+     * The injected map exists to remap a canonical key into a host app's own
+     * route namespace. A host whose route names already match the keys needs no
+     * entry, so fall back to the key itself rather than returning null: a
+     * missing entry used to render the inert <span> below, which consumers
+     * style as a button, so a forgotten map produced look-alikes rather than an
+     * error. `router.resolve` still rejects a name that does not exist.
+     */
+    const name = routes[props.routeKey] ?? props.routeKey
 
     // If `to` is an object, merge params/query/hash into a named route
     if (typeof props.to === 'object' && props.to !== null && !Array.isArray(props.to)) {
@@ -66,4 +73,56 @@ const resolvedTo = computed((): RouteLocationRaw | null => {
     return null
   }
 })
+
+/** Names a route location without serialising it -- see the note below. */
+function describeTo (to: RouteLocationRaw | undefined): string {
+  if (typeof to === 'string') return to
+  if (to && typeof to === 'object') {
+    const named = to as RouteLocationNamedRaw & { path?: string }
+    if (named.name) return String(named.name)
+    if (named.path) return named.path
+  }
+  return '(location)'
+}
+
+/*
+ * An unresolved link still renders its slot content, in a <span> that carries
+ * whatever classes the caller passed -- and callers style these as buttons. The
+ * result looks exactly like a link, has no link role, is not focusable and does
+ * nothing when clicked, with nothing in the console to say so. That silence is
+ * the actual defect: it has already cost a downstream app a debugging session.
+ *
+ * See radio.vue for why the NODE_ENV guard is bare.
+ */
+if (process.env.NODE_ENV !== 'production') {
+  onMounted(() => {
+    if (resolvedTo.value) return
+    if (!props.routeKey && !props.to) return
+
+    // Never JSON.stringify `to`: a route location may legitimately hold a cycle
+    // or a BigInt in `state`, and a warning that throws is worse than none.
+    const asked = props.routeKey
+      ? `route-key="${props.routeKey}"`
+      : `to="${describeTo(props.to)}"`
+
+    let cause: string
+    if (!router) {
+      // Every destination fails when there is no router at all, so blaming the
+      // route map here would send someone looking in the wrong place entirely.
+      cause = 'No vue-router instance is installed on this app, so no destination can resolve. '
+        + 'cat-link renders a RouterLink and needs the router registered.'
+    } else if (props.routeKey) {
+      cause = 'Either the key is missing from the map provided as LinkRoutesKey, or no route of '
+        + 'that name exists. A host whose route names match the keys needs no map entry.'
+    } else {
+      cause = 'Check that the target route exists.'
+    }
+
+    console.warn(
+      `[catenary] <cat-link ${asked}> did not resolve to a route, so it renders a `
+      + 'plain <span>: it keeps its classes and its text, but it is not navigable, has no '
+      + `link role and cannot be focused. ${cause}`
+    )
+  })
+}
 </script>
