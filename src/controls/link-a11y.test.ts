@@ -81,6 +81,29 @@ describe('cat-link inert fallback is announced in development', () => {
     expect(catWarnings().join('\n')).toMatch(/not navigable|<span>/i)
   })
 
+  // A warning that throws is worse than no warning: `to` can legitimately hold
+  // values JSON cannot serialise (a cycle, a BigInt in `state`).
+  it('does not throw when `to` is not JSON-serialisable', async () => {
+    const cyclic: Record<string, unknown> = { name: 'no-such-route' }
+    cyclic.self = cyclic
+    await expect(mountLink({ to: cyclic as never })).resolves.toBeTruthy()
+    expect(catWarnings().length).toBeGreaterThan(0)
+  })
+
+  // With no router at all, every destination fails to resolve. Blaming the
+  // route map would send someone looking in the wrong place.
+  it('names the real cause when no router is installed', async () => {
+    const w = mount(CatLink, {
+      props: { routeKey: 'anything' },
+      slots: { default: () => 'x' }
+    })
+    await flushPromises()
+    expect(w.find('span').exists()).toBe(true)
+    expect(catWarnings().join('\n')).toMatch(/router/i)
+    expect(catWarnings().join('\n')).not.toMatch(/missing from the map/i)
+    w.unmount()
+  })
+
   it('stays silent when no destination was asked for', async () => {
     const w = await mountLink({})
     expect(w.find('span').exists()).toBe(true)

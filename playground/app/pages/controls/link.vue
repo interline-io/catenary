@@ -75,7 +75,7 @@
         :references="[
           { label: 'WCAG SC 4.1.2: Name, Role, Value', url: 'https://www.w3.org/WAI/WCAG21/Understanding/name-role-value.html' },
           { label: 'WCAG SC 2.1.1: Keyboard', url: 'https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html' },
-          { label: 'WAI: Links', url: 'https://www.w3.org/WAI/tutorials/menus/' },
+          { label: 'WCAG SC 2.4.4: Link Purpose (In Context)', url: 'https://www.w3.org/WAI/WCAG21/Understanding/link-purpose-in-context.html' },
         ]"
         :keyboard="[
           { key: 'Tab / Shift+Tab', description: 'Moves focus through resolved links. An unresolved one is a <span> and is skipped entirely.' },

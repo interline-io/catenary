@@ -74,6 +74,17 @@ const resolvedTo = computed((): RouteLocationRaw | null => {
   }
 })
 
+/** Names a route location without serialising it -- see the note below. */
+function describeTo (to: RouteLocationRaw | undefined): string {
+  if (typeof to === 'string') return to
+  if (to && typeof to === 'object') {
+    const named = to as RouteLocationNamedRaw & { path?: string }
+    if (named.name) return String(named.name)
+    if (named.path) return named.path
+  }
+  return '(location)'
+}
+
 /*
  * An unresolved link still renders its slot content, in a <span> that carries
  * whatever classes the caller passed -- and callers style these as buttons. The
@@ -87,17 +98,30 @@ if (process.env.NODE_ENV !== 'production') {
   onMounted(() => {
     if (resolvedTo.value) return
     if (!props.routeKey && !props.to) return
+
+    // Never JSON.stringify `to`: a route location may legitimately hold a cycle
+    // or a BigInt in `state`, and a warning that throws is worse than none.
     const asked = props.routeKey
       ? `route-key="${props.routeKey}"`
-      : `to=${JSON.stringify(props.to)}`
+      : `to="${describeTo(props.to)}"`
+
+    let cause: string
+    if (!router) {
+      // Every destination fails when there is no router at all, so blaming the
+      // route map here would send someone looking in the wrong place entirely.
+      cause = 'No vue-router instance is installed on this app, so no destination can resolve. '
+        + 'cat-link renders a RouterLink and needs the router registered.'
+    } else if (props.routeKey) {
+      cause = 'Either the key is missing from the map provided as LinkRoutesKey, or no route of '
+        + 'that name exists. A host whose route names match the keys needs no map entry.'
+    } else {
+      cause = 'Check that the target route exists.'
+    }
+
     console.warn(
       `[catenary] <cat-link ${asked}> did not resolve to a route, so it renders a `
       + 'plain <span>: it keeps its classes and its text, but it is not navigable, has no '
-      + 'link role and cannot be focused. '
-      + (props.routeKey
-        ? 'Either the key is missing from the map provided as LinkRoutesKey, or no route of '
-        + 'that name exists. A host whose route names match the keys needs no map entry.'
-        : 'Check that the target route exists.')
+      + `link role and cannot be focused. ${cause}`
     )
   })
 }
