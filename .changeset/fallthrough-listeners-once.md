@@ -22,4 +22,6 @@ A `.capture` listener stays on the wrapper whatever the event: the capture phase
 
 Note for `cat-radio` and `cat-switch` specifically: `id`, `aria-*` and `data-*` move from the `<label>` to the `<input>`. Check any selector, style rule or test that relied on the old placement.
 
+**`cat-slider`'s tick labels now meet AA in dark mode.** They were coloured `var(--bulma-grey)`, a palette value that holds the same lightness in both schemes by design — fine on white at 4.68:1, but 3.97:1 against the dark background. They use `var(--bulma-text-weak)` now, which is the same 48% lightness in light (so nothing changes there) and lifts to 53% in dark, clearing AA at 4.63:1. Found by running real axe-core against the playground in dark mode; catenary's own test suite cannot see this, because jsdom computes no styles and skips the contrast rules entirely.
+
 Consumers working around the double-fire — binding a key handler to a wrapper element, or writing attributes directly onto the control rather than passing them down — can drop those workarounds.
