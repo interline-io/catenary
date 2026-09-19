@@ -10,6 +10,10 @@ Listeners are now bound in exactly one place, chosen by whether the wrapper can 
 
 `@invalid` is worth calling out for anyone using constraint validation: it is a form-control event that does not bubble, so it now reaches the control rather than being bound somewhere it could never fire.
 
+A `.capture` listener stays on the wrapper whatever the event: the capture phase runs from the root down for everything, so `@focus.capture` still sees the control and the icons beside it.
+
+**`.self` is not supported on these components.** Vue compiles it to a runtime guard and leaves the key as plain `onKeydown`, so there is no way to route by it; the listener lands on the wrapper, where the guard rejects events coming from the control, and never runs. It fired once before, from the duplicate control-side binding that this release removes. The modifier is ill-defined for a component that is a wrapper *and* a control in any case — bind the handler and compare `event.target` yourself if you need it.
+
 **One ordering change to be aware of.** Because a consumer's `@input` / `@change` listener now sits on the wrapper rather than on the control, it runs *after* the component's own handler, which is where `update:modelValue` is emitted. Previously it ran before. If you normalize a value in `@input` — upper-casing it, stripping characters — the raw value is now emitted first and your correction lands on the following tick. Move that work to a `watch` on the bound value, or to `@change`.
 
 **`cat-slider` was missing `inheritAttrs: false` entirely**, so every fallthrough attribute was applied twice — a caller's `id` landed on both the wrapper and the range input, breaking `getElementById`, `<label for>` and anything pointing at it through `aria-controls` or `aria-describedby`. The other three had this fixed in 0.13.0; the slider was missed. Note that `data-*` attributes, including a `data-testid`, now resolve to the range input rather than to the wrapper — check any selector or style rule that relied on the old placement. It also gains its first test file.

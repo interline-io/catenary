@@ -30,6 +30,23 @@ export function filterAttrs (
 /** A fallthrough event listener, e.g. `onKeydown`. */
 const isListenerAttr = (key: string): boolean => /^on[A-Z]/.test(key)
 
+// Known limitation: `.self` is not supported on these components.
+//
+// Vue compiles it to a runtime guard (`target !== currentTarget` bails) and
+// leaves the key as plain `onKeydown`, so it is invisible here — there is no way
+// to route by it. A `.self` listener lands on the wrapper, where the guard
+// rejects every event coming from the control, and never runs.
+//
+// It is not honoured by binding to both destinations either: that is what made a
+// single keypress fire twice, which is the bug this module exists to fix. And
+// the modifier is ill-defined for a component that is a wrapper *and* a control
+// — "self" names no one element. It happened to fire once before, from the
+// control-side binding, which was luck rather than design.
+//
+// Checked across the consumer apps before settling on this: 896 `.vue` files,
+// zero uses of `.self` on any component. Bind the handler and compare
+// `event.target` yourself if you need this.
+
 // Vue appends modifiers to the listener key — `@click.capture.once` arrives as
 // `onClickCaptureOnce` — so they are stripped before matching and a modified
 // listener is classified by its event rather than by its modifiers. Key
@@ -65,8 +82,19 @@ const WRAPPER_CANNOT_SEE = new Set([
   'onInvalid'
 ])
 
+// `.capture` is the one modifier that changes *which elements observe* an
+// event, so it cannot be stripped and forgotten like the other two. The capture
+// phase runs from the root down to the target, and it runs for every event —
+// including the ones that never bubble back out. A capturing listener on the
+// wrapper therefore sees a descendant's `focus` or `invalid`, and belongs on the
+// wrapper, where it also covers the icons and the clear button beside the
+// control. Order is not fixed (`@focus.once.capture` arrives as
+// `onFocusOnceCapture`), so this looks inside the whole modifier run.
+const hasCaptureModifier = (key: string): boolean =>
+  (key.match(LISTENER_MODIFIERS)?.[0] ?? '').includes('Capture')
+
 const isWrapperBlindListener = (key: string): boolean =>
-  WRAPPER_CANNOT_SEE.has(key.replace(LISTENER_MODIFIERS, ''))
+  !hasCaptureModifier(key) && WRAPPER_CANNOT_SEE.has(key.replace(LISTENER_MODIFIERS, ''))
 
 // Everything the wrapper can observe belongs on the wrapper and nowhere else.
 // It sees the control's own events on the way up *and* events from the icons

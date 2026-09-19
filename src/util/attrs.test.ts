@@ -76,13 +76,33 @@ describe('isRootAttr / isControlAttr', () => {
   })
 
   // Vue appends modifiers to the key, so `@focus.once` arrives as `onFocusOnce`
-  // and would be read as an ordinary wrapper listener if they were not stripped
-  // first — which would bind it where it can never fire.
+  // and would be read as an ordinary wrapper listener if `Once` were not
+  // stripped first — which would bind it where it can never fire.
   it('classifies a modified listener by its event, not its modifiers', () => {
     expect(isControlAttr('onFocusOnce')).toBe(true)
-    expect(isControlAttr('onInvalidCapture')).toBe(true)
     expect(isRootAttr('onFocusOnce')).toBe(false)
     expect(isRootAttr('onClickCaptureOnce')).toBe(true)
+  })
+
+  // `.capture` is the exception: the capture phase runs from the root down for
+  // every event, so a capturing wrapper listener does see a descendant's focus
+  // or invalid — and covers the icons beside the control too. Verified against a
+  // real constraint-validation `invalid` event: a capturing listener on the
+  // wrapper fires, a non-capturing one does not.
+  it('keeps a capturing listener on the wrapper even when the event is wrapper-blind', () => {
+    for (const key of ['onFocusCapture', 'onBlurCapture', 'onInvalidCapture', 'onScrollCapture']) {
+      expect(isRootAttr(key), key).toBe(true)
+      expect(isControlAttr(key), key).toBe(false)
+    }
+  })
+
+  // Vue appends event-option modifiers in the order they were written, so
+  // `@focus.once.capture` arrives as `onFocusOnceCapture`. Matching only a
+  // trailing `Capture` would miss it and bind it to the control.
+  it('finds Capture anywhere in the modifier run', () => {
+    expect(isRootAttr('onFocusOnceCapture')).toBe(true)
+    expect(isRootAttr('onFocusCaptureOnce')).toBe(true)
+    expect(isControlAttr('onFocusOnceCapture')).toBe(false)
   })
 
   it('keeps class and style on both, and everything else on the control', () => {
