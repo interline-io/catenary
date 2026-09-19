@@ -18,7 +18,7 @@
         :disabled="disabled"
         :aria-readonly="readonly ? 'true' : undefined"
         :multiple="multiple"
-        v-bind="$attrs"
+        v-bind="controlAttrs"
         @change="handleChange"
         @mousedown="onReadonlyGuard"
         @keydown="onReadonlyKeydown"
@@ -34,7 +34,7 @@
 
 <script setup lang="ts" generic="T extends string | null | string[] = string | null">
 import { computed, ref, watch, onMounted, nextTick, inject, useAttrs } from 'vue'
-import { filterAttrs, isPresentationalAttr } from '../util/attrs'
+import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { SelectVariant, SelectSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
@@ -65,8 +65,9 @@ defineOptions({
 
 const attrs = useAttrs()
 
-// class, style and on* listeners — the subset that keeps reaching the wrapper.
-const rootAttrs = computed(() => filterAttrs(attrs, isPresentationalAttr))
+// class and style reach both; a bubbling listener is the wrapper's alone.
+const rootAttrs = computed(() => filterAttrs(attrs, isRootAttr))
+const controlAttrs = computed(() => filterAttrs(attrs, isControlAttr))
 const fieldId = inject(FieldIdKey, undefined)
 
 /**

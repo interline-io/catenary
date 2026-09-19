@@ -1,5 +1,5 @@
 <template>
-  <div class="cat-slider-wrapper">
+  <div class="cat-slider-wrapper" v-bind="rootAttrs">
     <input
       :id="fieldId"
       ref="sliderRef"
@@ -13,7 +13,7 @@
       :max="max"
       :step="step"
       :disabled="disabled"
-      v-bind="$attrs"
+      v-bind="controlAttrs"
       @input="handleInput"
       @mousedown="showTooltip = true"
       @mouseup="showTooltip = false"
@@ -34,9 +34,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useSlots, provide, inject } from 'vue'
+import { ref, computed, useSlots, provide, inject, useAttrs } from 'vue'
+import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { SliderSize, SliderVariant } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
+
+// Wraps a native <input type="range"> beside its tooltip and ticks, so
+// fallthrough attributes are routed by hand rather than landing on both the
+// wrapper and the control.
+defineOptions({
+  inheritAttrs: false
+})
+
+const attrs = useAttrs()
+
+// class and style reach both; a bubbling listener is the wrapper's alone.
+const rootAttrs = computed(() => filterAttrs(attrs, isRootAttr))
+const controlAttrs = computed(() => filterAttrs(attrs, isControlAttr))
 
 const fieldId = inject(FieldIdKey, undefined)
 

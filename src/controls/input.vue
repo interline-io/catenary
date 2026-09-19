@@ -21,7 +21,7 @@
       :min="min"
       :max="max"
       :step="step"
-      v-bind="$attrs"
+      v-bind="controlAttrs"
       @input="handleInput"
     >
     <span v-if="icon" class="icon is-left">
@@ -57,7 +57,7 @@
 
 <script setup lang="ts" generic="T extends string | number = string">
 import { computed, inject, ref, useAttrs } from 'vue'
-import { filterAttrs, isPresentationalAttr } from '../util/attrs'
+import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { InputVariant, InputSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
@@ -85,8 +85,9 @@ defineOptions({
 
 const attrs = useAttrs()
 
-// class, style and on* listeners — the subset that keeps reaching the wrapper.
-const rootAttrs = computed(() => filterAttrs(attrs, isPresentationalAttr))
+// class and style reach both; a bubbling listener is the wrapper's alone.
+const rootAttrs = computed(() => filterAttrs(attrs, isRootAttr))
+const controlAttrs = computed(() => filterAttrs(attrs, isControlAttr))
 const fieldId = inject(FieldIdKey, undefined)
 const inputRef = ref<HTMLInputElement | null>(null)
 

@@ -22,7 +22,7 @@
 
 <script setup lang="ts" generic="T extends boolean | string | number | any[] = boolean">
 import { ref, watch, onMounted, computed, nextTick, useAttrs } from 'vue'
-import { filterAttrs, isPresentationalAttr } from '../util/attrs'
+import { filterAttrs, isRootAttr } from '../util/attrs'
 import type { CheckboxVariant, CheckboxSize } from './types'
 
 /**
@@ -88,14 +88,15 @@ defineOptions({ inheritAttrs: false })
 /*
  * The root is the <label>, so undirected fallthrough attributes land there --
  * where `aria-label` and `aria-describedby` do nothing for the input's
- * accessible name. Route everything except class, style and listeners to the
- * input instead. The presentational three stay on the wrapper alone, which is
+ * accessible name. Route everything except class, style and bubbling listeners
+ * to the input instead. `class` and `style` stay on the wrapper alone, which is
  * where they already applied: moving a consumer's spacing class onto the box
- * would shift the layout of every existing call site.
+ * would shift the layout of every existing call site. A non-bubbling listener
+ * (`@focus`, `@blur`) goes to the input, since the label never sees one.
  */
 const attrs = useAttrs()
-const rootAttrs = computed(() => filterAttrs(attrs, isPresentationalAttr))
-const nativeAttrs = computed(() => filterAttrs(attrs, key => !isPresentationalAttr(key)))
+const rootAttrs = computed(() => filterAttrs(attrs, isRootAttr))
+const nativeAttrs = computed(() => filterAttrs(attrs, key => !isRootAttr(key)))
 
 /**
  * Emitted when checkbox state changes.

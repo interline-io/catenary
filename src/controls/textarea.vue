@@ -20,7 +20,7 @@
       :rows="rows"
       :cols="cols"
       :wrap="wrap"
-      v-bind="$attrs"
+      v-bind="controlAttrs"
       @input="handleInput"
     />
   </p>
@@ -28,7 +28,7 @@
 
 <script setup lang="ts">
 import { computed, inject, ref, useAttrs } from 'vue'
-import { filterAttrs, isPresentationalAttr } from '../util/attrs'
+import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { TextareaVariant, TextareaSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
@@ -56,8 +56,9 @@ defineOptions({
 
 const attrs = useAttrs()
 
-// class, style and on* listeners — the subset that keeps reaching the wrapper.
-const rootAttrs = computed(() => filterAttrs(attrs, isPresentationalAttr))
+// class and style reach both; a bubbling listener is the wrapper's alone.
+const rootAttrs = computed(() => filterAttrs(attrs, isRootAttr))
+const controlAttrs = computed(() => filterAttrs(attrs, isControlAttr))
 const fieldId = inject(FieldIdKey, undefined)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 
