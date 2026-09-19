@@ -1,11 +1,12 @@
 <template>
-  <label class="radio cat-radio" :class="radioClasses">
+  <label class="radio cat-radio" :class="radioClasses" v-bind="rootAttrs">
     <input
       type="radio"
       :checked="modelValue === nativeValue"
       :disabled="disabled"
       :name="groupName"
       :value="nativeValue"
+      v-bind="nativeAttrs"
       @change="handleChange"
     >
     <slot>{{ label }}</slot>
@@ -13,7 +14,8 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number | boolean | null = string">
-import { computed, inject, onMounted } from 'vue'
+import { computed, inject, onMounted, useAttrs } from 'vue'
+import { filterAttrs, isRootAttr, isLabelledControlAttr } from '../util/attrs'
 import { RadioGroupNameKey } from './types'
 import type { RadioVariant, RadioSize } from './types'
 
@@ -52,6 +54,25 @@ const props = withDefaults(defineProps<{
   size: undefined,
   label: undefined
 })
+
+// Wraps a native control inside its own <label>, so fallthrough attributes are
+// routed by hand rather than landing on the label alone.
+defineOptions({
+  inheritAttrs: false
+})
+/**
+ * The root of this component *is* the `<label>`, so undirected fallthrough
+ * attributes land there — where `aria-describedby` never reaches the input's
+ * accessible description, an `id` resolves to a non-labelable element, and
+ * `@focus` / `@blur` never fire at all, because neither reaches the label from
+ * the input. Route everything except `class`, `style` and the listeners the
+ * label can observe to the input instead. `class` and `style` stay on the
+ * label, where they already applied: moving a consumer's spacing class onto the
+ * box would shift the layout of every existing call site.
+ */
+const attrs = useAttrs()
+const rootAttrs = computed(() => filterAttrs(attrs, isRootAttr))
+const nativeAttrs = computed(() => filterAttrs(attrs, isLabelledControlAttr))
 
 const emit = defineEmits<{
   'update:modelValue': [value: T]

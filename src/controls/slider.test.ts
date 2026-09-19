@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { mountComponent } from '../testutil/component-helpers'
+import { mountComponent, expectNoAxeViolations } from '../testutil/component-helpers'
 import CatSlider from './slider.vue'
 
 describe('CatSlider', () => {
@@ -72,6 +72,45 @@ describe('CatSlider', () => {
       await wrapper.find('.probe-tick').trigger('click')
 
       expect(onClick).toHaveBeenCalledTimes(1)
+      wrapper.unmount()
+    })
+  })
+
+  // Required by CLAUDE.md for any component with a visible surface. Note the
+  // limit: jsdom computes no styles, so the color-contrast rules are inert here
+  // and this catches structural problems only — roles, names, states. The
+  // tooltip's hardcoded --bulma-grey-darker on --bulma-white and the track's
+  // --bulma-grey-lighter have still never been measured in either theme; that
+  // needs axe DevTools against /controls/slider, in light and dark. Tracked as
+  // part of the a11y review gap in #64.
+  describe('accessibility', () => {
+    it('has no axe violations when labelled', async () => {
+      const wrapper = mountComponent(CatSlider, {
+        attachTo: document.body,
+        attrs: { 'aria-label': 'Volume' }
+      })
+      await expectNoAxeViolations(wrapper)
+      wrapper.unmount()
+    })
+
+    it('has no axe violations with ticks and a tooltip', async () => {
+      const wrapper = mountComponent(CatSlider, {
+        attachTo: document.body,
+        props: { tooltip: true, modelValue: 50 },
+        attrs: { 'aria-label': 'Volume' },
+        slots: { default: '<span class="tick">0</span><span class="tick">100</span>' }
+      })
+      await expectNoAxeViolations(wrapper)
+      wrapper.unmount()
+    })
+
+    it('has no axe violations when disabled', async () => {
+      const wrapper = mountComponent(CatSlider, {
+        attachTo: document.body,
+        props: { disabled: true },
+        attrs: { 'aria-label': 'Volume' }
+      })
+      await expectNoAxeViolations(wrapper)
       wrapper.unmount()
     })
   })
