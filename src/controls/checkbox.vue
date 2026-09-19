@@ -22,7 +22,7 @@
 
 <script setup lang="ts" generic="T extends boolean | string | number | any[] = boolean">
 import { ref, watch, onMounted, computed, nextTick, useAttrs } from 'vue'
-import { filterAttrs, isRootAttr } from '../util/attrs'
+import { filterAttrs, isRootAttr, isLabelledControlAttr } from '../util/attrs'
 import type { CheckboxVariant, CheckboxSize } from './types'
 
 /**
@@ -96,7 +96,7 @@ defineOptions({ inheritAttrs: false })
  */
 const attrs = useAttrs()
 const rootAttrs = computed(() => filterAttrs(attrs, isRootAttr))
-const nativeAttrs = computed(() => filterAttrs(attrs, key => !isRootAttr(key)))
+const nativeAttrs = computed(() => filterAttrs(attrs, isLabelledControlAttr))
 
 /**
  * Emitted when checkbox state changes.

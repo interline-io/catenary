@@ -311,7 +311,7 @@ describe('CatInput', () => {
     })
 
     // `invalid` is fired by constraint validation and does not bubble (verified
-    // against a real browser-generated event, not a synthesised one), so a
+    // against a real browser-generated event, not a synthesized one), so a
     // listener routed to the wrapper would never run. Dispatched here with
     // bubbles: false to match what the browser actually emits.
     it('delivers a non-bubbling invalid event to the input', async () => {

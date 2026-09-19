@@ -42,41 +42,45 @@ describe('isRootAttr / isControlAttr', () => {
     }
   })
 
-  // A wrapper listener would never fire for these, since they do not bubble out
-  // of the native control inside it. `invalid` is the one to keep in mind: it
-  // is a form-control event, so it is the likeliest of these to be bound to a
-  // form control, and it was missed on the first pass.
-  it('sends a non-bubbling listener to the control and nowhere else', () => {
-    const nonBubbling = [
+  // The wrapper cannot observe these at all, so a listener there never fires.
+  // `invalid` is the one to keep in mind: it is a form-control event, so it is
+  // the likeliest of these to be bound to a form control, and it was missed on
+  // the first pass.
+  it('sends a listener the wrapper cannot see to the control and nowhere else', () => {
+    const wrapperBlind = [
       'onFocus',
       'onBlur',
-      'onMouseenter',
-      'onMouseleave',
-      'onPointerenter',
-      'onPointerleave',
       'onScroll',
+      'onScrollend',
       'onInvalid'
     ]
-    for (const key of nonBubbling) {
+    for (const key of wrapperBlind) {
       expect(isRootAttr(key), key).toBe(false)
       expect(isControlAttr(key), key).toBe(true)
     }
   })
 
-  // The bubbling counterparts, which are easy to confuse with the entries
-  // above and must stay on the wrapper.
-  it('keeps the bubbling counterparts on the wrapper', () => {
-    for (const key of ['onFocusin', 'onFocusout', 'onMouseover', 'onMouseout', 'onPointerover', 'onPointerout']) {
+  // mouseenter and its relatives do not bubble, but the browser fires them on
+  // every element being entered, so the wrapper does see them — over a larger
+  // area than the control. Routing them to the control shrank the hover region
+  // to the bare control, which is why "does it bubble" is the wrong test.
+  it('keeps the enter/leave family and the bubbling counterparts on the wrapper', () => {
+    const wrapperVisible = [
+      'onMouseenter', 'onMouseleave', 'onPointerenter', 'onPointerleave',
+      'onFocusin', 'onFocusout', 'onMouseover', 'onMouseout', 'onPointerover', 'onPointerout'
+    ]
+    for (const key of wrapperVisible) {
       expect(isRootAttr(key), key).toBe(true)
       expect(isControlAttr(key), key).toBe(false)
     }
   })
 
   // Vue appends modifiers to the key, so `@focus.once` arrives as `onFocusOnce`
-  // and would be read as a bubbling listener if they were not stripped first.
+  // and would be read as an ordinary wrapper listener if they were not stripped
+  // first — which would bind it where it can never fire.
   it('classifies a modified listener by its event, not its modifiers', () => {
     expect(isControlAttr('onFocusOnce')).toBe(true)
-    expect(isControlAttr('onMouseenterCapture')).toBe(true)
+    expect(isControlAttr('onInvalidCapture')).toBe(true)
     expect(isRootAttr('onFocusOnce')).toBe(false)
     expect(isRootAttr('onClickCaptureOnce')).toBe(true)
   })

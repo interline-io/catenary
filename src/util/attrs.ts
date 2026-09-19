@@ -5,7 +5,7 @@
  * Components that render a native control inside a `.control` wrapper set
  * `inheritAttrs: false` so attributes reach the control rather than being
  * duplicated onto the wrapper, then route a subset back to the wrapper by
- * hand. This centralises the one subtlety in doing that.
+ * hand. This centralizes the one subtlety in doing that.
  */
 export function filterAttrs (
   attrs: Record<string, unknown>,
@@ -37,43 +37,48 @@ const isListenerAttr = (key: string): boolean => /^on[A-Z]/.test(key)
 // guard around the handler and leave the key as `onKeydown`.
 const LISTENER_MODIFIERS = /(?:Capture|Once|Passive)+$/
 
-// Events that do not bubble. A listener on the wrapper would never see these
-// fire on the native control inside it, so they have to be bound to the control
-// itself. `focusin` / `focusout` are the bubbling counterparts of the first two
-// and are deliberately absent.
+// Events a listener on the wrapper cannot observe at all, so they have to be
+// bound to the native control itself.
+//
+// The test is "can the wrapper see it", which is narrower than "does it
+// bubble". `mouseenter` and its pointer counterpart do not bubble, yet the
+// browser fires them separately on every element being entered — so the wrapper
+// does see them, over a larger area than the control. They belong on the
+// wrapper with the rest. `focusin` / `focusout` are the bubbling counterparts
+// of the first two here and are deliberately absent.
 //
 // This is an allowlist, so an event missing from it is silently dead rather
 // than merely misplaced — `invalid` was missed on the first pass and would have
 // left constraint validation unreachable through these components. To check a
 // candidate, put a listener on a wrapper and on the control, provoke the *real*
 // event and see which fires; dispatching a synthetic one only echoes back
-// whichever `bubbles` you passed.
-const NON_BUBBLING = new Set([
+// whichever `bubbles` you passed, and reasoning from `bubbles` alone is what
+// put the enter/leave family in this list by mistake.
+const WRAPPER_CANNOT_SEE = new Set([
   'onFocus',
   'onBlur',
-  'onMouseenter',
-  'onMouseleave',
-  'onPointerenter',
-  'onPointerleave',
+  // Scrolling an element does not notify its ancestors.
   'onScroll',
+  'onScrollend',
   // Fired by constraint validation, e.g. form.reportValidity() on a control
   // with an unmet `required` or `pattern`.
   'onInvalid'
 ])
 
-const isNonBubblingListener = (key: string): boolean =>
-  NON_BUBBLING.has(key.replace(LISTENER_MODIFIERS, ''))
+const isWrapperBlindListener = (key: string): boolean =>
+  WRAPPER_CANNOT_SEE.has(key.replace(LISTENER_MODIFIERS, ''))
 
-// A bubbling listener belongs on the wrapper and nowhere else. The wrapper sees
-// the control's own events on the way up *and* events from the icons and clear
-// button beside it, which is why it is the better of the two destinations —
-// and binding it in both places is what made a single keypress fire twice.
+// Everything the wrapper can observe belongs on the wrapper and nowhere else.
+// It sees the control's own events on the way up *and* events from the icons
+// and clear button beside it, which is why it is the better of the two
+// destinations — and binding it in both places is what made a single keypress
+// fire twice.
 const isWrapperListener = (key: string): boolean =>
-  isListenerAttr(key) && !isNonBubblingListener(key)
+  isListenerAttr(key) && !isWrapperBlindListener(key)
 
 /**
- * The wrapper's share: `class`, `style` and every listener for an event that
- * bubbles.
+ * The wrapper's share: `class`, `style` and every listener for an event the
+ * wrapper can observe.
  *
  * `class` and `style` deliberately reach both destinations. Layout utilities
  * style the wrapper, while typography only takes effect on the native element —
@@ -85,8 +90,22 @@ export const isRootAttr = (key: string): boolean =>
   key === 'class' || key === 'style' || isWrapperListener(key)
 
 /**
- * The native control's share: everything except the bubbling listeners the
- * wrapper already took. Non-bubbling listeners stay here, since the wrapper
- * cannot see them.
+ * The native control's share for a component whose wrapper also takes `class`
+ * and `style`: everything except the listeners the wrapper already took.
+ *
+ * Not the same predicate as `!isRootAttr`, which `cat-checkbox` uses: there
+ * `class` and `style` stay on the wrapper alone. The two differ only on those
+ * two keys, deliberately, so they are not interchangeable.
  */
 export const isControlAttr = (key: string): boolean => !isWrapperListener(key)
+
+/**
+ * The native control's share for a component whose wrapper keeps `class` and
+ * `style` to itself — `cat-checkbox`, whose root *is* the `<label>`, where a
+ * consumer's spacing class already applied and must keep applying.
+ *
+ * Named rather than written inline at the call site so the difference from
+ * `isControlAttr` is visible: tidying the two into one would move a spacing
+ * class onto the box and shift the layout of every existing call site.
+ */
+export const isLabelledControlAttr = (key: string): boolean => !isRootAttr(key)

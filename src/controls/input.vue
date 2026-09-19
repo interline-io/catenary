@@ -68,17 +68,17 @@ import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 // element, and silently stopped labelling anything. Undeclared `aria-*` was
 // duplicated onto a wrapper with no role the same way.
 //
-// `class`, `style` and event listeners still reach the root as well, which is
-// what they did before and what callers depend on:
-//   - layout utilities (`mt-2`, `mr-2`) act on the wrapper, while typography
-//     (`is-family-monospace`) only works on the native element — Bulma's base
-//     stylesheet sets `font-family` directly on input/select/textarea, so it
-//     cannot be inherited from the wrapper.
-//   - a listener on the root sees events from the icons and the clear button,
-//     which are siblings of the native element rather than inside it, while
-//     one on the native element is what non-bubbling `@focus` / `@blur` need.
-//     Both destinations are load-bearing; see cat-search-bar's Escape handler,
-//     which stops propagation to collapse the resulting duplicate keydown.
+// `class` and `style` still reach the root as well, which is what they did
+// before and what callers depend on: layout utilities (`mt-2`, `mr-2`) act on
+// the wrapper, while typography (`is-family-monospace`) only works on the
+// native element — Bulma's base stylesheet sets `font-family` directly on
+// input/select/textarea, so it cannot be inherited from the wrapper.
+//
+// Listeners go to exactly one destination, never both. The root gets everything
+// it can observe, so a listener there still sees events from the icons and the
+// clear button, which are siblings of the native element rather than inside it.
+// The native element gets what the root cannot see — `@focus`, `@blur`,
+// `@invalid`, `@scroll`. See `util/attrs.ts` for the split.
 defineOptions({
   inheritAttrs: false
 })

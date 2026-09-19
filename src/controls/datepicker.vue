@@ -13,11 +13,13 @@
              announcement time are unreliable. -->
         <span class="is-sr-only" role="status">{{ statusMessage }}</span>
         <div class="field has-addons cat-datepicker-field">
-          <!-- .stop on keydown.enter/focusout: cat-input inherits fallthrough
-               listeners onto its root wrapper while also binding $attrs on the
-               native input, so without .stop each handler is registered twice
-               and the bubbled event would run commitTypedInput a second time
-               (double-emitting the date in the same tick). -->
+          <!-- .stop on keydown.enter/focusout: these once guarded against
+               cat-input registering each handler twice, which it no longer
+               does. They are kept because they still do something — the event
+               is consumed at cat-input's wrapper rather than travelling on — so
+               an ancestor of cat-datepicker does not also see the Enter that
+               commits a date, or the focusout that closes the picker.
+               Removing them changes propagation depth, not a no-op. -->
           <cat-input
             ref="inputRef"
             :model-value="inputText"
