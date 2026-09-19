@@ -41,12 +41,24 @@ const LISTENER_MODIFIERS = /(?:Capture|Once|Passive)+$/
 // fire on the native control inside it, so they have to be bound to the control
 // itself. `focusin` / `focusout` are the bubbling counterparts of the first two
 // and are deliberately absent.
+//
+// This is an allowlist, so an event missing from it is silently dead rather
+// than merely misplaced — `invalid` was missed on the first pass and would have
+// left constraint validation unreachable through these components. To check a
+// candidate, put a listener on a wrapper and on the control, provoke the *real*
+// event and see which fires; dispatching a synthetic one only echoes back
+// whichever `bubbles` you passed.
 const NON_BUBBLING = new Set([
   'onFocus',
   'onBlur',
   'onMouseenter',
   'onMouseleave',
-  'onScroll'
+  'onPointerenter',
+  'onPointerleave',
+  'onScroll',
+  // Fired by constraint validation, e.g. form.reportValidity() on a control
+  // with an unmet `required` or `pattern`.
+  'onInvalid'
 ])
 
 const isNonBubblingListener = (key: string): boolean =>

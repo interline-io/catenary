@@ -43,11 +43,32 @@ describe('isRootAttr / isControlAttr', () => {
   })
 
   // A wrapper listener would never fire for these, since they do not bubble out
-  // of the native control inside it.
+  // of the native control inside it. `invalid` is the one to keep in mind: it
+  // is a form-control event, so it is the likeliest of these to be bound to a
+  // form control, and it was missed on the first pass.
   it('sends a non-bubbling listener to the control and nowhere else', () => {
-    for (const key of ['onFocus', 'onBlur', 'onMouseenter', 'onMouseleave', 'onScroll']) {
+    const nonBubbling = [
+      'onFocus',
+      'onBlur',
+      'onMouseenter',
+      'onMouseleave',
+      'onPointerenter',
+      'onPointerleave',
+      'onScroll',
+      'onInvalid'
+    ]
+    for (const key of nonBubbling) {
       expect(isRootAttr(key), key).toBe(false)
       expect(isControlAttr(key), key).toBe(true)
+    }
+  })
+
+  // The bubbling counterparts, which are easy to confuse with the entries
+  // above and must stay on the wrapper.
+  it('keeps the bubbling counterparts on the wrapper', () => {
+    for (const key of ['onFocusin', 'onFocusout', 'onMouseover', 'onMouseout', 'onPointerover', 'onPointerout']) {
+      expect(isRootAttr(key), key).toBe(true)
+      expect(isControlAttr(key), key).toBe(false)
     }
   })
 

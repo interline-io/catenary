@@ -309,5 +309,20 @@ describe('CatInput', () => {
       expect(onFocus).toHaveBeenCalledTimes(1)
       wrapper.unmount()
     })
+
+    // `invalid` is fired by constraint validation and does not bubble (verified
+    // against a real browser-generated event, not a synthesised one), so a
+    // listener routed to the wrapper would never run. Dispatched here with
+    // bubbles: false to match what the browser actually emits.
+    it('delivers a non-bubbling invalid event to the input', async () => {
+      const onInvalid = vi.fn()
+      const wrapper = mountComponent(CatInput, { attrs: { onInvalid } })
+
+      wrapper.find('input').element.dispatchEvent(new Event('invalid', { bubbles: false }))
+      await wrapper.vm.$nextTick()
+
+      expect(onInvalid).toHaveBeenCalledTimes(1)
+      wrapper.unmount()
+    })
   })
 })
