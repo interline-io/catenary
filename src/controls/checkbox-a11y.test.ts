@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import CatCheckbox from './checkbox.vue'
 
@@ -27,6 +27,60 @@ describe('cat-checkbox accessible name', () => {
     const w = mountCb({}, { class: 'mt-2', style: 'color: red' })
     expect(w.find('label').classes()).toContain('mt-2')
     expect(w.find('input').classes()).not.toContain('mt-2')
+    w.unmount()
+  })
+
+  // focus and blur do not reach the wrapping <label>, so routing every listener
+  // there left a consumer's handlers dead. The listener split is what delivers
+  // them; without it this suite stayed green while @focus never fired.
+  it('delivers focus and blur to the input', async () => {
+    const onFocus = vi.fn()
+    const onBlur = vi.fn()
+    const w = mountCb({}, { onFocus, onBlur })
+
+    await w.find('input').trigger('focus')
+    await w.find('input').trigger('blur')
+
+    expect(onFocus).toHaveBeenCalledTimes(1)
+    expect(onBlur).toHaveBeenCalledTimes(1)
+    w.unmount()
+  })
+
+  // The label is the larger target and the reason wrapper listeners live there:
+  // a click on the visible text, not just on the box, has to count.
+  //
+  // Asserted against a bare <label><input></label> rather than a fixed number:
+  // clicking a label makes the browser forward a synthetic click to the control
+  // it labels, which bubbles back to the label, so the handler legitimately runs
+  // more than once. That is native behavior, not duplicate binding, and pinning
+  // a literal count here would be pinning that quirk instead of our routing.
+  it('fires a click listener the same number of times as a bare label', async () => {
+    const native = document.createElement('label')
+    native.appendChild(document.createElement('input')).setAttribute('type', 'checkbox')
+    document.body.appendChild(native)
+    let nativeCalls = 0
+    native.addEventListener('click', () => nativeCalls++)
+    native.dispatchEvent(new MouseEvent('click', { bubbles: true }))
+    native.remove()
+
+    const onClick = vi.fn()
+    const w = mountCb({ label: 'Agree' }, { onClick })
+    await w.find('label').trigger('click')
+
+    expect(nativeCalls).toBeGreaterThan(0)
+    expect(onClick).toHaveBeenCalledTimes(nativeCalls)
+    w.unmount()
+  })
+
+  // mouseenter does not bubble, but the browser fires it on each element being
+  // entered, so the label sees it over a larger area than the box does.
+  it('fires mouseenter from the label', async () => {
+    const onMouseenter = vi.fn()
+    const w = mountCb({ label: 'Agree' }, { onMouseenter })
+
+    await w.find('label').trigger('mouseenter')
+
+    expect(onMouseenter).toHaveBeenCalledTimes(1)
     w.unmount()
   })
 

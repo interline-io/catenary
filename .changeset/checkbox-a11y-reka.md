@@ -2,9 +2,9 @@
 "@interline-io/catenary": minor
 ---
 
-`cat-checkbox` accessibility review, plus API additions modelled on Reka UI. Part of #64. All additive — no existing prop, event or behavior changes.
+`cat-checkbox` accessibility review, plus API additions modelled on Reka UI. Part of #64. No existing prop or event changes. (Listener routing does change in the same release — see the fallthrough-listeners entry, which supersedes the note below about where listeners are bound.)
 
-**`aria-label` and `aria-describedby` now reach the native input.** The component's root *is* the `<label>`, so undirected fallthrough attributes landed there — where `aria-label` does nothing for the input's accessible name. A checkbox with no visible text was therefore impossible to name from outside, which matters for the common case of a row selector in a table. There is now an `ariaLabel` prop, and fallthrough `aria-*`/`data-*` are routed to the input. `class`, `style` and listeners stay on the wrapper, exactly where they already applied — moving a spacing class onto the box would shift the layout of existing call sites.
+**`aria-label` and `aria-describedby` now reach the native input.** The component's root *is* the `<label>`, so undirected fallthrough attributes landed there — where `aria-label` does nothing for the input's accessible name. A checkbox with no visible text was therefore impossible to name from outside, which matters for the common case of a row selector in a table. There is now an `ariaLabel` prop, and fallthrough `aria-*`/`data-*` are routed to the input. `class` and `style` stay on the wrapper, exactly where they already applied — moving a spacing class onto the box would shift the layout of existing call sites. Listeners are split by whether the wrapper can observe the event; see the fallthrough-listeners entry.
 
 **The mixed state survives a click.** The browser clears the DOM `indeterminate` property as soon as the box is clicked. Since the `indeterminate` prop had not changed, the watcher never refired, so a parent checkbox whose children were unchanged silently lost its mixed state in the accessibility tree. It is now restored after the change event.
 

@@ -1,5 +1,5 @@
 <template>
-  <div class="cat-slider-wrapper">
+  <div class="cat-slider-wrapper" v-bind="rootAttrs">
     <input
       :id="fieldId"
       ref="sliderRef"
@@ -13,7 +13,7 @@
       :max="max"
       :step="step"
       :disabled="disabled"
-      v-bind="$attrs"
+      v-bind="controlAttrs"
       @input="handleInput"
       @mousedown="showTooltip = true"
       @mouseup="showTooltip = false"
@@ -34,9 +34,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useSlots, provide, inject } from 'vue'
+import { ref, computed, useSlots, provide, inject, useAttrs } from 'vue'
+import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { SliderSize, SliderVariant } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
+
+// Wraps a native <input type="range"> beside its tooltip and ticks, so
+// fallthrough attributes are routed by hand rather than landing on both the
+// wrapper and the control.
+defineOptions({
+  inheritAttrs: false
+})
+
+const attrs = useAttrs()
+
+// class and style reach both; a bubbling listener is the wrapper's alone.
+const rootAttrs = computed(() => filterAttrs(attrs, isRootAttr))
+const controlAttrs = computed(() => filterAttrs(attrs, isControlAttr))
 
 const fieldId = inject(FieldIdKey, undefined)
 
@@ -301,13 +315,22 @@ provide('sliderSetValue', setValue)
     justify-content: space-between;
     margin-top: -0.5rem;
     font-size: var(--bulma-size-small);
-    color: var(--bulma-grey);
+    // Text on the page background, so it needs a scheme token rather than a
+    // palette color. `--bulma-grey` is hsl(221, 14%, 48%) in *both* schemes by
+    // design, which reads fine on white (4.68:1) and fails on the dark
+    // background (3.97:1, measured with axe). `--bulma-text-weak` is the same
+    // 48% in light — so this changes nothing there — and lifts to 53% in dark,
+    // clearing AA at 4.63:1.
+    color: var(--bulma-text-weak);
   }
 
   .cat-slider-tooltip {
     position: absolute;
     top: -2.5rem;
     transform: translateX(-50%);
+    // Deliberately theme-independent, like cat-tooltip's bubble: the surface is
+    // always dark, so white on it is correct in both schemes rather than a
+    // palette color that forgot to adapt. 12.7:1 either way.
     background: var(--bulma-grey-darker);
     color: var(--bulma-white);
     padding: 0.25rem 0.5rem;

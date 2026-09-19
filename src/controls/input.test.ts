@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import CatInput from './input.vue'
 import {
   mountComponent,
@@ -278,6 +278,50 @@ describe('CatInput', () => {
       const wrapper = mountComponent(CatInput, { attrs: { class: 'mt-2' } })
       expect(wrapper.find('.control').classes()).toContain('mt-2')
       expect(wrapper.find('input').classes()).toContain('mt-2')
+      wrapper.unmount()
+    })
+
+    // A listener bound to both the wrapper and the control ran twice for one
+    // keypress, because the control's event bubbles up through the wrapper.
+    // The key that moved a consumer's listbox highlight moved it two rows.
+    it('fires a bubbling listener once per event', async () => {
+      const onKeydown = vi.fn()
+      const wrapper = mountComponent(CatInput, {
+        attrs: { onKeydown }
+      })
+
+      await wrapper.find('input').trigger('keydown', { key: 'ArrowDown' })
+
+      expect(onKeydown).toHaveBeenCalledTimes(1)
+      wrapper.unmount()
+    })
+
+    // focus does not bubble, so a wrapper-only listener would never fire.
+    it('fires a non-bubbling listener on the control', async () => {
+      const onFocus = vi.fn()
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        attrs: { onFocus }
+      })
+
+      await wrapper.find('input').trigger('focus')
+
+      expect(onFocus).toHaveBeenCalledTimes(1)
+      wrapper.unmount()
+    })
+
+    // `invalid` is fired by constraint validation and does not bubble (verified
+    // against a real browser-generated event, not a synthesized one), so a
+    // listener routed to the wrapper would never run. Dispatched here with
+    // bubbles: false to match what the browser actually emits.
+    it('delivers a non-bubbling invalid event to the input', async () => {
+      const onInvalid = vi.fn()
+      const wrapper = mountComponent(CatInput, { attrs: { onInvalid } })
+
+      wrapper.find('input').element.dispatchEvent(new Event('invalid', { bubbles: false }))
+      await wrapper.vm.$nextTick()
+
+      expect(onInvalid).toHaveBeenCalledTimes(1)
       wrapper.unmount()
     })
   })

@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { mountComponent } from '../testutil/component-helpers'
 import CatTextarea from './textarea.vue'
 
@@ -49,6 +49,35 @@ describe('CatTextarea', () => {
       const wrapper = mountComponent(CatTextarea, { attrs: { class: 'mt-2' } })
       expect(wrapper.find('.control').classes()).toContain('mt-2')
       expect(wrapper.find('textarea').classes()).toContain('mt-2')
+      wrapper.unmount()
+    })
+
+    // A listener bound to both the wrapper and the control ran twice for one
+    // keypress, because the control's event bubbles up through the wrapper.
+    // The key that moved a consumer's listbox highlight moved it two rows.
+    it('fires a bubbling listener once per event', async () => {
+      const onKeydown = vi.fn()
+      const wrapper = mountComponent(CatTextarea, {
+        attrs: { onKeydown }
+      })
+
+      await wrapper.find('textarea').trigger('keydown', { key: 'ArrowDown' })
+
+      expect(onKeydown).toHaveBeenCalledTimes(1)
+      wrapper.unmount()
+    })
+
+    // focus does not bubble, so a wrapper-only listener would never fire.
+    it('fires a non-bubbling listener on the control', async () => {
+      const onFocus = vi.fn()
+      const wrapper = mountComponent(CatTextarea, {
+        attachTo: document.body,
+        attrs: { onFocus }
+      })
+
+      await wrapper.find('textarea').trigger('focus')
+
+      expect(onFocus).toHaveBeenCalledTimes(1)
       wrapper.unmount()
     })
   })

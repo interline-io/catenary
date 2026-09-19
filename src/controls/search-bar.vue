@@ -143,8 +143,9 @@ function handleEscape (event: KeyboardEvent): void {
   if (!hasValue) return
   // Consume Escape so the layered dismiss stack (modals, popups) does not also
   // react to this press: preventDefault (the stack bails on defaultPrevented)
-  // and stopPropagation (cat-input forwards $attrs to both its input and its
-  // root, so stopping here also collapses that duplicate keydown to one).
+  // and stopPropagation (nothing above this needs the key once it has cleared
+  // the field). This handler reaches cat-input's wrapper rather than its input,
+  // which is what lets Escape pressed on the clear button clear the field too.
   event.preventDefault()
   event.stopPropagation()
   clear()

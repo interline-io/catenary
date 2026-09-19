@@ -5,7 +5,7 @@
  * Components that render a native control inside a `.control` wrapper set
  * `inheritAttrs: false` so attributes reach the control rather than being
  * duplicated onto the wrapper, then route a subset back to the wrapper by
- * hand. This centralises the one subtlety in doing that.
+ * hand. This centralizes the one subtlety in doing that.
  */
 export function filterAttrs (
   attrs: Record<string, unknown>,
@@ -27,6 +27,113 @@ export function filterAttrs (
   return out
 }
 
-/** `class`, `style` and `on*` listeners — the subset that also belongs on a wrapper. */
-export const isPresentationalAttr = (key: string): boolean =>
-  key === 'class' || key === 'style' || /^on[A-Z]/.test(key)
+/** A fallthrough event listener, e.g. `onKeydown`. */
+const isListenerAttr = (key: string): boolean => /^on[A-Z]/.test(key)
+
+// Known limitation: `.self` is not supported on these components.
+//
+// Vue compiles it to a runtime guard (`target !== currentTarget` bails) and
+// leaves the key as plain `onKeydown`, so it is invisible here — there is no way
+// to route by it. A `.self` listener lands on the wrapper, where the guard
+// rejects every event coming from the control, and never runs.
+//
+// It is not honoured by binding to both destinations either: that is what made a
+// single keypress fire twice, which is the bug this module exists to fix. And
+// the modifier is ill-defined for a component that is a wrapper *and* a control
+// — "self" names no one element. It happened to fire once before, from the
+// control-side binding, which was luck rather than design.
+//
+// Checked across the consumer apps before settling on this: 896 `.vue` files,
+// zero uses of `.self` on any component. Bind the handler and compare
+// `event.target` yourself if you need this.
+
+// Vue appends modifiers to the listener key — `@click.capture.once` arrives as
+// `onClickCaptureOnce` — so they are stripped before matching and a modified
+// listener is classified by its event rather than by its modifiers. Key
+// modifiers (`@keydown.esc`) do not appear here: they compile to a `withKeys`
+// guard around the handler and leave the key as `onKeydown`.
+const LISTENER_MODIFIERS = /(?:Capture|Once|Passive)+$/
+
+// Events a listener on the wrapper cannot observe at all, so they have to be
+// bound to the native control itself.
+//
+// The test is "can the wrapper see it", which is narrower than "does it
+// bubble". `mouseenter` and its pointer counterpart do not bubble, yet the
+// browser fires them separately on every element being entered — so the wrapper
+// does see them, over a larger area than the control. They belong on the
+// wrapper with the rest. `focusin` / `focusout` are the bubbling counterparts
+// of the first two here and are deliberately absent.
+//
+// This is an allowlist, so an event missing from it is silently dead rather
+// than merely misplaced — `invalid` was missed on the first pass and would have
+// left constraint validation unreachable through these components. To check a
+// candidate, put a listener on a wrapper and on the control, provoke the *real*
+// event and see which fires; dispatching a synthetic one only echoes back
+// whichever `bubbles` you passed, and reasoning from `bubbles` alone is what
+// put the enter/leave family in this list by mistake.
+const WRAPPER_CANNOT_SEE = new Set([
+  'onFocus',
+  'onBlur',
+  // Scrolling an element does not notify its ancestors.
+  'onScroll',
+  'onScrollend',
+  // Fired by constraint validation, e.g. form.reportValidity() on a control
+  // with an unmet `required` or `pattern`.
+  'onInvalid'
+])
+
+// `.capture` is the one modifier that changes *which elements observe* an
+// event, so it cannot be stripped and forgotten like the other two. The capture
+// phase runs from the root down to the target, and it runs for every event —
+// including the ones that never bubble back out. A capturing listener on the
+// wrapper therefore sees a descendant's `focus` or `invalid`, and belongs on the
+// wrapper, where it also covers the icons and the clear button beside the
+// control. Order is not fixed (`@focus.once.capture` arrives as
+// `onFocusOnceCapture`), so this looks inside the whole modifier run.
+const hasCaptureModifier = (key: string): boolean =>
+  (key.match(LISTENER_MODIFIERS)?.[0] ?? '').includes('Capture')
+
+const isWrapperBlindListener = (key: string): boolean =>
+  !hasCaptureModifier(key) && WRAPPER_CANNOT_SEE.has(key.replace(LISTENER_MODIFIERS, ''))
+
+// Everything the wrapper can observe belongs on the wrapper and nowhere else.
+// It sees the control's own events on the way up *and* events from the icons
+// and clear button beside it, which is why it is the better of the two
+// destinations — and binding it in both places is what made a single keypress
+// fire twice.
+const isWrapperListener = (key: string): boolean =>
+  isListenerAttr(key) && !isWrapperBlindListener(key)
+
+/**
+ * The wrapper's share: `class`, `style` and every listener for an event the
+ * wrapper can observe.
+ *
+ * `class` and `style` deliberately reach both destinations. Layout utilities
+ * style the wrapper, while typography only takes effect on the native element —
+ * Bulma's `base/generic.scss` sets `font-family` directly on `input, select,
+ * textarea`, so `is-family-monospace` on the wrapper alone cannot be inherited
+ * in.
+ */
+export const isRootAttr = (key: string): boolean =>
+  key === 'class' || key === 'style' || isWrapperListener(key)
+
+/**
+ * The native control's share for a component whose wrapper also takes `class`
+ * and `style`: everything except the listeners the wrapper already took.
+ *
+ * Not the same predicate as `!isRootAttr`, which `cat-checkbox` uses: there
+ * `class` and `style` stay on the wrapper alone. The two differ only on those
+ * two keys, deliberately, so they are not interchangeable.
+ */
+export const isControlAttr = (key: string): boolean => !isWrapperListener(key)
+
+/**
+ * The native control's share for a component whose wrapper keeps `class` and
+ * `style` to itself — `cat-checkbox`, whose root *is* the `<label>`, where a
+ * consumer's spacing class already applied and must keep applying.
+ *
+ * Named rather than written inline at the call site so the difference from
+ * `isControlAttr` is visible: tidying the two into one would move a spacing
+ * class onto the box and shift the layout of every existing call site.
+ */
+export const isLabelledControlAttr = (key: string): boolean => !isRootAttr(key)
