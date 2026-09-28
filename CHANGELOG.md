@@ -1,5 +1,11 @@
 # @interline-io/catenary
 
+## 0.14.1
+
+### Patch Changes
+
+- [#102](https://github.com/interline-io/catenary/pull/102) [`40cba7d`](https://github.com/interline-io/catenary/commit/40cba7deb88b23b4bc376493552857f1e4273e99) Thanks [@drewda](https://github.com/drewda)! - `cat-modal` returns focus to its opener when it is unmounted while open, as with `<cat-modal v-if="open" v-model="open">`, where focus used to fall to `<body>`. Several open modals also no longer undo each other: only the topmost one restores focus and traps Tab, and `is-clipped` is removed only when the last one closes, so unmounting a closed modal no longer unlocks scrolling under an open one.
+
 ## 0.14.0
 
 ### Minor Changes
