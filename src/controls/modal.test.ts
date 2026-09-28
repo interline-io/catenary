@@ -1,4 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, afterAll } from 'vitest'
+import { parse, compileStyleAsync } from 'vue/compiler-sfc'
+import modalSource from './modal.vue?raw'
 import { mount, enableAutoUnmount, flushPromises } from '@vue/test-utils'
 import { nextTick, defineComponent, ref } from 'vue'
 import CatModal from './modal.vue'
@@ -563,5 +565,91 @@ describe('cat-modal open-state behaviors', () => {
     const results = await axe(document.body)
     expect(results.violations).toEqual([])
     wrapper.unmount()
+  })
+})
+
+// Width and placement are CSS, so these compile the component's real <style>
+// block (SCSS, scoped) into the document. jsdom cascades custom properties but
+// doesn't substitute var(), so width is asserted through --cat-modal-width.
+describe('cat-modal sizing and position styles', () => {
+  let styleEl: HTMLStyleElement | null = null
+
+  async function mountStyled (props: Record<string, unknown>): Promise<HTMLElement> {
+    mount(CatModal, { attachTo: document.body, props: { modelValue: true, title: 'X', ...props } })
+    await nextTick()
+    const card = findCard()!
+    if (!styleEl) {
+      const scopeId = Array.from(card.attributes).map(a => a.name).find(n => n.startsWith('data-v-'))!
+      const { descriptor } = parse(modalSource)
+      const result = await compileStyleAsync({
+        source: descriptor.styles[0]!.content,
+        filename: 'modal.vue',
+        id: scopeId,
+        scoped: true,
+        preprocessLang: 'scss',
+        preprocessOptions: { loadPaths: ['node_modules'] }
+      })
+      expect(result.errors).toEqual([])
+      styleEl = document.createElement('style')
+      styleEl.textContent = result.code
+      document.head.appendChild(styleEl)
+    }
+    return card
+  }
+
+  afterAll(() => {
+    styleEl?.remove()
+  })
+
+  function widthVar (card: HTMLElement): string {
+    return getComputedStyle(card).getPropertyValue('--cat-modal-width').trim()
+  }
+
+  it('a modal with no size or width is exactly 800px wide', async () => {
+    const card = await mountStyled({})
+    expect(getComputedStyle(card).width).toBe('var(--cat-modal-width)')
+    expect(widthVar(card)).toBe('800px')
+  })
+
+  it.each([
+    ['small', '480px'],
+    ['medium', '800px'],
+    ['large', '1200px']
+  ])('size="%s" sets the width to %s', async (size, width) => {
+    const card = await mountStyled({ size })
+    expect(widthVar(card)).toBe(width)
+  })
+
+  it('the width prop overrides size', async () => {
+    const card = await mountStyled({ size: 'large', width: '640px' })
+    expect(card.style.getPropertyValue('--cat-modal-width')).toBe('640px')
+    expect(widthVar(card)).toBe('640px')
+  })
+
+  it('sets no inline style when the width prop is unset', async () => {
+    const card = await mountStyled({ size: 'small' })
+    expect(card.getAttribute('style')).toBeNull()
+  })
+
+  it('centres by default', async () => {
+    const card = await mountStyled({})
+    const root = card.closest('.modal') as HTMLElement
+    expect(root.classList.contains('cat-modal-top')).toBe(false)
+    // Centring itself is Bulma's rule, which isn't loaded here; the component's
+    // own block must just leave it alone.
+    expect(getComputedStyle(root).justifyContent).not.toBe('flex-start')
+  })
+
+  it('position="top" anchors the card near the top of the viewport', async () => {
+    const card = await mountStyled({ position: 'top' })
+    const root = card.closest('.modal') as HTMLElement
+    expect(root.classList.contains('cat-modal-top')).toBe(true)
+    expect(getComputedStyle(root).justifyContent).toBe('flex-start')
+    expect(getComputedStyle(card).marginTop).toBe('10vh')
+  })
+
+  it('position="top" does not offset a fullScreen modal', async () => {
+    const card = await mountStyled({ position: 'top', fullScreen: true })
+    expect(getComputedStyle(card).marginTop).not.toBe('10vh')
   })
 })

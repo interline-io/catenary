@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div class="modal cat-modal" :class="{ 'is-active': modelValue }">
+    <div class="modal cat-modal" :class="{ 'is-active': modelValue, 'cat-modal-top': position === 'top' }">
       <!-- Backdrop click is a convenience dismissal; the WAI-ARIA-compliant
            keyboard dismissal is Escape, handled at document level via
            handleKeydown. -->
@@ -16,6 +16,7 @@
         tabindex="-1"
         class="modal-card"
         :class="modalCardClasses"
+        :style="modalCardStyle"
       >
         <header class="modal-card-head">
           <!-- tabindex="-1" so the title can serve as the initial focus target
@@ -104,6 +105,24 @@ interface Props {
   size?: 'small' | 'medium' | 'large'
 
   /**
+   * Card width as any CSS length (`640px`, `40rem`), for a width the `size`
+   * steps don't cover. Overrides `size`, and is still capped at 90vw. No effect
+   * with `fullScreen`.
+   *
+   * Sets the `--cat-modal-width` custom property on the card, which is what the
+   * `size` classes set too.
+   */
+  width?: string
+
+  /**
+   * Vertical placement. `top` anchors the card near the top of the viewport, so
+   * a dialog whose content grows — a search palette's result list — grows
+   * downward instead of moving. No effect with `fullScreen`.
+   * @default 'center'
+   */
+  position?: 'center' | 'top'
+
+  /**
    * Drop `fullScreen`'s inset at every width, so the dialog is the whole
    * viewport rather than a card with a margin around it. `fullScreen` already
    * does this below Bulma's mobile breakpoint; this is for a dialog that should
@@ -155,6 +174,8 @@ const props = withDefaults(defineProps<Props>(), {
   closable: true,
   fullScreen: false,
   size: 'medium',
+  width: undefined,
+  position: 'center',
   fullBleed: false,
   fillBody: false,
   ariaLabel: undefined,
@@ -184,6 +205,10 @@ const effectiveAriaLabel = computed(() => {
   if (hasTitle.value) return undefined
   return props.ariaLabel || 'Dialog'
 })
+
+const modalCardStyle = computed(() => (
+  props.width ? { '--cat-modal-width': props.width } : undefined
+))
 
 const modalCardClasses = computed(() => ({
   'cat-modal-fullscreen': props.fullScreen,
@@ -398,20 +423,49 @@ onUnmounted(() => {
 }
 
 .cat-modal {
+  // position="top". .modal is a centred column, so the card moves to the top
+  // on the main axis. The offset comes out of max-height as well, or a tall
+  // card would run off the bottom.
+  //
+  // Kept before the .modal-card block, at no more specificity than its
+  // modifiers, so fullScreen's margin and height win by source order, and a
+  // consumer's own override of the card isn't outranked.
+  &.cat-modal-top {
+    justify-content: flex-start;
+
+    .modal-card {
+      margin-top: 10vh;
+      max-height: calc(90vh - var(--bulma-modal-card-spacing));
+      max-height: calc(100dvh - 10vh - var(--bulma-modal-card-spacing));
+
+      // On a phone 10vh is space the content needs; keep an even gap instead.
+      @include mx.mobile {
+        margin-top: calc(var(--bulma-modal-card-spacing) / 2);
+        max-height: calc(100vh - var(--bulma-modal-card-spacing));
+        max-height: calc(100dvh - var(--bulma-modal-card-spacing));
+      }
+    }
+  }
+
+  // Width goes through a custom property so the `width` prop, set inline on the
+  // card, beats the size classes without raising any selector's specificity.
+  // A modal with no size or width must still come out at exactly 800px.
   .modal-card {
-    width: 800px;
+    --cat-modal-width: 800px;
+
+    width: var(--cat-modal-width);
     max-width: 90vw;
 
     &.cat-modal-small {
-      width: 480px;
+      --cat-modal-width: 480px;
     }
 
     &.cat-modal-medium {
-      width: 800px;
+      --cat-modal-width: 800px;
     }
 
     &.cat-modal-large {
-      width: 1200px;
+      --cat-modal-width: 1200px;
     }
 
     // fillBody. The body lays out as a column and the slot takes what is left,
