@@ -51,7 +51,7 @@
             <br>
           </div>
         </section>
-        <footer v-if="$slots.footer" class="modal-card-foot">
+        <footer v-if="$slots.footer" ref="footerRef" class="modal-card-foot">
           <slot name="footer" :close="close" />
         </footer>
       </div>
@@ -167,6 +167,24 @@ interface Props {
    * purpose). Optional per the WAI-ARIA Modal Dialog pattern.
    */
   ariaDescribedby?: string
+
+  /**
+   * Where focus lands when the dialog opens. By default: the first focusable
+   * element in the body (unless the body overflows), then the first in the
+   * footer, then the title, then the body wrapper. The close button is never
+   * picked by default.
+   *
+   * Pass a CSS selector (matched inside the dialog), an element, or a function
+   * returning one to override, e.g. the Cancel button of a destructive confirm.
+   * Pass `false` to skip controls and focus the title or body wrapper, e.g. so
+   * a text field doesn't raise the on-screen keyboard on a phone. A target that
+   * is missing, outside the dialog, or not focusable falls through to the
+   * default.
+   */
+  // `& object` makes the SFC compiler emit an Object runtime type. It can't
+  // resolve HTMLElement, and the production build (which consumers validate
+  // against in dev) keeps only the types it can, so an element would warn.
+  initialFocus?: string | (HTMLElement & object) | (() => HTMLElement | null) | false
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -180,7 +198,8 @@ const props = withDefaults(defineProps<Props>(), {
   fullBleed: false,
   fillBody: false,
   ariaLabel: undefined,
-  ariaDescribedby: undefined
+  ariaDescribedby: undefined,
+  initialFocus: undefined
 })
 
 const emit = defineEmits<{
@@ -191,6 +210,7 @@ const slots = useSlots()
 const modalCardRef = ref<HTMLElement | null>(null)
 const bodyContentRef = ref<HTMLElement | null>(null)
 const bodySectionRef = ref<HTMLElement | null>(null)
+const footerRef = ref<HTMLElement | null>(null)
 const bodyOverflows = ref(false)
 let bodyResizeObserver: ResizeObserver | null = null
 const titleId = useId()
@@ -233,19 +253,23 @@ function handleBackgroundClick (): void {
   }
 }
 
-// Collect focusable descendants of the modal card. Used to seed focus on open
-// and to wrap Tab / Shift+Tab at the boundaries per the WAI-ARIA Modal Dialog
-// pattern.
-function focusableElements (): HTMLElement[] {
-  const root = modalCardRef.value
+const focusableSelector = 'a[href], area[href], button, input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"]), audio[controls], video[controls], iframe, object, embed, [contenteditable]'
+
+// Hidden candidates (display:none etc.) cannot receive focus; including them
+// dead-ends the Tab wrap. checkVisibility is a pass-through where the API is
+// absent (older jsdom).
+function isVisible (el: HTMLElement): boolean {
+  return (el as HTMLElement & { checkVisibility?: () => boolean }).checkVisibility?.() !== false
+}
+
+// Collect focusable descendants of a region of the modal card (the whole card
+// by default). Used to seed focus on open and to wrap Tab / Shift+Tab at the
+// boundaries per the WAI-ARIA Modal Dialog pattern.
+function focusableElements (root: HTMLElement | null = modalCardRef.value): HTMLElement[] {
   if (!root) return []
-  const sel = 'a[href], area[href], button, input:not([type="hidden"]), select, textarea, [tabindex]:not([tabindex="-1"]), audio[controls], video[controls], iframe, object, embed, [contenteditable]'
-  return Array.from(root.querySelectorAll<HTMLElement>(sel))
+  return Array.from(root.querySelectorAll<HTMLElement>(focusableSelector))
     .filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1)
-    // Hidden candidates (display:none etc.) cannot receive focus; including
-    // them dead-ends the Tab wrap. checkVisibility is a pass-through where
-    // the API is absent (older jsdom).
-    .filter(el => (el as HTMLElement & { checkVisibility?: () => boolean }).checkVisibility?.() !== false)
+    .filter(isVisible)
 }
 
 // Tab containment only; Escape dismissal goes through the shared dismiss
@@ -285,14 +309,51 @@ function handleKeydown (event: KeyboardEvent): void {
   }
 }
 
+// Resolve the initialFocus prop to an element inside the card that can take
+// focus, or null to fall through to the default chain. tabindex="-1" targets
+// are allowed: they can't be tabbed to but can be focused programmatically.
+function requestedFocusTarget (): HTMLElement | null {
+  const root = modalCardRef.value
+  const req = props.initialFocus
+  if (!root || req === undefined || req === false) return null
+  let el: HTMLElement | null = null
+  if (typeof req === 'string') {
+    try {
+      el = req ? root.querySelector<HTMLElement>(req) : null
+    } catch {
+      // An invalid selector throws; treat it like a missing target.
+      el = null
+    }
+  } else if (typeof req === 'function') {
+    el = req()
+  } else {
+    el = req
+  }
+  if (!el || !root.contains(el) || el.hasAttribute('disabled')) return null
+  if (!el.matches(focusableSelector) && !el.hasAttribute('tabindex')) return null
+  return isVisible(el) ? el : null
+}
+
 // Pick the element that should receive initial focus when the dialog opens.
-// Order matches APG guidance: focus the first interactive element if one
-// exists; otherwise focus a static element at the start of the content (the
-// title, then the body wrapper) rather than the dialog itself, which the
-// APG advises against focusing.
+// APG says to focus the first focusable element, but searching the whole card
+// in document order always found the header's close button first. So the
+// search is scoped to the content: the body (skipped when it overflows, per
+// APG's caveat that focusing a control far down a long dialog scrolls its start
+// out of view), then the footer, where a confirm dialog's actions live and
+// Cancel conventionally comes first. Otherwise focus a static element at the
+// start of the content (the title, then the body wrapper) rather than the
+// dialog itself, which the APG advises against focusing.
 function initialFocusTarget (): HTMLElement | null {
-  const els = focusableElements()
-  if (els.length > 0) return els[0]!
+  if (props.initialFocus !== false) {
+    const requested = requestedFocusTarget()
+    if (requested) return requested
+    if (!bodyOverflows.value) {
+      const inBody = focusableElements(bodySectionRef.value)[0]
+      if (inBody) return inBody
+    }
+    const inFooter = focusableElements(footerRef.value)[0]
+    if (inFooter) return inFooter
+  }
   if (hasTitle.value) {
     const titleEl = modalCardRef.value?.querySelector<HTMLElement>('.modal-card-title')
     if (titleEl) return titleEl

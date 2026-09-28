@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { mount, enableAutoUnmount, flushPromises } from '@vue/test-utils'
 import { nextTick, defineComponent, ref } from 'vue'
 import CatModal from './modal.vue'
@@ -605,5 +605,142 @@ describe('cat-modal width and position bindings', () => {
     const card = await openCard({ position: 'top', fullScreen: true })
     expect(card.classList.contains('cat-modal-fullscreen')).toBe(true)
     expect(card.closest('.modal')!.classList.contains('cat-modal-top')).toBe(true)
+  })
+})
+
+describe('cat-modal initial focus', () => {
+  async function open (options: Parameters<typeof mount<typeof CatModal>>[1]) {
+    const wrapper = mount(CatModal, { attachTo: document.body, ...options })
+    await wrapper.setProps({ modelValue: true })
+    await flushPromises()
+    return wrapper
+  }
+
+  // jsdom has no layout; simulate an overflowing body.
+  function overflowBody (): void {
+    const section = document.body.querySelector<HTMLElement>('.modal-card-body')!
+    Object.defineProperty(section, 'scrollHeight', { value: 600, configurable: true })
+    Object.defineProperty(section, 'clientHeight', { value: 300, configurable: true })
+  }
+
+  function title (): Element | null | undefined {
+    return findCard()?.querySelector('.modal-card-title')
+  }
+
+  it('focuses the first field of a form, not the close button', async () => {
+    await open({
+      props: { modelValue: false, title: 'Edit' },
+      slots: { default: '<label>Name <input id="name"></label><input id="email" aria-label="Email">' }
+    })
+    expect(document.activeElement?.id).toBe('name')
+  })
+
+  it('focuses the first footer control when the body has none', async () => {
+    await open({
+      props: { modelValue: false, title: 'Delete item?' },
+      slots: {
+        default: '<p>This cannot be undone.</p>',
+        footer: '<button id="cancel">Cancel</button><button id="delete">Delete</button>'
+      }
+    })
+    expect(document.activeElement?.id).toBe('cancel')
+  })
+
+  it('focuses the title when the close button is the only control', async () => {
+    await open({
+      props: { modelValue: false, title: 'Notice' },
+      slots: { default: '<p>Static text.</p>' }
+    })
+    expect(document.activeElement).toBe(title())
+  })
+
+  it('skips the fields of an overflowing body and focuses the footer', async () => {
+    const wrapper = mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: false, title: 'Terms' },
+      slots: {
+        default: '<p>Long text.</p><input id="agree" type="checkbox" aria-label="Agree">',
+        footer: '<button id="decline">Decline</button>'
+      }
+    })
+    overflowBody()
+    await wrapper.setProps({ modelValue: true })
+    await flushPromises()
+    expect(document.activeElement?.id).toBe('decline')
+  })
+
+  it('focuses the title when an overflowing body has no footer', async () => {
+    const wrapper = mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: false, title: 'Long form' },
+      slots: { default: '<p>Long text.</p><input id="field" aria-label="Field">' }
+    })
+    overflowBody()
+    await wrapper.setProps({ modelValue: true })
+    await flushPromises()
+    expect(document.activeElement).toBe(title())
+  })
+
+  it('initialFocus accepts a selector, a function or an element', async () => {
+    const slots = {
+      default: '<input id="field" aria-label="Field">',
+      footer: '<button id="cancel">Cancel</button><button id="confirm">Delete</button>'
+    }
+    const bySelector = await open({ props: { modelValue: false, title: 'X', initialFocus: '#confirm' }, slots })
+    expect(document.activeElement?.id).toBe('confirm')
+    bySelector.unmount()
+
+    const byFunction = await open({
+      props: { modelValue: false, title: 'X', initialFocus: () => document.getElementById('cancel') },
+      slots
+    })
+    expect(document.activeElement?.id).toBe('cancel')
+    byFunction.unmount()
+
+    // An element is a valid prop value, so Vue must not warn about its type.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const byElement = mount(CatModal, { attachTo: document.body, props: { modelValue: false, title: 'X' }, slots })
+    await byElement.setProps({ modelValue: true, initialFocus: document.getElementById('cancel')! })
+    await flushPromises()
+    expect(document.activeElement?.id).toBe('cancel')
+    expect(warn).not.toHaveBeenCalled()
+    warn.mockRestore()
+  })
+
+  it('initialFocus can name the close button', async () => {
+    await open({
+      props: { modelValue: false, title: 'X', initialFocus: 'button.delete' },
+      slots: { default: '<input id="field" aria-label="Field">' }
+    })
+    expect(document.activeElement?.classList.contains('delete')).toBe(true)
+  })
+
+  it('initialFocus=false skips controls and focuses the title', async () => {
+    await open({
+      props: { modelValue: false, title: 'Search', initialFocus: false },
+      slots: { default: '<input id="query" aria-label="Query">' }
+    })
+    expect(document.activeElement).toBe(title())
+  })
+
+  it('initialFocus=false focuses the body wrapper when there is no title', async () => {
+    await open({
+      props: { modelValue: false, ariaLabel: 'Search', initialFocus: false },
+      slots: { default: '<input id="query" aria-label="Query">' }
+    })
+    expect(document.activeElement?.classList.contains('cat-modal-body-content')).toBe(true)
+  })
+
+  it('falls through when initialFocus is missing, disabled, invalid or outside the dialog', async () => {
+    const outside = document.createElement('button')
+    document.body.appendChild(outside)
+    for (const initialFocus of ['#nope', '#off', '', '[[invalid', () => outside]) {
+      const wrapper = await open({
+        props: { modelValue: false, title: 'X', initialFocus },
+        slots: { default: '<input id="field" aria-label="Field"><button id="off" disabled>Off</button>' }
+      })
+      expect(document.activeElement?.id).toBe('field')
+      wrapper.unmount()
+    }
   })
 })
