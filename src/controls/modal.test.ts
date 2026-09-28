@@ -1,10 +1,14 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { mount, enableAutoUnmount, flushPromises } from '@vue/test-utils'
 import { nextTick, defineComponent, ref } from 'vue'
 import CatModal from './modal.vue'
 import CatDropdown from './dropdown.vue'
 import CatDropdownItem from './dropdown-item.vue'
 import { axe } from '../testutil/axe'
+
+// Unmount even when a test fails before its own wrapper.unmount(), so the
+// module-level open-modal and dismiss stacks don't leak into later tests.
+enableAutoUnmount(afterEach)
 
 beforeEach(() => {
   // Modal teleports to document.body; clean it up between tests so each one
@@ -164,6 +168,179 @@ describe('cat-modal', () => {
     wrapper.unmount()
   })
 
+  it('restores focus to the opener when the modal is unmounted by the v-if its v-model drives', async () => {
+    const Host = defineComponent({
+      setup () {
+        const open = ref(false)
+        return { open }
+      },
+      template: `
+        <div>
+          <button id="opener" @click="open = true">Open</button>
+          <CatModal v-if="open" v-model="open" title="X">
+            <button id="inside">Inside</button>
+          </CatModal>
+        </div>
+      `,
+      components: { CatModal }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    const opener = wrapper.get('#opener').element as HTMLButtonElement
+    opener.focus()
+    await opener.click()
+    await nextTick()
+    await nextTick()
+    expect(findCard()?.contains(document.activeElement)).toBe(true)
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await nextTick()
+    await nextTick()
+    expect(findCard()).toBeFalsy()
+    expect(document.activeElement).toBe(opener)
+    expect(document.documentElement.classList.contains('is-clipped')).toBe(false)
+    wrapper.unmount()
+  })
+
+  it('restores focus to the outer opener when a nested open modal unmounts with its v-if parent', async () => {
+    const Host = defineComponent({
+      setup () {
+        const editing = ref(false)
+        const confirm = ref(false)
+        return { editing, confirm }
+      },
+      template: `
+        <div>
+          <button id="opener" @click="editing = true">Edit</button>
+          <CatModal v-if="editing" v-model="editing" title="Edit">
+            <button id="discard" @click="confirm = true">Discard</button>
+            <CatModal v-model="confirm" title="Sure?">
+              <button id="yes" @click="confirm = false; editing = false">Yes</button>
+            </CatModal>
+          </CatModal>
+        </div>
+      `,
+      components: { CatModal }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    const opener = wrapper.get('#opener').element as HTMLButtonElement
+    opener.focus()
+    opener.click()
+    await flushPromises()
+    const discard = document.getElementById('discard') as HTMLButtonElement
+    discard.focus()
+    discard.click()
+    await flushPromises()
+    ;(document.getElementById('yes') as HTMLButtonElement).click()
+    await flushPromises()
+    expect(findCard()).toBeFalsy()
+    expect(document.activeElement).toBe(opener)
+    expect(document.documentElement.classList.contains('is-clipped')).toBe(false)
+  })
+
+  it('does not focus an opener that is removed in the same render as the modal', async () => {
+    const Host = defineComponent({
+      setup () {
+        const section = ref(true)
+        const open = ref(false)
+        const opened = ref(0)
+        return { section, open, opened }
+      },
+      template: `
+        <div>
+          <template v-if="section">
+            <button id="opener" @click="open = true" @focus="opened++">Open</button>
+            <CatModal v-if="open" v-model="open" title="X">
+              <button id="inside">Inside</button>
+            </CatModal>
+          </template>
+        </div>
+      `,
+      components: { CatModal }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    const opener = wrapper.get('#opener').element as HTMLButtonElement
+    opener.focus()
+    opener.click()
+    await flushPromises()
+    const focusCount = wrapper.vm.opened
+    wrapper.vm.section = false
+    await flushPromises()
+    expect(opener.isConnected).toBe(false)
+    expect(wrapper.vm.opened).toBe(focusCount)
+    expect(document.documentElement.classList.contains('is-clipped')).toBe(false)
+  })
+
+  it('leaves focus and the scroll lock with the modal on top when one beneath it unmounts', async () => {
+    const Host = defineComponent({
+      setup () {
+        const item = ref<string | null>('a')
+        const showA = ref(false)
+        const showB = ref(false)
+        return { item, showA, showB }
+      },
+      template: `
+        <div>
+          <button id="opener-a" @click="showA = true">Edit</button>
+          <CatModal v-if="item" v-model="showA" title="A">
+            <button id="opener-b" @click="showB = true">Delete</button>
+          </CatModal>
+          <CatModal v-model="showB" title="B">
+            <button id="in-b" @click="item = null">Confirm</button>
+          </CatModal>
+        </div>
+      `,
+      components: { CatModal }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    const openerA = wrapper.get('#opener-a').element as HTMLButtonElement
+    openerA.focus()
+    openerA.click()
+    await flushPromises()
+    const openerB = document.getElementById('opener-b') as HTMLButtonElement
+    openerB.focus()
+    openerB.click()
+    await flushPromises()
+    const inB = document.getElementById('in-b') as HTMLButtonElement
+    inB.focus()
+    inB.click()
+    await flushPromises()
+    expect(document.activeElement).toBe(inB)
+    expect(document.documentElement.classList.contains('is-clipped')).toBe(true)
+    wrapper.vm.showB = false
+    await flushPromises()
+    expect(document.documentElement.classList.contains('is-clipped')).toBe(false)
+  })
+
+  it('unmounting a closed modal leaves focus and another modal\'s scroll lock alone', async () => {
+    const Host = defineComponent({
+      setup () {
+        const showA = ref(false)
+        const hasB = ref(true)
+        return { showA, hasB }
+      },
+      template: `
+        <div>
+          <button id="opener" @click="showA = true">Open</button>
+          <CatModal v-model="showA" title="A">
+            <button id="in-a" @click="hasB = false">Remove row</button>
+          </CatModal>
+          <CatModal v-if="hasB" :model-value="false" title="B" />
+        </div>
+      `,
+      components: { CatModal }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    const opener = wrapper.get('#opener').element as HTMLButtonElement
+    opener.focus()
+    opener.click()
+    await flushPromises()
+    const inA = document.getElementById('in-a') as HTMLButtonElement
+    inA.focus()
+    inA.click()
+    await flushPromises()
+    expect(document.activeElement).toBe(inA)
+    expect(document.documentElement.classList.contains('is-clipped')).toBe(true)
+  })
+
   it('does not throw when restoring focus to a removed opener', async () => {
     const Host = defineComponent({
       setup () {
@@ -215,6 +392,40 @@ describe('cat-modal', () => {
     expect(document.activeElement).toBe(first)
     expect(tab.defaultPrevented).toBe(true)
     wrapper.unmount()
+  })
+
+  it('only the topmost of two open modals traps Tab', async () => {
+    const Host = defineComponent({
+      setup () {
+        const showA = ref(true)
+        const showB = ref(false)
+        return { showA, showB }
+      },
+      template: `
+        <div>
+          <CatModal v-model="showA" title="A">
+            <button id="opener-b" @click="showB = true">Open B</button>
+          </CatModal>
+          <CatModal v-model="showB" title="B">
+            <button id="b-first">First</button>
+            <button id="b-last">Last</button>
+          </CatModal>
+        </div>
+      `,
+      components: { CatModal }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    await flushPromises()
+    wrapper.vm.showB = true
+    await flushPromises()
+    const bFirst = document.getElementById('b-first') as HTMLButtonElement
+    bFirst.focus()
+    const event = new KeyboardEvent('keydown', { key: 'Tab', cancelable: true })
+    document.dispatchEvent(event)
+    // Not the last focusable in B, so B lets the browser move focus, and A
+    // must not pull it back into A's card.
+    expect(event.defaultPrevented).toBe(false)
+    expect(document.activeElement).toBe(bFirst)
   })
 
   it('wraps Shift+Tab from the first focusable to the last', async () => {
