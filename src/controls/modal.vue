@@ -59,8 +59,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, useSlots, useId, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { computed, ref, watch, useSlots, useId, nextTick, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import { pushDismissLayer, removeDismissLayer, type DismissLayer } from '../util/dismiss-stack'
+import { isOpenModal, isTopModal, openModalCount, pushOpenModal, removeOpenModal } from '../util/modal-stack'
 
 /**
  * Modal component using Bulma modal-card structure.
@@ -172,6 +173,8 @@ const bodyOverflows = ref(false)
 let bodyResizeObserver: ResizeObserver | null = null
 const titleId = useId()
 let previouslyFocused: HTMLElement | null = null
+// Identifies this instance on the shared open-modal stack.
+const openToken = {}
 
 const hasTitle = computed(() => Boolean(props.title || slots.title))
 // When there's no visible title, fall back to the ariaLabel prop or a generic
@@ -221,6 +224,9 @@ function focusableElements (): HTMLElement[] {
 function handleKeydown (event: KeyboardEvent): void {
   if (!props.modelValue) return
   if (event.key !== 'Tab') return
+  // Only the topmost modal traps Tab. A stacked modal is teleported to body,
+  // outside this card, so trapping here too would yank focus out of it.
+  if (!isTopModal(openToken)) return
   const root = modalCardRef.value
   if (!root) return
   const els = focusableElements()
@@ -286,8 +292,11 @@ async function openSideEffects (): Promise<void> {
   if (typeof document === 'undefined') return
   document.documentElement.classList.add('is-clipped')
   previouslyFocused = document.activeElement as HTMLElement | null
+  pushOpenModal(openToken)
   pushDismissLayer(dismissLayer)
   await nextTick()
+  // Closed or unmounted during the tick; don't leave an observer or steal focus.
+  if (!isOpenModal(openToken)) return
   updateBodyOverflow()
   if (typeof ResizeObserver !== 'undefined' && bodySectionRef.value) {
     bodyResizeObserver = new ResizeObserver(updateBodyOverflow)
@@ -301,7 +310,14 @@ async function openSideEffects (): Promise<void> {
 
 function closeSideEffects (): void {
   if (typeof document === 'undefined') return
-  document.documentElement.classList.remove('is-clipped')
+  if (!isOpenModal(openToken)) return
+  // Read before removing: a modal beneath another one closing must leave
+  // focus inside the modal still open on top.
+  const wasTop = isTopModal(openToken)
+  removeOpenModal(openToken)
+  if (openModalCount() === 0) {
+    document.documentElement.classList.remove('is-clipped')
+  }
   removeDismissLayer(dismissLayer)
   bodyResizeObserver?.disconnect()
   bodyResizeObserver = null
@@ -309,7 +325,7 @@ function closeSideEffects (): void {
   // (e.g., it lived inside a v-if branch that re-rendered). Guard against
   // calling focus() on a stale reference.
   const prev = previouslyFocused
-  if (prev && prev.isConnected) {
+  if (wasTop && prev && prev.isConnected) {
     prev.focus()
   }
   previouslyFocused = null
@@ -334,13 +350,20 @@ onMounted(() => {
   }
 })
 
-// Unmounting while open is a close, focus restore included. A modal under the
-// same v-if its v-model drives is removed in the render that clears it, so it
-// never sees modelValue go false and the watch above never runs.
 onBeforeUnmount(() => {
   if (typeof document !== 'undefined') {
     document.removeEventListener('keydown', handleKeydown)
   }
+})
+
+// Unmounting while open is a close, focus restore included. A modal under the
+// same v-if its v-model drives is removed in the render that clears it, so it
+// never sees modelValue go false and the watch above never runs.
+// This runs in onUnmounted, after the DOM is removed, rather than in
+// onBeforeUnmount: then isConnected is false for an opener torn down in the
+// same patch, and a nested modal (unmounted child-first) skips an opener inside
+// its removed parent, leaving the parent to restore focus to its own opener.
+onUnmounted(() => {
   closeSideEffects()
 })
 </script>
