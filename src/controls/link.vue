@@ -114,9 +114,10 @@ const warnedKeys = new Set<string>()
 <style scoped lang="scss">
 // A fallback styled as a button takes Bulma's disabled-button look, so the
 // dead control is visibly distinct rather than a working-looking look-alike.
+// Background and border are left alone: Bulma keeps a colored button's own
+// fill when disabled, and forcing the neutral disabled background under
+// is-primary's invert text made the label invisible.
 .cat-link-unresolved.button {
-  background-color: var(--bulma-button-disabled-background-color);
-  border-color: var(--bulma-button-disabled-border-color);
   box-shadow: var(--bulma-button-disabled-shadow);
   opacity: var(--bulma-button-disabled-opacity);
   cursor: not-allowed;
