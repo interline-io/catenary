@@ -164,6 +164,38 @@ describe('cat-modal', () => {
     wrapper.unmount()
   })
 
+  it('restores focus to the opener when the modal is unmounted by the v-if its v-model drives', async () => {
+    const Host = defineComponent({
+      setup () {
+        const open = ref(false)
+        return { open }
+      },
+      template: `
+        <div>
+          <button id="opener" @click="open = true">Open</button>
+          <CatModal v-if="open" v-model="open" title="X">
+            <button id="inside">Inside</button>
+          </CatModal>
+        </div>
+      `,
+      components: { CatModal }
+    })
+    const wrapper = mount(Host, { attachTo: document.body })
+    const opener = wrapper.get('#opener').element as HTMLButtonElement
+    opener.focus()
+    await opener.click()
+    await nextTick()
+    await nextTick()
+    expect(findCard()?.contains(document.activeElement)).toBe(true)
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }))
+    await nextTick()
+    await nextTick()
+    expect(findCard()).toBeFalsy()
+    expect(document.activeElement).toBe(opener)
+    expect(document.documentElement.classList.contains('is-clipped')).toBe(false)
+    wrapper.unmount()
+  })
+
   it('does not throw when restoring focus to a removed opener', async () => {
     const Host = defineComponent({
       setup () {

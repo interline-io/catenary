@@ -334,14 +334,14 @@ onMounted(() => {
   }
 })
 
+// Unmounting while open is a close, focus restore included. A modal under the
+// same v-if its v-model drives is removed in the render that clears it, so it
+// never sees modelValue go false and the watch above never runs.
 onBeforeUnmount(() => {
   if (typeof document !== 'undefined') {
     document.removeEventListener('keydown', handleKeydown)
-    document.documentElement.classList.remove('is-clipped')
   }
-  removeDismissLayer(dismissLayer)
-  bodyResizeObserver?.disconnect()
-  bodyResizeObserver = null
+  closeSideEffects()
 })
 </script>
 
