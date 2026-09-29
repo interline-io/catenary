@@ -37,9 +37,10 @@
           Unresolved button-styled link
         </cat-link>
         <p class="has-text-grey mt-2">
-          Renders as inert text with Bulma's disabled-button look. The caller's
-          <code>@click</code>, <code>tabindex</code> and <code>role</code> are dropped,
-          so it is neither a mouse-only control nor a keyboard dead end.
+          Renders as inert text that keeps the button's colors but has a not-allowed
+          cursor and no hover or press response. The caller's <code>@click</code>,
+          <code>tabindex</code> and <code>role</code> are dropped, so it is neither a
+          mouse-only control nor a keyboard dead end.
           Clicks counted: {{ clicks }}
         </p>
       </demo-box>

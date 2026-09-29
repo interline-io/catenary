@@ -8,9 +8,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, getCurrentInstance, inject, defineAsyncComponent, useAttrs, watch } from 'vue'
+import { computed, getCurrentInstance, inject, defineAsyncComponent, onMounted, ref, useAttrs, watch } from 'vue'
 import type { Router, RouteLocationRaw, RouteLocationNamedRaw } from 'vue-router'
 import { LinkRoutesKey } from './types'
+import { filterAttrs } from '../util/attrs'
 
 defineOptions({
   inheritAttrs: false
@@ -34,92 +35,107 @@ const linkComponent = router
   ? defineAsyncComponent(() => import('vue-router').then(m => m.RouterLink))
   : 'span'
 
-const resolvedTo = computed((): RouteLocationRaw | null => {
-  if (!router) return null
+// Own properties only: `routes.constructor` would otherwise count as mapped.
+function lookupRoute (key: string): string | undefined {
+  return Object.prototype.hasOwnProperty.call(routes, key) ? routes[key] : undefined
+}
 
-  let target: RouteLocationRaw | undefined
-
+// The resolved target, or why there is none. The reason drives the
+// development warning; `null` means the fallback is deliberate or pending
+// (a key mapped to "", or a `to` still null while data loads).
+const resolution = computed((): { to: RouteLocationRaw | null, reason: string | null } => {
   if (props.routeKey) {
-    const name = routes[props.routeKey]
-    if (!name) return null
+    const name = lookupRoute(props.routeKey)
+    if (name === undefined) {
+      return { to: null, reason: `route-key="${props.routeKey}" has no entry in the route map; provide it via LinkRoutesKey, or map it to "" to mark it deliberately unlinked` }
+    }
+    if (!name) return { to: null, reason: null }
+    if (!router) return { to: null, reason: 'no router is installed' }
 
     // If `to` is an object, merge params/query/hash into a named route
+    const merged: RouteLocationNamedRaw = { name }
     if (typeof props.to === 'object' && props.to !== null && !Array.isArray(props.to)) {
       const base = props.to as RouteLocationNamedRaw
-      const merged: RouteLocationNamedRaw = { name }
       if (base.params) merged.params = base.params
       if (base.query) merged.query = base.query
       if (base.hash) merged.hash = base.hash
-      target = merged
-    } else {
-      target = { name }
     }
-  } else {
-    target = props.to
+    return tryResolve(merged, `route-key="${props.routeKey}" maps to route "${name}", which the router cannot resolve`)
   }
-
-  if (!target) return null
-
-  try {
-    router.resolve(target)
-    return target
-  } catch {
-    return null
-  }
+  if (!props.to) return { to: null, reason: null }
+  if (!router) return { to: null, reason: 'no router is installed' }
+  return tryResolve(props.to, `the router cannot resolve to=${JSON.stringify(props.to)}`)
 })
+
+function tryResolve (target: RouteLocationRaw, reason: string) {
+  try {
+    router!.resolve(target)
+    return { to: target, reason: null }
+  } catch {
+    return { to: null, reason }
+  }
+}
+
+const resolvedTo = computed(() => resolution.value.to)
 
 // The unresolved fallback is plain text. Callers style links as buttons and
 // attach handlers, and passing those through made a span that looked like a
 // button and answered a mouse click but was unreachable by keyboard and
-// announced as text (WCAG 2.1.1). So drop listeners and anything that makes
-// it look interactive to assistive tech; keep class, style, id and data-*
-// so layout holds. The cat-link-unresolved class marks it for styling.
-const INTERACTIVE_ATTRS = new Set(['tabindex', 'role', 'href', 'target', 'rel', 'download', 'aria-current'])
-
-const fallbackAttrs = computed(() => {
-  const out: Record<string, unknown> = {}
-  for (const [key, value] of Object.entries(attrs)) {
-    if (/^on[A-Z]/.test(key)) continue
-    if (INTERACTIVE_ATTRS.has(key.toLowerCase())) continue
-    out[key] = value
-  }
-  return out
-})
+// announced as text (WCAG 2.1.1). An allowlist, not a denylist: string
+// `onclick`, `contenteditable` and role-dependent aria-* would all survive a
+// denylist. filterAttrs, not a local loop, for its reactivity fix.
+const fallbackAttrs = computed(() => filterAttrs(attrs, keepOnFallback))
 
 /*
- * Warn when a route key has no entry in the provided route map, the usual
- * cause being that nothing provides LinkRoutesKey at all. `=== undefined`,
- * not falsiness: an empty string is a deliberate "no route for this key"
- * sentinel. A `to` that is still null while data loads is not warned about.
- * Watched, not checked once, since the key can change; warned once per key.
+ * Warn in development when a link falls back for a reason the caller likely
+ * did not intend. From onMounted, so it never fires during SSR (see
+ * radio.vue), and watched afterwards since the key, `to` or a reactive route
+ * map can change. A map filled after mount warns at mount; the link still
+ * resolves once the entry arrives. Warned once per message.
  * Bare process.env check so bundlers strip it; see radio.vue.
  */
 if (process.env.NODE_ENV !== 'production') {
-  watch(() => props.routeKey, (key) => {
-    if (!key || !router || routes[key] !== undefined || warnedKeys.has(key)) return
-    warnedKeys.add(key)
-    console.warn(
-      `[catenary] <cat-link route-key="${key}"> has no entry in the route map, `
-      + 'so it renders as plain text rather than a link. Provide the key via '
-      + 'LinkRoutesKey, or map it to "" to mark it deliberately unlinked.'
-    )
-  }, { immediate: true })
+  const mounted = ref(false)
+  onMounted(() => { mounted.value = true })
+  watch([mounted, () => resolution.value.reason], ([isMounted, reason]) => {
+    if (!isMounted || !reason) return
+    const message = `[catenary] <cat-link> renders as plain text rather than a link: ${reason}.`
+    if (warnedMessages.has(message)) return
+    warnedMessages.add(message)
+    console.warn(message)
+  })
 }
 </script>
 
 <script lang="ts">
-const warnedKeys = new Set<string>()
+const warnedMessages = new Set<string>()
+
+/** Test hook: forget which warnings were already logged. */
+export function resetLinkWarnings (): void {
+  warnedMessages.clear()
+}
+
+// Layout-bearing attributes, plus Vue's vnode lifecycle hooks
+// (`@vue:mounted` arrives as `onVnodeMounted`), which are not interaction.
+function keepOnFallback (key: string): boolean {
+  return key === 'class' || key === 'style' || key === 'id'
+    || key.startsWith('data-') || /^onVnode[A-Z]/.test(key)
+}
 </script>
 
 <style scoped lang="scss">
-// A fallback styled as a button takes Bulma's disabled-button look, so the
-// dead control is visibly distinct rather than a working-looking look-alike.
-// Background and border are left alone: Bulma keeps a colored button's own
-// fill when disabled, and forcing the neutral disabled background under
-// is-primary's invert text made the label invisible.
+// A fallback styled as a button keeps its colors at full strength: it is a
+// span, not a disabled control, so WCAG 1.4.3's exemption for inactive
+// controls does not cover it and dimming would fail contrast. It is marked
+// instead by the cursor and by not reacting to hover or press. Bulma drives
+// those states by swapping in the hover/active lightness deltas, so zeroing
+// the deltas turns them off whatever the selector specificity.
 .cat-link-unresolved.button {
+  --bulma-button-hover-background-l-delta: 0%;
+  --bulma-button-active-background-l-delta: 0%;
+  --bulma-button-hover-border-l-delta: 0%;
+  --bulma-button-active-border-l-delta: 0%;
   box-shadow: var(--bulma-button-disabled-shadow);
-  opacity: var(--bulma-button-disabled-opacity);
   cursor: not-allowed;
 }
 </style>
