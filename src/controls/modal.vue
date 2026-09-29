@@ -501,7 +501,7 @@ onUnmounted(() => {
   }
 }
 
-// position="top". .modal is a centred column, so the card moves to the top on
+// position="top". .modal is a centered column, so the card moves to the top on
 // the main axis. The offset comes out of max-height as well, or a tall card
 // would run off the bottom.
 //

@@ -591,7 +591,7 @@ describe('cat-modal width and position bindings', () => {
     expect(card.style.getPropertyValue('--cat-modal-width')).toBe('640px')
   })
 
-  it('is centred by default', async () => {
+  it('is centered by default', async () => {
     const card = await openCard({})
     expect(card.closest('.modal')!.classList.contains('cat-modal-top')).toBe(false)
   })
