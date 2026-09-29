@@ -189,11 +189,17 @@
         </cat-modal>
       </demo-box>
 
-      <demo-box label="Modal with Footer">
+      <demo-box label="Modal with Footer: initialFocus on Cancel">
+        <p class="mb-3">
+          Footer actions are never focused by default, so without the override
+          this dialog opens on its title. <code>initial-focus="[data-cancel]"</code>
+          sends focus to Cancel, the least destructive action, rather than the
+          Confirm button that leads the footer.
+        </p>
         <cat-button variant="warning" @click="showFooter = true">
           Open Modal with Footer
         </cat-button>
-        <cat-modal v-model="showFooter" title="Confirm Action">
+        <cat-modal v-model="showFooter" title="Confirm Action" initial-focus="[data-cancel]">
           <p>Are you sure you want to proceed with this action?</p>
           <p>This operation cannot be undone.</p>
           <template #footer>
@@ -201,7 +207,7 @@
               <cat-button variant="danger" @click="handleConfirm">
                 Confirm
               </cat-button>
-              <cat-button @click="showFooter = false">
+              <cat-button data-cancel @click="showFooter = false">
                 Cancel
               </cat-button>
             </div>
@@ -255,6 +261,22 @@
         </cat-notification>
       </demo-box>
 
+      <demo-box label="initialFocus false: no field focused on open">
+        <p class="mb-3">
+          By default a form modal focuses its first field, which on a phone
+          raises the on-screen keyboard as the dialog opens.
+          <code>:initial-focus="false"</code> focuses the title instead.
+        </p>
+        <cat-button variant="primary" @click="showNoFieldFocus = true">
+          Open Search Modal
+        </cat-button>
+        <cat-modal v-model="showNoFieldFocus" title="Find a stop" :initial-focus="false">
+          <cat-field label="Stop name">
+            <cat-input v-model="stopQuery" placeholder="e.g. Embarcadero" />
+          </cat-field>
+        </cat-modal>
+      </demo-box>
+
       <demo-box label="Example: Layered Escape (popups inside a modal)" example>
         <p class="mb-3">
           Open the modal, then open the dropdown or the date picker inside it.
@@ -304,7 +326,7 @@
             The dialog renders with <code>role="dialog"</code>, <code>aria-modal="true"</code>, and either <code>aria-labelledby</code> pointing at the title (when set) or <code>aria-label</code> (defaults to "Dialog"). Pass <code>aria-describedby</code> with the id of a body element when the dialog needs longer-form context.
           </p>
           <p class="mt-2">
-            On open, focus moves to the first focusable element inside the dialog. If the dialog has no focusable children, focus falls back to the title (preferred per APG: do not focus the dialog element itself) or the body wrapper. Tab and Shift+Tab cycle within the dialog. On close, focus returns to whatever element opened it; if that element is gone from the DOM, the restore is a safe no-op.
+            On open, focus moves to the first focusable element in the body, so a form modal focuses its first field. The close button and footer actions are never picked by default, since a footer often leads with its primary or destructive action. If the body has nothing focusable, or its first control is out of view in a body that overflows, focus goes to the title (preferred per APG: do not focus the dialog element itself) or the body wrapper. <code>initialFocus</code> overrides this with a selector, element or function, and <code>false</code> skips straight to the title. Tab and Shift+Tab cycle within the dialog, including from the title. On close, focus returns to whatever element opened it; if that element is gone from the DOM, the restore is a safe no-op.
           </p>
           <p class="mt-2">
             Background clicks dismiss the modal when <code>closable</code> is true. Escape dismissal goes through a shared LIFO stack, so a popup opened inside the modal (a <code>cat-dropdown</code> menu or <code>cat-datepicker</code> calendar) closes on the first Escape and the modal on the second, rather than both at once. A non-closable modal still consumes Escape so it cannot dismiss a surface beneath it.
@@ -348,6 +370,8 @@ const paletteResults = computed(() => {
   const q = paletteQuery.value.trim().toLowerCase()
   return q ? paletteStops.filter(s => s.toLowerCase().includes(q)) : []
 })
+const showNoFieldFocus = ref(false)
+const stopQuery = ref('')
 const resultMessage = ref('')
 
 const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
