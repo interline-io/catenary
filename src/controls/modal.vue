@@ -63,6 +63,7 @@
 import { computed, ref, watch, useSlots, useId, nextTick, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import { pushDismissLayer, removeDismissLayer, type DismissLayer } from '../util/dismiss-stack'
 import { isOpenModal, isTopModal, openModalCount, pushOpenModal, removeOpenModal } from '../util/modal-stack'
+import type { ModalPosition, ModalWidth } from './types'
 
 /**
  * Modal component using Bulma modal-card structure.
@@ -105,22 +106,22 @@ interface Props {
   size?: 'small' | 'medium' | 'large'
 
   /**
-   * Card width as any CSS length (`640px`, `40rem`), for a width the `size`
-   * steps don't cover. Overrides `size`, and is still capped at 90vw. No effect
-   * with `fullScreen`.
+   * Card width, for a width the `size` steps don't cover: a number is pixels
+   * (as in cat-dropdown), a string any CSS length (`640px`, `40rem`). Overrides
+   * `size`, and is still capped at 90vw. No effect with `fullScreen`.
    *
-   * Sets the `--cat-modal-width` custom property on the card, which is what the
-   * `size` classes set too.
+   * Sets `--cat-modal-width` inline on the card. The same property set on any
+   * ancestor, or `:root`, sizes every modal beneath it.
    */
-  width?: string
+  width?: ModalWidth
 
   /**
    * Vertical placement. `top` anchors the card near the top of the viewport, so
    * a dialog whose content grows — a search palette's result list — grows
    * downward instead of moving. No effect with `fullScreen`.
-   * @default 'center'
+   * @default 'centered'
    */
-  position?: 'center' | 'top'
+  position?: ModalPosition
 
   /**
    * Drop `fullScreen`'s inset at every width, so the dialog is the whole
@@ -175,7 +176,7 @@ const props = withDefaults(defineProps<Props>(), {
   fullScreen: false,
   size: 'medium',
   width: undefined,
-  position: 'center',
+  position: 'centered',
   fullBleed: false,
   fillBody: false,
   ariaLabel: undefined,
@@ -206,9 +207,12 @@ const effectiveAriaLabel = computed(() => {
   return props.ariaLabel || 'Dialog'
 })
 
-const modalCardStyle = computed(() => (
-  props.width ? { '--cat-modal-width': props.width } : undefined
-))
+const modalCardStyle = computed(() => {
+  // A bare number would be an invalid length for `width`, which then drops
+  // to auto and shrinks the card to its content, so numbers mean pixels.
+  const w = typeof props.width === 'number' ? `${props.width}px` : props.width
+  return w ? { '--cat-modal-width': w } : undefined
+})
 
 const modalCardClasses = computed(() => ({
   'cat-modal-fullscreen': props.fullScreen,
@@ -423,49 +427,23 @@ onUnmounted(() => {
 }
 
 .cat-modal {
-  // position="top". .modal is a centred column, so the card moves to the top
-  // on the main axis. The offset comes out of max-height as well, or a tall
-  // card would run off the bottom.
-  //
-  // Kept before the .modal-card block, at no more specificity than its
-  // modifiers, so fullScreen's margin and height win by source order, and a
-  // consumer's own override of the card isn't outranked.
-  &.cat-modal-top {
-    justify-content: flex-start;
-
-    .modal-card {
-      margin-top: 10vh;
-      max-height: calc(90vh - var(--bulma-modal-card-spacing));
-      max-height: calc(100dvh - 10vh - var(--bulma-modal-card-spacing));
-
-      // On a phone 10vh is space the content needs; keep an even gap instead.
-      @include mx.mobile {
-        margin-top: calc(var(--bulma-modal-card-spacing) / 2);
-        max-height: calc(100vh - var(--bulma-modal-card-spacing));
-        max-height: calc(100dvh - var(--bulma-modal-card-spacing));
-      }
-    }
-  }
-
-  // Width goes through a custom property so the `width` prop, set inline on the
-  // card, beats the size classes without raising any selector's specificity.
-  // A modal with no size or width must still come out at exactly 800px.
+  // Width. The size classes set an internal step, and --cat-modal-width, when
+  // set, wins over it: inline on the card from the `width` prop, or inherited
+  // from any ancestor (:root, a page wrapper), since the card never sets it
+  // itself. The 800px default lives only here, so a card with no size class
+  // (size="normal") still gets it.
   .modal-card {
-    --cat-modal-width: 800px;
+    --cat-modal-size-width: 800px;
 
-    width: var(--cat-modal-width);
+    width: var(--cat-modal-width, var(--cat-modal-size-width));
     max-width: 90vw;
 
     &.cat-modal-small {
-      --cat-modal-width: 480px;
-    }
-
-    &.cat-modal-medium {
-      --cat-modal-width: 800px;
+      --cat-modal-size-width: 480px;
     }
 
     &.cat-modal-large {
-      --cat-modal-width: 1200px;
+      --cat-modal-size-width: 1200px;
     }
 
     // fillBody. The body lays out as a column and the slot takes what is left,
@@ -520,6 +498,38 @@ onUnmounted(() => {
 
   .modal-card-foot {
     justify-content: flex-end;
+  }
+}
+
+// position="top". .modal is a centred column, so the card moves to the top on
+// the main axis. The offset comes out of max-height as well, or a tall card
+// would run off the bottom.
+//
+// :where() keeps these at (0,2,0) with the scope attribute: enough to beat
+// Bulma's .modal and .modal-card, below the fullScreen modifier (0,4,0), which
+// therefore wins by specificity, and tied with a consumer's own
+// `.cat-modal .modal-card` override rather than outranking it.
+//
+// Spacing reads Bulma's runtime --bulma-modal-card-spacing rather than the
+// SCSS variable CLAUDE.md prefers: $modal-card-spacing is not in
+// initial-variables, and @use-ing Bulma's modal module would emit its CSS again.
+:where(.cat-modal).cat-modal-top {
+  justify-content: flex-start;
+}
+
+:where(.cat-modal.cat-modal-top) .modal-card {
+  --cat-modal-top-offset: 10vh;
+
+  margin-top: var(--cat-modal-top-offset);
+  max-height: calc(100vh - var(--cat-modal-top-offset) - var(--bulma-modal-card-spacing));
+  max-height: calc(100dvh - var(--cat-modal-top-offset) - var(--bulma-modal-card-spacing));
+
+  // On a phone 10vh is space the content needs; keep an even gap instead.
+  @include mx.mobile {
+    --cat-modal-top-offset: calc(var(--bulma-modal-card-spacing) / 2);
+
+    max-height: calc(100vh - 2 * var(--cat-modal-top-offset));
+    max-height: calc(100dvh - 2 * var(--cat-modal-top-offset));
   }
 }
 </style>

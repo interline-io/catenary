@@ -117,6 +117,12 @@ export type PaginationSize = typeof PaginationSizes[number]
 export const PaginationPositions = ['left', 'centered', 'right'] as const
 export type PaginationPosition = typeof PaginationPositions[number]
 
+// Modal vertical placement, and a width as pixels or any CSS length
+export const ModalPositions = ['centered', 'top'] as const
+export type ModalPosition = typeof ModalPositions[number]
+
+export type ModalWidth = string | number
+
 // Taginput uses tag variants for styling and input sizes
 export const TaginputVariants = TagVariants
 export type TaginputVariant = typeof TaginputVariants[number]
