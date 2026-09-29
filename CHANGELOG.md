@@ -1,5 +1,29 @@
 # @interline-io/catenary
 
+## 0.15.0
+
+### Minor Changes
+
+- [#104](https://github.com/interline-io/catenary/pull/104) [`d973ea1`](https://github.com/interline-io/catenary/commit/d973ea1d01a9297b8e024a361711350b6602ba4e) Thanks [@drewda](https://github.com/drewda)! - `cat-link` renders an unresolved link as inert text. Closes [#94](https://github.com/interline-io/catenary/issues/94).
+
+  When neither `to` nor `route-key` resolved, the fallback `<span>` kept every attribute and listener the caller passed, so a link styled as a button answered a mouse click but was unreachable by keyboard (WCAG 2.1.1). The fallback now keeps only `class`, `style`, `id`, `data-*` and vnode hooks, and drops listeners, `tabindex`, `role`, `aria-*` and every other attribute. It carries a `cat-link-unresolved` class. One styled as a Bulma `button` keeps its colors, shows a not-allowed cursor, and does not react to hover or press.
+
+  In development, a link that falls back unintentionally logs a warning once, naming the cause: a `route-key` missing from the `LinkRoutesKey` map, a route the router cannot resolve, or no router installed. A key mapped to `""` and a `to` that is still null do not warn, and nothing is logged during SSR.
+
+  Check any call site that relied on `@click` or `tabindex` on a link that might not resolve.
+
+- [#106](https://github.com/interline-io/catenary/pull/106) [`f4d13a8`](https://github.com/interline-io/catenary/commit/f4d13a8ace054753d358aaac63610edf31e767a4) Thanks [@drewda](https://github.com/drewda)! - `cat-modal` no longer opens with focus on its close button. Focus goes to the first focusable element in the body, so a form modal focuses its first field. If the body has none, or its first control is out of view in a body that overflows, focus goes to the title, then the body wrapper. Footer actions are never focused by default, because a footer often leads with its primary or destructive action. A new `initialFocus` prop takes a selector, an element (a wrapper resolves to its first focusable descendant) or a function to pick the target, or `false` to skip controls and focus the title. Tab and Shift+Tab from the title now stay inside the dialog. Fixes [#96](https://github.com/interline-io/catenary/issues/96).
+
+  This changes where focus lands for nearly every modal. Check:
+
+  - **Confirm dialogs** now open on the title. To focus Cancel, set `initialFocus`.
+  - **Modals with a text field that open on phones.** Focusing the field raises the on-screen keyboard as the dialog opens. `:initial-focus="false"` opts out.
+  - **A body control with focus behavior**, such as `cat-taginput` with `open-on-focus`, opens its dropdown as the modal opens when it is the first control.
+  - **Body content that renders after the modal opens** (async components, `<ClientOnly>`, loading states) is not a candidate; focus goes to the title instead.
+  - **Tests or flows that expected focus on the close button** after open need updating.
+
+- [#105](https://github.com/interline-io/catenary/pull/105) [`ff497b6`](https://github.com/interline-io/catenary/commit/ff497b6ba5da923f8f410b18a54e2ff29a567175) Thanks [@drewda](https://github.com/drewda)! - `cat-modal` gains `position` (`centered`, the default, or `top`) and `width` (a number of pixels or any CSS length). `position="top"` anchors the card near the top of the viewport, so a dialog whose content grows, such as a search palette, grows downward instead of moving. `width` covers sizes between the `size` steps by setting `--cat-modal-width` on the card; the same property set on any ancestor or `:root` sizes every modal beneath it. New `ModalPosition` and `ModalWidth` types are exported. A modal that passes neither prop is unchanged. Closes [#98](https://github.com/interline-io/catenary/issues/98).
+
 ## 0.14.1
 
 ### Patch Changes
