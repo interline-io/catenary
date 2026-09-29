@@ -565,3 +565,45 @@ describe('cat-modal open-state behaviors', () => {
     wrapper.unmount()
   })
 })
+
+// Width and placement are CSS, which jsdom can't resolve (no var()
+// substitution, no specificity), so these check the bindings the styles key
+// off; the layout itself is checked in a browser.
+describe('cat-modal width and position bindings', () => {
+  async function openCard (props: Record<string, unknown>): Promise<HTMLElement> {
+    mount(CatModal, { attachTo: document.body, props: { modelValue: true, title: 'X', ...props } })
+    await nextTick()
+    return findCard()!
+  }
+
+  it('sets no inline style by default', async () => {
+    const card = await openCard({ size: 'small' })
+    expect(card.getAttribute('style')).toBeNull()
+  })
+
+  it('sets --cat-modal-width from a string width', async () => {
+    const card = await openCard({ size: 'large', width: '40rem' })
+    expect(card.style.getPropertyValue('--cat-modal-width')).toBe('40rem')
+  })
+
+  it('treats a numeric width as pixels', async () => {
+    const card = await openCard({ width: 640 })
+    expect(card.style.getPropertyValue('--cat-modal-width')).toBe('640px')
+  })
+
+  it('is centered by default', async () => {
+    const card = await openCard({})
+    expect(card.closest('.modal')!.classList.contains('cat-modal-top')).toBe(false)
+  })
+
+  it('marks the root for position="top"', async () => {
+    const card = await openCard({ position: 'top' })
+    expect(card.closest('.modal')!.classList.contains('cat-modal-top')).toBe(true)
+  })
+
+  it('keeps the fullScreen class alongside position="top"', async () => {
+    const card = await openCard({ position: 'top', fullScreen: true })
+    expect(card.classList.contains('cat-modal-fullscreen')).toBe(true)
+    expect(card.closest('.modal')!.classList.contains('cat-modal-top')).toBe(true)
+  })
+})

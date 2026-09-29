@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div class="modal cat-modal" :class="{ 'is-active': modelValue }">
+    <div class="modal cat-modal" :class="{ 'is-active': modelValue, 'cat-modal-top': position === 'top' }">
       <!-- Backdrop click is a convenience dismissal; the WAI-ARIA-compliant
            keyboard dismissal is Escape, handled at document level via
            handleKeydown. -->
@@ -16,6 +16,7 @@
         tabindex="-1"
         class="modal-card"
         :class="modalCardClasses"
+        :style="modalCardStyle"
       >
         <header class="modal-card-head">
           <!-- tabindex="-1" so the title can serve as the initial focus target
@@ -62,6 +63,7 @@
 import { computed, ref, watch, useSlots, useId, nextTick, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
 import { pushDismissLayer, removeDismissLayer, type DismissLayer } from '../util/dismiss-stack'
 import { isOpenModal, isTopModal, openModalCount, pushOpenModal, removeOpenModal } from '../util/modal-stack'
+import type { ModalPosition, ModalWidth } from './types'
 
 /**
  * Modal component using Bulma modal-card structure.
@@ -102,6 +104,24 @@ interface Props {
    * @default 'medium'
    */
   size?: 'small' | 'medium' | 'large'
+
+  /**
+   * Card width, for a width the `size` steps don't cover: a number is pixels
+   * (as in cat-dropdown), a string any CSS length (`640px`, `40rem`). Overrides
+   * `size`, and is still capped at 90vw. No effect with `fullScreen`.
+   *
+   * Sets `--cat-modal-width` inline on the card. The same property set on any
+   * ancestor, or `:root`, sizes every modal beneath it.
+   */
+  width?: ModalWidth
+
+  /**
+   * Vertical placement. `top` anchors the card near the top of the viewport, so
+   * a dialog whose content grows — a search palette's result list — grows
+   * downward instead of moving. No effect with `fullScreen`.
+   * @default 'centered'
+   */
+  position?: ModalPosition
 
   /**
    * Drop `fullScreen`'s inset at every width, so the dialog is the whole
@@ -155,6 +175,8 @@ const props = withDefaults(defineProps<Props>(), {
   closable: true,
   fullScreen: false,
   size: 'medium',
+  width: undefined,
+  position: 'centered',
   fullBleed: false,
   fillBody: false,
   ariaLabel: undefined,
@@ -183,6 +205,13 @@ const hasTitle = computed(() => Boolean(props.title || slots.title))
 const effectiveAriaLabel = computed(() => {
   if (hasTitle.value) return undefined
   return props.ariaLabel || 'Dialog'
+})
+
+const modalCardStyle = computed(() => {
+  // A bare number would be an invalid length for `width`, which then drops
+  // to auto and shrinks the card to its content, so numbers mean pixels.
+  const w = typeof props.width === 'number' ? `${props.width}px` : props.width
+  return w ? { '--cat-modal-width': w } : undefined
 })
 
 const modalCardClasses = computed(() => ({
@@ -398,20 +427,23 @@ onUnmounted(() => {
 }
 
 .cat-modal {
+  // Width. The size classes set an internal step, and --cat-modal-width, when
+  // set, wins over it: inline on the card from the `width` prop, or inherited
+  // from any ancestor (:root, a page wrapper), since the card never sets it
+  // itself. The 800px default lives only here, so a card with no size class
+  // (size="normal") still gets it.
   .modal-card {
-    width: 800px;
+    --cat-modal-size-width: 800px;
+
+    width: var(--cat-modal-width, var(--cat-modal-size-width));
     max-width: 90vw;
 
     &.cat-modal-small {
-      width: 480px;
-    }
-
-    &.cat-modal-medium {
-      width: 800px;
+      --cat-modal-size-width: 480px;
     }
 
     &.cat-modal-large {
-      width: 1200px;
+      --cat-modal-size-width: 1200px;
     }
 
     // fillBody. The body lays out as a column and the slot takes what is left,
@@ -466,6 +498,38 @@ onUnmounted(() => {
 
   .modal-card-foot {
     justify-content: flex-end;
+  }
+}
+
+// position="top". .modal is a centered column, so the card moves to the top on
+// the main axis. The offset comes out of max-height as well, or a tall card
+// would run off the bottom.
+//
+// :where() keeps these at (0,2,0) with the scope attribute: enough to beat
+// Bulma's .modal and .modal-card, below the fullScreen modifier (0,4,0), which
+// therefore wins by specificity, and tied with a consumer's own
+// `.cat-modal .modal-card` override rather than outranking it.
+//
+// Spacing reads Bulma's runtime --bulma-modal-card-spacing rather than the
+// SCSS variable CLAUDE.md prefers: $modal-card-spacing is not in
+// initial-variables, and @use-ing Bulma's modal module would emit its CSS again.
+:where(.cat-modal).cat-modal-top {
+  justify-content: flex-start;
+}
+
+:where(.cat-modal.cat-modal-top) .modal-card {
+  --cat-modal-top-offset: 10vh;
+
+  margin-top: var(--cat-modal-top-offset);
+  max-height: calc(100vh - var(--cat-modal-top-offset) - var(--bulma-modal-card-spacing));
+  max-height: calc(100dvh - var(--cat-modal-top-offset) - var(--bulma-modal-card-spacing));
+
+  // On a phone 10vh is space the content needs; keep an even gap instead.
+  @include mx.mobile {
+    --cat-modal-top-offset: calc(var(--bulma-modal-card-spacing) / 2);
+
+    max-height: calc(100vh - 2 * var(--cat-modal-top-offset));
+    max-height: calc(100dvh - 2 * var(--cat-modal-top-offset));
   }
 }
 </style>

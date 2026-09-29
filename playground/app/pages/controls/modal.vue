@@ -44,6 +44,27 @@
         </cat-modal>
       </demo-box>
 
+      <demo-box label="Top-anchored, Custom Width">
+        <p class="mb-3">
+          <code>position="top"</code> keeps the card near the top of the viewport,
+          so results added below grow downward without moving the dialog.
+          <code>width="640px"</code> sits between the small and medium sizes.
+        </p>
+        <cat-button variant="primary" @click="showPalette = true">
+          Open Search Palette
+        </cat-button>
+        <cat-modal v-model="showPalette" title="Search" position="top" width="640px">
+          <cat-field label="Search stops">
+            <cat-input v-model="paletteQuery" placeholder="Type to filter" />
+          </cat-field>
+          <ul>
+            <li v-for="stop in paletteResults" :key="stop">
+              {{ stop }}
+            </li>
+          </ul>
+        </cat-modal>
+      </demo-box>
+
       <demo-box label="Fullscreen Modal">
         <cat-button variant="success" @click="showFullscreen = true">
           Open Fullscreen Modal
@@ -298,7 +319,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import DemoBox from '../../components/demo-box.vue'
 import DemoA11y from '../../components/demo-a11y.vue'
 
@@ -315,6 +336,18 @@ const showFooter = ref(false)
 const showNoClose = ref(false)
 const showForm = ref(false)
 const showLayered = ref(false)
+const showPalette = ref(false)
+const paletteQuery = ref('')
+const paletteStops = [
+  'Embarcadero', 'Montgomery St', 'Powell St', 'Civic Center', '16th St Mission',
+  '24th St Mission', 'Glen Park', 'Balboa Park', 'Daly City', 'Colma',
+  'South San Francisco', 'San Bruno', 'Millbrae', 'West Oakland', '12th St Oakland'
+]
+// Empty query shows nothing, so typing visibly grows the card downward.
+const paletteResults = computed(() => {
+  const q = paletteQuery.value.trim().toLowerCase()
+  return q ? paletteStops.filter(s => s.toLowerCase().includes(q)) : []
+})
 const resultMessage = ref('')
 
 const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
