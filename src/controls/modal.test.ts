@@ -847,7 +847,7 @@ describe('cat-modal Tab trap from a non-tabbable focus', () => {
     expect(document.activeElement?.classList.contains('delete')).toBe(true)
   })
 
-  it('Tab and Shift+Tab from the body wrapper step to its neighbours by DOM position', async () => {
+  it('Tab and Shift+Tab from the body wrapper step to its neighbors by DOM position', async () => {
     await openTitled({ default: '<p>Static text.</p>', footer: '<button id="ok">OK</button>' })
     const body = findCard()!.querySelector<HTMLElement>('.cat-modal-body-content')!
     body.focus()

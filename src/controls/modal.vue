@@ -325,7 +325,7 @@ function handleKeydown (event: KeyboardEvent): void {
     // Focus is inside the card but not on a tabbable element: the title, the
     // body wrapper, or a tabindex="-1" initialFocus target. The browser would
     // move from there by DOM position, and from the title, which precedes every
-    // control, Shift+Tab would leave the dialog. So step to the neighbouring
+    // control, Shift+Tab would leave the dialog. So step to the neighboring
     // tabbable by DOM position here, wrapping at either end.
     event.preventDefault()
     const follows = (el: HTMLElement) => Boolean(active.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)
