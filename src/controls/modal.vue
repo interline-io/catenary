@@ -51,7 +51,7 @@
             <br>
           </div>
         </section>
-        <footer v-if="$slots.footer" ref="footerRef" class="modal-card-foot">
+        <footer v-if="$slots.footer" class="modal-card-foot">
           <slot name="footer" :close="close" />
         </footer>
       </div>
@@ -170,21 +170,24 @@ interface Props {
 
   /**
    * Where focus lands when the dialog opens. By default: the first focusable
-   * element in the body (unless the body overflows), then the first in the
-   * footer, then the title, then the body wrapper. The close button is never
-   * picked by default.
+   * element in the body, if it is in view; otherwise the title, then the body
+   * wrapper. The close button and footer actions are never picked by default,
+   * since a footer often leads with its primary or destructive action.
    *
    * Pass a CSS selector (matched inside the dialog), an element, or a function
    * returning one to override, e.g. the Cancel button of a destructive confirm.
-   * Pass `false` to skip controls and focus the title or body wrapper, e.g. so
-   * a text field doesn't raise the on-screen keyboard on a phone. A target that
-   * is missing, outside the dialog, or not focusable falls through to the
-   * default.
+   * An element that can't take focus itself, such as a component's wrapper, is
+   * resolved to its first focusable descendant. Pass `false` to skip controls
+   * and focus the title or body wrapper, e.g. so a text field doesn't raise the
+   * on-screen keyboard on a phone. A target that is missing, outside the
+   * dialog, or not focusable falls through to the default, with a warning in
+   * development.
    */
   // `& object` makes the SFC compiler emit an Object runtime type. It can't
   // resolve HTMLElement, and the production build (which consumers validate
   // against in dev) keeps only the types it can, so an element would warn.
-  initialFocus?: string | (HTMLElement & object) | (() => HTMLElement | null) | false
+  // `null` is accepted so a template ref can be passed directly.
+  initialFocus?: string | (HTMLElement & object) | (() => HTMLElement | null) | false | null
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -210,11 +213,11 @@ const slots = useSlots()
 const modalCardRef = ref<HTMLElement | null>(null)
 const bodyContentRef = ref<HTMLElement | null>(null)
 const bodySectionRef = ref<HTMLElement | null>(null)
-const footerRef = ref<HTMLElement | null>(null)
 const bodyOverflows = ref(false)
 let bodyResizeObserver: ResizeObserver | null = null
 const titleId = useId()
 let previouslyFocused: HTMLElement | null = null
+let warnedInitialFocus = false
 // Identifies this instance on the shared open-modal stack.
 const openToken = {}
 
@@ -262,14 +265,32 @@ function isVisible (el: HTMLElement): boolean {
   return (el as HTMLElement & { checkVisibility?: () => boolean }).checkVisibility?.() !== false
 }
 
-// Collect focusable descendants of a region of the modal card (the whole card
-// by default). Used to seed focus on open and to wrap Tab / Shift+Tab at the
-// boundaries per the WAI-ARIA Modal Dialog pattern.
+// Whether an element is disabled or inert. `:disabled` also covers controls
+// inside a disabled <fieldset>; the attribute check covers elements `:disabled`
+// doesn't apply to. An inert subtree takes no focus at all.
+function isInactive (el: HTMLElement): boolean {
+  return el.hasAttribute('disabled') || el.matches(':disabled') || Boolean(el.closest('[inert]'))
+}
+
+function isTabbable (el: HTMLElement): boolean {
+  return el.tabIndex !== -1 && !isInactive(el) && isVisible(el)
+}
+
+// Collect the tabbable descendants of the modal card, to wrap Tab / Shift+Tab
+// at the boundaries per the WAI-ARIA Modal Dialog pattern.
 function focusableElements (root: HTMLElement | null = modalCardRef.value): HTMLElement[] {
   if (!root) return []
-  return Array.from(root.querySelectorAll<HTMLElement>(focusableSelector))
-    .filter(el => !el.hasAttribute('disabled') && el.tabIndex !== -1)
-    .filter(isVisible)
+  return Array.from(root.querySelectorAll<HTMLElement>(focusableSelector)).filter(isTabbable)
+}
+
+// The first tabbable descendant, without building the whole list: a body can
+// hold a large table of row controls, and only the first is wanted.
+function firstFocusable (root: HTMLElement | null): HTMLElement | null {
+  if (!root) return null
+  for (const el of root.querySelectorAll<HTMLElement>(focusableSelector)) {
+    if (isTabbable(el)) return el
+  }
+  return null
 }
 
 // Tab containment only; Escape dismissal goes through the shared dismiss
@@ -300,6 +321,20 @@ function handleKeydown (event: KeyboardEvent): void {
     ;(event.shiftKey ? last : first).focus()
     return
   }
+  if (!els.includes(active)) {
+    // Focus is inside the card but not on a tabbable element: the title, the
+    // body wrapper, or a tabindex="-1" initialFocus target. The browser would
+    // move from there by DOM position, and from the title, which precedes every
+    // control, Shift+Tab would leave the dialog. So step to the neighbouring
+    // tabbable by DOM position here, wrapping at either end.
+    event.preventDefault()
+    const follows = (el: HTMLElement) => Boolean(active.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING)
+    const target = event.shiftKey
+      ? [...els].reverse().find(el => !follows(el)) ?? last
+      : els.find(follows) ?? first
+    target.focus()
+    return
+  }
   if (event.shiftKey && active === first) {
     event.preventDefault()
     last.focus()
@@ -310,55 +345,86 @@ function handleKeydown (event: KeyboardEvent): void {
 }
 
 // Resolve the initialFocus prop to an element inside the card that can take
-// focus, or null to fall through to the default chain. tabindex="-1" targets
+// focus, or null to fall through to the default order. tabindex="-1" targets
 // are allowed: they can't be tabbed to but can be focused programmatically.
+// Bad values (an invalid selector, a function that throws, a non-element such
+// as `true` or a component instance) resolve to null rather than throwing,
+// which would abort the open and leave focus behind the dialog.
 function requestedFocusTarget (): HTMLElement | null {
   const root = modalCardRef.value
   const req = props.initialFocus
-  if (!root || req === undefined || req === false) return null
-  let el: HTMLElement | null = null
-  if (typeof req === 'string') {
-    try {
-      el = req ? root.querySelector<HTMLElement>(req) : null
-    } catch {
-      // An invalid selector throws; treat it like a missing target.
-      el = null
+  if (!root || req == null) return null
+  let el: unknown
+  try {
+    if (typeof req === 'string') {
+      el = req ? root.querySelector(req) : null
+    } else if (typeof req === 'function') {
+      el = req()
+    } else {
+      el = req
     }
-  } else if (typeof req === 'function') {
-    el = req()
-  } else {
-    el = req
+  } catch {
+    el = null
   }
-  if (!el || !root.contains(el) || el.hasAttribute('disabled')) return null
-  if (!el.matches(focusableSelector) && !el.hasAttribute('tabindex')) return null
-  return isVisible(el) ? el : null
+  if (!(el instanceof HTMLElement) || !root.contains(el)) return null
+  const selfFocusable = (el.matches(focusableSelector) || el.hasAttribute('tabindex'))
+    && !isInactive(el) && isVisible(el)
+  // A component's root (a .control wrapper, say) is not focusable itself;
+  // use the control inside it.
+  return selfFocusable ? el : firstFocusable(el)
 }
 
-// Pick the element that should receive initial focus when the dialog opens.
-// APG says to focus the first focusable element, but searching the whole card
-// in document order always found the header's close button first. So the
-// search is scoped to the content: the body (skipped when it overflows, per
-// APG's caveat that focusing a control far down a long dialog scrolls its start
-// out of view), then the footer, where a confirm dialog's actions live and
-// Cancel conventionally comes first. Otherwise focus a static element at the
-// start of the content (the title, then the body wrapper) rather than the
+// The body's first control, if focusing it won't scroll. APG's caveat: in a
+// dialog whose content overflows, focusing a control far down scrolls the
+// start of the content out of view. A control already fully in view is fine.
+function bodyFocusTarget (): HTMLElement | null {
+  const section = bodySectionRef.value
+  const el = firstFocusable(section)
+  if (!el || !section || !bodyOverflows.value) return el
+  const box = section.getBoundingClientRect()
+  const rect = el.getBoundingClientRect()
+  return rect.top >= box.top && rect.bottom <= box.bottom ? el : null
+}
+
+// Candidates for initial focus, in order. APG says to focus the first
+// focusable element, but searching the whole card in document order always
+// found the header's close button first. So the search is scoped to the body.
+// The footer is not searched: Bulma's convention puts the primary or
+// destructive action first, and opening a confirm dialog with Delete focused
+// is worse than opening it on the title. Callers who want a footer action
+// focused name it with initialFocus. After the body, focus a static element at
+// the start of the content (the title, then the body wrapper) rather than the
 // dialog itself, which the APG advises against focusing.
-function initialFocusTarget (): HTMLElement | null {
+function initialFocusCandidates (): Array<HTMLElement | null | undefined> {
+  const candidates: Array<HTMLElement | null | undefined> = []
   if (props.initialFocus !== false) {
-    const requested = requestedFocusTarget()
-    if (requested) return requested
-    if (!bodyOverflows.value) {
-      const inBody = focusableElements(bodySectionRef.value)[0]
-      if (inBody) return inBody
+    if (props.initialFocus != null) {
+      const requested = requestedFocusTarget()
+      if (!requested && process.env.NODE_ENV !== 'production' && !warnedInitialFocus) {
+        warnedInitialFocus = true
+        console.warn('[catenary] <cat-modal> initialFocus did not resolve to a focusable element inside the dialog; using the default focus order.')
+      }
+      candidates.push(requested)
     }
-    const inFooter = focusableElements(footerRef.value)[0]
-    if (inFooter) return inFooter
+    candidates.push(bodyFocusTarget())
   }
   if (hasTitle.value) {
-    const titleEl = modalCardRef.value?.querySelector<HTMLElement>('.modal-card-title')
-    if (titleEl) return titleEl
+    candidates.push(modalCardRef.value?.querySelector<HTMLElement>('.modal-card-title'))
   }
-  return bodyContentRef.value ?? modalCardRef.value
+  candidates.push(bodyContentRef.value, modalCardRef.value)
+  return candidates
+}
+
+// Focus the first candidate that actually takes focus. A candidate can pass
+// every check and still refuse it (visibility:hidden, which checkVisibility
+// does not test by default, or a contenteditable="false" element), and
+// leaving focus on the opener behind an open modal is the worst outcome.
+function focusInitial (): void {
+  for (const el of initialFocusCandidates()) {
+    if (!el) continue
+    el.focus()
+    if (document.activeElement === el) return
+  }
 }
 
 // A non-closable modal still pushes a layer: it must swallow Escape rather
@@ -395,7 +461,7 @@ async function openSideEffects (): Promise<void> {
       bodyResizeObserver.observe(bodyContentRef.value)
     }
   }
-  initialFocusTarget()?.focus()
+  focusInitial()
 }
 
 function closeSideEffects (): void {

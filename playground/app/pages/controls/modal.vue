@@ -191,9 +191,10 @@
 
       <demo-box label="Modal with Footer: initialFocus on Cancel">
         <p class="mb-3">
-          The destructive action comes first in this footer, so the default
-          would focus it. <code>initial-focus="[data-cancel]"</code> sends focus
-          to Cancel instead, the least destructive action.
+          Footer actions are never focused by default, so without the override
+          this dialog opens on its title. <code>initial-focus="[data-cancel]"</code>
+          sends focus to Cancel, the least destructive action, rather than the
+          Confirm button that leads the footer.
         </p>
         <cat-button variant="warning" @click="showFooter = true">
           Open Modal with Footer
@@ -325,7 +326,7 @@
             The dialog renders with <code>role="dialog"</code>, <code>aria-modal="true"</code>, and either <code>aria-labelledby</code> pointing at the title (when set) or <code>aria-label</code> (defaults to "Dialog"). Pass <code>aria-describedby</code> with the id of a body element when the dialog needs longer-form context.
           </p>
           <p class="mt-2">
-            On open, focus moves to the first focusable element in the body, so a form modal focuses its first field. The close button is never picked by default. If the body has nothing focusable, or it overflows (so focusing a control far down would scroll the start of the content out of view), focus goes to the first control in the footer. Failing that, it falls back to the title (preferred per APG: do not focus the dialog element itself) or the body wrapper. <code>initialFocus</code> overrides this with a selector, element or function, and <code>false</code> skips straight to the title. Tab and Shift+Tab cycle within the dialog. On close, focus returns to whatever element opened it; if that element is gone from the DOM, the restore is a safe no-op.
+            On open, focus moves to the first focusable element in the body, so a form modal focuses its first field. The close button and footer actions are never picked by default, since a footer often leads with its primary or destructive action. If the body has nothing focusable, or its first control is out of view in a body that overflows, focus goes to the title (preferred per APG: do not focus the dialog element itself) or the body wrapper. <code>initialFocus</code> overrides this with a selector, element or function, and <code>false</code> skips straight to the title. Tab and Shift+Tab cycle within the dialog, including from the title. On close, focus returns to whatever element opened it; if that element is gone from the DOM, the restore is a safe no-op.
           </p>
           <p class="mt-2">
             Background clicks dismiss the modal when <code>closable</code> is true. Escape dismissal goes through a shared LIFO stack, so a popup opened inside the modal (a <code>cat-dropdown</code> menu or <code>cat-datepicker</code> calendar) closes on the first Escape and the modal on the second, rather than both at once. A non-closable modal still consumes Escape so it cannot dismiss a surface beneath it.
