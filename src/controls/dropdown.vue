@@ -510,9 +510,10 @@ defineExpose({ open, close, toggle })
        rounded corners.
      - `color: CanvasText` — the one that actually hurts. Bulma sets no
        `color-scheme`, so system colors resolve light and CanvasText is black
-       whatever the theme. .dropdown-item is `color: inherit`, so in dark mode
-       every item and icon rendered black on Bulma's dark .dropdown-content.
-       Measured: page color rgb(171,177,191), menu color rgb(0,0,0).
+       whatever the theme. Anything in the menu without a color of its own
+       inherits it, so in dark mode it rendered black on Bulma's dark
+       .dropdown-content. Measured: page color rgb(171,177,191), menu color
+       rgb(0,0,0).
    `overflow: auto` is deliberately left alone: a long menu needs to scroll.
 
    Scoped to `.cat-dropdown` purely for specificity. Bulma's placement rules
