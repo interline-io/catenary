@@ -109,16 +109,16 @@ function handleClick (event: MouseEvent) {
 </script>
 
 <style lang="scss" scoped>
+// Reset the native button, but leave background and color to Bulma's dropdown-item
+// rules: Bulma draws the selected and hover states only through the variables they use.
 .dropdown-item {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   width: 100%;
   text-align: inherit;
-  background: transparent;
   border: 0;
   font: inherit;
-  color: inherit;
   cursor: pointer;
 }
 
