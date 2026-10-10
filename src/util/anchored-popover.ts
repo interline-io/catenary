@@ -99,14 +99,15 @@ export function useAnchoredPopover (opts: UseAnchoredPopoverOptions): void {
     const trigger = opts.triggerRef.value
     const pop = opts.popoverRef.value
     if (!trigger || !pop) return
-    // Measure at the natural height. The cap from the last position would read
-    // as the height the popover needs, and keep it from flipping to a roomier side.
-    pop.style.maxHeight = ''
     const t = trigger.getBoundingClientRect()
     const p = pop.getBoundingClientRect()
+    // The natural height, which the cap from the last position hides: the scroll
+    // height plus the border the box adds. Clearing the cap to measure would
+    // reset the popover's scroll position, and cost a layout per frame.
+    const height = pop.scrollHeight + p.height - pop.clientHeight
     const { left, top, maxHeight } = computePopoverPosition(
       t,
-      { width: p.width, height: p.height },
+      { width: p.width, height },
       opts.placement(),
       { width: window.innerWidth, height: window.innerHeight }
     )

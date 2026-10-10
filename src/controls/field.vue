@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, useId, useSlots, provide } from 'vue'
+import { computed, ref, onBeforeUpdate, onMounted, useId, useSlots, provide } from 'vue'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
 const slots = useSlots()
@@ -130,18 +130,28 @@ const props = withDefaults(defineProps<Props>(), {
   labelSize: 'normal'
 })
 
+// Which of the #label and #message slots are passed. Slots are not reactive, so
+// a computed over them would keep its first answer; they are read again before
+// each update instead.
+const hasLabelSlot = ref(!!slots.label)
+const hasMessageSlot = ref(!!slots.message)
+onBeforeUpdate(() => {
+  hasLabelSlot.value = !!slots.label
+  hasMessageSlot.value = !!slots.message
+})
+
 // Wire the help/validation message and validation state to the wrapped
 // control: the message <p> gets a stable id that controls merge into their
 // aria-describedby, and a danger variant renders as aria-invalid on the
 // control. Both are provided as computeds (provide must run unconditionally
 // in setup) that resolve to undefined when there is nothing to convey.
 const messageId = `${fieldId}-help`
-const describedbyId = computed(() => (props.message || slots.message) ? messageId : undefined)
+const describedbyId = computed(() => (props.message || hasMessageSlot.value) ? messageId : undefined)
 provide(FieldDescribedbyKey, describedbyId)
 provide(FieldVariantKey, computed(() => props.variant))
 
 // Check if label exists via prop or slot
-const hasLabel = computed(() => !!(props.label || slots.label))
+const hasLabel = computed(() => !!(props.label || hasLabelSlot.value))
 
 // The id is there for the label to name a control, so a field without a label
 // hands out none. Otherwise a label-less group, such as a filter bar's search

@@ -627,6 +627,24 @@ describe('cat-modal fallthrough attributes', () => {
     expect(root.getAttribute('data-testid')).toBe('palette')
     expect(warn).not.toHaveBeenCalled()
   })
+
+  // On .modal they would describe a wrapper with no role, while the element
+  // assistive technology announces kept its own.
+  it('puts a caller\'s role and ARIA attributes on the dialog element', async () => {
+    mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: true, title: 'X' },
+      attrs: { 'role': 'alertdialog', 'aria-labelledby': 'custom-heading', 'class': 'confirm' }
+    })
+    await nextTick()
+    const card = findCard()!
+    const root = card.closest('.modal')!
+    expect(card.getAttribute('role')).toBe('alertdialog')
+    expect(card.getAttribute('aria-labelledby')).toBe('custom-heading')
+    expect(root.hasAttribute('role')).toBe(false)
+    expect(root.hasAttribute('aria-labelledby')).toBe(false)
+    expect(root.classList.contains('confirm')).toBe(true)
+  })
 })
 
 describe('cat-modal initial focus', () => {

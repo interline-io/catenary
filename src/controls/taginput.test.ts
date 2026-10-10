@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { defineComponent, nextTick, ref } from 'vue'
+import { computed, defineComponent, nextTick, ref } from 'vue'
 import CatTaginput from './taginput.vue'
 import { FieldIdKey } from './types'
 import {
@@ -183,7 +183,7 @@ describe('CatTaginput combobox semantics', () => {
   it('associates a wrapping cat-field label via FieldIdKey and defers aria-label to it', () => {
     const wrapper = mountComponent(CatTaginput, {
       props: { modelValue: [], options: fruitOptions, placeholder: 'Search' },
-      global: { provide: { [FieldIdKey as symbol]: 'field-9' } }
+      global: { provide: { [FieldIdKey as symbol]: computed(() => 'field-9') } }
     })
     const input = wrapper.find('input')
     expect(input.attributes('id')).toBe('field-9')

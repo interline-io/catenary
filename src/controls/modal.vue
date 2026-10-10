@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div class="modal cat-modal" :class="{ 'is-active': modelValue, 'cat-modal-top': position === 'top' }" v-bind="$attrs">
+    <div class="modal cat-modal" :class="{ 'is-active': modelValue, 'cat-modal-top': position === 'top' }" v-bind="rootAttrs">
       <!-- Backdrop click is a convenience dismissal; the WAI-ARIA-compliant
            keyboard dismissal is Escape, handled at document level via
            handleKeydown. -->
@@ -17,6 +17,7 @@
         class="modal-card"
         :class="modalCardClasses"
         :style="modalCardStyle"
+        v-bind="dialogAttrs"
       >
         <header class="modal-card-head">
           <!-- tabindex="-1" so the title can serve as the initial focus target
@@ -60,7 +61,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, useSlots, useId, nextTick, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
+import { computed, ref, watch, useAttrs, useSlots, useId, nextTick, onMounted, onBeforeUnmount, onUnmounted } from 'vue'
+import { filterAttrs } from '../util/attrs'
 import { pushDismissLayer, removeDismissLayer, type DismissLayer } from '../util/dismiss-stack'
 import { isOpenModal, isTopModal, openModalCount, pushOpenModal, removeOpenModal } from '../util/modal-stack'
 import type { ModalPosition, ModalWidth } from './types'
@@ -209,10 +211,15 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
 
-// The root is a Teleport, which cannot inherit attributes, so they go on .modal
-// by hand: a caller's class, say, or the scope id a scoped parent passes while
-// rendering on the server.
+// The root is a Teleport, which cannot inherit attributes, so they are bound by
+// hand: a role and ARIA attributes on the dialog, everything else on .modal,
+// including the scope id a scoped parent passes when rendering on the server.
 defineOptions({ inheritAttrs: false })
+
+const attrs = useAttrs()
+const isDialogAttr = (key: string): boolean => key === 'role' || key.startsWith('aria-')
+const rootAttrs = computed(() => filterAttrs(attrs, key => !isDialogAttr(key)))
+const dialogAttrs = computed(() => filterAttrs(attrs, isDialogAttr))
 
 const slots = useSlots()
 const modalCardRef = ref<HTMLElement | null>(null)

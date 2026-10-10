@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { h } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 import CatField from './field.vue'
 import CatInput from './input.vue'
 import CatSelect from './select.vue'
+import CatTaginput from './taginput.vue'
 import CatCheckbox from './checkbox.vue'
 
 let warn: ReturnType<typeof vi.spyOn>
@@ -133,11 +134,46 @@ describe('cat-field label association', () => {
     w.unmount()
   })
 
+  // cat-taginput takes its aria-label fallback only when no field label names
+  // it, which it judges by whether the field handed it an id.
+  it('lets a taginput in a field without a label fall back to an aria-label', () => {
+    const unlabeled = mountField({}, () => h(CatTaginput, { placeholder: 'Add tags' }))
+    expect(unlabeled.find('input').attributes('id')).toBeUndefined()
+    expect(unlabeled.find('input').attributes('aria-label')).toBe('Add tags')
+    unlabeled.unmount()
+
+    const labeled = mountField({ label: 'Tags' }, () => h(CatTaginput, { placeholder: 'Add tags' }))
+    expect(labeled.find('input').attributes('id')).toBe(labeled.find('label.label').attributes('for'))
+    expect(labeled.find('input').attributes('aria-label')).toBeUndefined()
+    expect(catenaryWarnings()).toHaveLength(0)
+    labeled.unmount()
+  })
+
   it('hands its id to the control once a label arrives', async () => {
     const w = mountField({}, () => h(CatInput, { ariaLabel: 'Name' }))
     expect(w.find('input').attributes('id')).toBeUndefined()
     await w.setProps({ label: 'Name' })
     expect(w.find('input').attributes('id')).toBe(w.find('label.label').attributes('for'))
+    w.unmount()
+  })
+
+  // Slots are not reactive, so a #label slot passed only after mount must still
+  // render the label and hand the control its id.
+  it('names its control once a #label slot arrives', async () => {
+    const showLabel = ref(false)
+    const w = mount(defineComponent({
+      render: () => h(CatField, null, {
+        ...(showLabel.value ? { label: () => 'Name' } : {}),
+        default: () => h(CatInput, { ariaLabel: 'Name' })
+      })
+    }), { attachTo: document.body })
+    expect(w.find('label.label').exists()).toBe(false)
+    expect(w.find('input').attributes('id')).toBeUndefined()
+    showLabel.value = true
+    await nextTick()
+    const forId = w.find('label.label').attributes('for')
+    expect(forId).toBeTruthy()
+    expect(w.find('input').attributes('id')).toBe(forId)
     w.unmount()
   })
 
