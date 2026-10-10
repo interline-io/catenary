@@ -16,7 +16,7 @@
 
     <div v-if="horizontal" class="field-body">
       <div class="field" :class="{ 'has-addons': addons }">
-        <slot :id="fieldId" :describedby="describedbyId" />
+        <slot :id="controlId" :describedby="describedbyId" />
         <p v-if="message || $slots.message" :id="messageId" class="help" :class="messageClass">
           <slot name="message">
             {{ message }}
@@ -28,10 +28,10 @@
     <template v-else>
       <!-- Wrap controls in nested field if we have a label and grouped/addons controls -->
       <div v-if="(grouped || addons) && hasLabel" class="field" :class="{ 'is-grouped': grouped, 'has-addons': addons }">
-        <slot :id="fieldId" :describedby="describedbyId" />
+        <slot :id="controlId" :describedby="describedbyId" />
       </div>
       <template v-else>
-        <slot :id="fieldId" :describedby="describedbyId" />
+        <slot :id="controlId" :describedby="describedbyId" />
       </template>
       <p v-if="message || $slots.message" :id="messageId" class="help" :class="messageClass">
         <slot name="message">
@@ -48,7 +48,6 @@ import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
 const slots = useSlots()
 const fieldId = useId()
-provide(FieldIdKey, fieldId)
 
 /**
  * Form field wrapper component following Bulma field structure.
@@ -144,6 +143,12 @@ provide(FieldVariantKey, computed(() => props.variant))
 // Check if label exists via prop or slot
 const hasLabel = computed(() => !!(props.label || slots.label))
 
+// The id is there for the label to name a control, so a field without a label
+// hands out none. Otherwise a label-less group, such as a filter bar's search
+// input and select, would put the same id on every control.
+const controlId = computed(() => hasLabel.value ? fieldId : undefined)
+provide(FieldIdKey, controlId)
+
 const fieldClasses = computed(() => {
   const classes: string[] = []
 
@@ -192,24 +197,19 @@ if (process.env.NODE_ENV !== 'production') {
   const LABELABLE = 'input:not([type="hidden"]), select, textarea, button, meter, output, progress'
 
   onMounted(() => {
-    if (!root.value) return
+    // Without a label the field hands out no id, so there is nothing to check.
+    if (!root.value || !hasLabel.value) return
     const claimed = Array.from(root.value.querySelectorAll<HTMLElement>('[id]'))
       .filter(el => el.id === fieldId)
     if (claimed.length === 1 && claimed[0]!.matches(LABELABLE)) return
-    // Duplicate ids are invalid whether or not the field renders a label, so
-    // this check runs first and unconditionally; only the association warnings
-    // below depend on there being a label to associate.
     if (claimed.length > 1) {
       console.warn(
-        `[catenary] <cat-field${props.label ? ` label="${props.label}"` : ''}> has ${claimed.length} `
-        + `elements sharing the id "${fieldId}", so the DOM has duplicate ids`
-        + (hasLabel.value ? ' and the label resolves to whichever comes first' : '')
-        + '. Give every control after the first an explicit `id`.'
+        `[catenary] <cat-field label="${props.label ?? ''}"> has ${claimed.length} `
+        + `elements sharing the id "${fieldId}", so the DOM has duplicate ids and the label `
+        + 'resolves to whichever comes first. Give every control after the first an explicit `id`.'
       )
       return
     }
-
-    if (!hasLabel.value) return
 
     if (claimed.length === 1) {
       console.warn(

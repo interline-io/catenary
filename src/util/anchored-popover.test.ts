@@ -28,6 +28,7 @@ describe('computePopoverPosition', () => {
     const r = computePopoverPosition(rect(100, 700, 200, 30), { width: 320, height: 300 }, 'bottom-left', viewport)
     expect(r.placement).toBe('top-left')
     expect(r.top).toBe(700 - 4 - 300) // trigger.top - gap - height
+    expect(r.maxHeight).toBe(700 - 4 - 8) // the room above: trigger.top - gap - margin
   })
 
   it('flips a top placement to bottom when there is no room above', () => {
@@ -52,11 +53,22 @@ describe('computePopoverPosition', () => {
     expect(r.left).toBe(8) // margin
   })
 
-  it('clamps the top when a popover is too tall for either side', () => {
+  it('caps a popover too tall for either side to the roomier one', () => {
     const tall = { width: 320, height: 900 } // taller than the 800 viewport
+    // 388px above the trigger (400 - 4 - 8) against 358px below (800 - 430 - 4 - 8).
     for (const placement of ['bottom-left', 'top-left'] as PopoverPlacement[]) {
       const r = computePopoverPosition(rect(100, 400, 200, 30), tall, placement, viewport)
-      expect(r.top).toBe(8) // clamped to top margin
+      expect(r.placement).toBe('top-left')
+      expect(r.maxHeight).toBe(388)
+      expect(r.top).toBe(8) // trigger.top - gap - maxHeight, at the top margin
     }
+  })
+
+  it('stays on the preferred side when it is the roomier one, capped to its room', () => {
+    // 458px below the trigger (800 - 330 - 4 - 8) against 288px above.
+    const r = computePopoverPosition(rect(100, 300, 200, 30), { width: 320, height: 900 }, 'bottom-left', viewport)
+    expect(r.placement).toBe('bottom-left')
+    expect(r.top).toBe(334) // trigger.bottom + gap
+    expect(r.maxHeight).toBe(458)
   })
 })

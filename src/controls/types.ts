@@ -146,7 +146,10 @@ export interface TagOptionBase<T extends string | number = string> {
  * @template T - The type of the value (string or number)
  */
 export type TagOption<T extends string | number = string> = TagOptionBase<T> & Record<string, unknown>
-export const FieldIdKey: InjectionKey<string> = Symbol('fieldId')
+
+// Injection key provided by cat-field: the id its label names, which a wrapped
+// control takes unless given its own. Undefined when the field has no label.
+export const FieldIdKey: InjectionKey<ComputedRef<string | undefined>> = Symbol('fieldId')
 
 /**
  * Injection key provided by cat-field: the id of its help/validation message

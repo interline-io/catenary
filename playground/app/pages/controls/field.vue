@@ -123,7 +123,7 @@
         <cat-fieldset label="Full name">
           <cat-field addons>
             <cat-input v-model="firstName" aria-label="First name" placeholder="First name" expanded />
-            <cat-input id="demo-last-name" v-model="lastName" aria-label="Last name" placeholder="Last name" expanded />
+            <cat-input v-model="lastName" aria-label="Last name" placeholder="Last name" expanded />
           </cat-field>
         </cat-fieldset>
 
@@ -133,7 +133,7 @@
             <div class="control">
               <span class="button is-static">to</span>
             </div>
-            <cat-input id="demo-end-date" v-model="endDate" aria-label="End date" type="date" expanded />
+            <cat-input v-model="endDate" aria-label="End date" type="date" expanded />
           </cat-field>
         </cat-fieldset>
       </demo-box>
@@ -268,7 +268,7 @@
             <strong>A group of controls needs <code>cat-fieldset</code>, not <code>cat-field</code>.</strong> One <code>&lt;label&gt;</code> cannot name a set, so a label above several checkboxes, radios, switches or buttons is orphaned. <code>cat-fieldset</code> names the set with a <code>&lt;legend&gt;</code>, which assistive technology announces on entering the group. The <em>Grouped</em> and <em>Multiple Inputs</em> demos above use it for exactly this reason, and each control inside carries its own name.
           </p>
           <p class="mt-3">
-            <strong>Two controls under one field share one id.</strong> The field mints a single id, so a second <code>cat-input</code> inside the same field would render a duplicate. Give every control after the first an explicit <code>id</code>, or split them into separate fields inside a <code>cat-fieldset</code>.
+            <strong>Two controls under one labeled field share its id.</strong> The field mints a single id for its label to name, so a second <code>cat-input</code> inside the same field would render a duplicate. Give every control after the first an explicit <code>id</code>, or split them into separate fields inside a <code>cat-fieldset</code>. A field without a label hands out no id, so the controls of a label-less group, such as a filter bar, need nothing extra.
           </p>
           <p class="mt-3">
             <strong>Validation.</strong> Pass the error through <code>variant</code> and <code>message</code> rather than writing a <code>&lt;p class="help"&gt;</code> by hand. The message gets a stable id that wrapped controls merge into their <code>aria-describedby</code>, and <code>variant="danger"</code> renders <code>aria-invalid="true"</code> on the control — neither of which a hand-written paragraph provides. Colour is never the only signal: the message text carries the meaning.

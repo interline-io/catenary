@@ -1,6 +1,6 @@
 <template>
   <Teleport to="body">
-    <div class="modal cat-modal" :class="{ 'is-active': modelValue, 'cat-modal-top': position === 'top' }">
+    <div class="modal cat-modal" :class="{ 'is-active': modelValue, 'cat-modal-top': position === 'top' }" v-bind="$attrs">
       <!-- Backdrop click is a convenience dismissal; the WAI-ARIA-compliant
            keyboard dismissal is Escape, handled at document level via
            handleKeydown. -->
@@ -208,6 +208,11 @@ const props = withDefaults(defineProps<Props>(), {
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
 }>()
+
+// The root is a Teleport, which cannot inherit attributes, so they go on .modal
+// by hand: a caller's class, say, or the scope id a scoped parent passes while
+// rendering on the server.
+defineOptions({ inheritAttrs: false })
 
 const slots = useSlots()
 const modalCardRef = ref<HTMLElement | null>(null)

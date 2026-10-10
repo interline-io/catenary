@@ -612,6 +612,23 @@ describe('cat-modal width and position bindings', () => {
   })
 })
 
+describe('cat-modal fallthrough attributes', () => {
+  it('puts a caller\'s class and attributes on the teleported root', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: true, title: 'X' },
+      attrs: { 'class': 'search-palette', 'data-testid': 'palette' }
+    })
+    await nextTick()
+    const root = findCard()!.closest('.modal')!
+    expect(root.classList.contains('search-palette')).toBe(true)
+    expect(root.classList.contains('cat-modal')).toBe(true)
+    expect(root.getAttribute('data-testid')).toBe('palette')
+    expect(warn).not.toHaveBeenCalled()
+  })
+})
+
 describe('cat-modal initial focus', () => {
   // jsdom has no layout; simulate an overflowing body. `fieldTop` places the
   // body's controls relative to its 300px-tall visible area.
