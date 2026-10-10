@@ -157,6 +157,24 @@ describe('cat-field label association', () => {
     w.unmount()
   })
 
+  // A label that arrives after mount hands the id out only then, so the check
+  // has to run again.
+  it('warns about duplicate ids when a label arrives after mount', async () => {
+    const w = mountField({ grouped: true }, () => [h(CatInput, { ariaLabel: 'From' }), h(CatInput, { ariaLabel: 'To' })])
+    expect(catenaryWarnings()).toHaveLength(0)
+    await w.setProps({ label: 'Date range' })
+    expect(catenaryWarnings().join('\n')).toMatch(/duplicate ids/i)
+    w.unmount()
+  })
+
+  it('warns about an orphaned label that arrives after mount', async () => {
+    const w = mountField({}, () => h('input', { 'class': 'input', 'aria-label': 'Email' }))
+    expect(catenaryWarnings()).toHaveLength(0)
+    await w.setProps({ label: 'Email' })
+    expect(catenaryWarnings().join('\n')).toMatch(/v-slot/)
+    w.unmount()
+  })
+
   // Slots are not reactive, so a #label slot passed only after mount must still
   // render the label and hand the control its id.
   it('names its control once a #label slot arrives', async () => {

@@ -43,7 +43,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onBeforeUpdate, onMounted, useId, useSlots, provide } from 'vue'
+import { computed, ref, watch, onBeforeUpdate, onMounted, useId, useSlots, provide } from 'vue'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 
 const slots = useSlots()
@@ -206,7 +206,7 @@ if (process.env.NODE_ENV !== 'production') {
   // a wrapper <div> looks claimed while doing nothing at all.
   const LABELABLE = 'input:not([type="hidden"]), select, textarea, button, meter, output, progress'
 
-  onMounted(() => {
+  const checkLabelAssociation = (): void => {
     // Without a label the field hands out no id, so there is nothing to check.
     if (!root.value || !hasLabel.value) return
     const claimed = Array.from(root.value.querySelectorAll<HTMLElement>('[id]'))
@@ -266,6 +266,15 @@ if (process.env.NODE_ENV !== 'production') {
         + 'itself the way cat-dropdown does, drop the field `label`.'
       )
     }
-  })
+  }
+
+  onMounted(checkLabelAssociation)
+  // A label that arrives after mount hands the id out only then. Checked after
+  // the DOM update, once the controls carry the id.
+  watch(hasLabel, (labeled) => {
+    if (labeled) {
+      checkLabelAssociation()
+    }
+  }, { flush: 'post' })
 }
 </script>
