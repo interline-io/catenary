@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { nextTick } from 'vue'
+import { computed, nextTick } from 'vue'
 import CatDatepicker from './datepicker.vue'
 import { FieldIdKey } from './types'
 import { expectNoAxeViolations } from '../testutil/component-helpers'
@@ -53,7 +53,7 @@ describe('cat-datepicker trigger and popup semantics', () => {
   it('keeps the field id on the input and gives the month/year selects their own ids and labels', () => {
     const wrapper = mount(CatDatepicker, {
       attachTo: document.body,
-      global: { provide: { [FieldIdKey as symbol]: 'field-1' } }
+      global: { provide: { [FieldIdKey as symbol]: computed(() => 'field-1') } }
     })
 
     expect(wrapper.find('input').attributes('id')).toBe('field-1')

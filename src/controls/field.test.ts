@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { defineComponent, h } from 'vue'
+import { defineComponent, h, nextTick, ref } from 'vue'
 import CatField from './field.vue'
 import CatInput from './input.vue'
 
@@ -79,6 +79,24 @@ describe('cat-field message association', () => {
   it('omits aria-describedby when there is no message', () => {
     const wrapper = mountFieldWithInput()
     expect(wrapper.find('input').attributes('aria-describedby')).toBeUndefined()
+  })
+
+  // Slots are not reactive, so a #message slot passed only after mount must
+  // still reach the control's aria-describedby.
+  it('describes its control once a #message slot arrives', async () => {
+    const showMessage = ref(false)
+    const wrapper = mount(defineComponent({
+      render: () => h(CatField, { label: 'Start date' }, {
+        ...(showMessage.value ? { message: () => 'Required' } : {}),
+        default: () => h(CatInput, { modelValue: '' })
+      })
+    }))
+    expect(wrapper.find('input').attributes('aria-describedby')).toBeUndefined()
+    showMessage.value = true
+    await nextTick()
+    const describedby = wrapper.find('input').attributes('aria-describedby')
+    expect(describedby).toBeTruthy()
+    expect(wrapper.find(`[id="${describedby}"]`).text()).toBe('Required')
   })
 
   it('merges the field message with the control\'s own ariaDescribedby', () => {

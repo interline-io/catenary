@@ -37,12 +37,9 @@ interface Size {
   height: number
 }
 
-/**
- * Compute fixed viewport coordinates for a popover anchored to a trigger.
- * Pure and side-effect free so it can be unit tested. Flips the vertical side
- * when the preferred side lacks room and the opposite side has it, then clamps
- * both axes to the viewport so an oversized popover never runs off-screen.
- */
+// Computes fixed viewport coordinates for a popover anchored to a trigger, and
+// the room on its side of the trigger as `maxHeight`, so an oversized popover
+// scrolls rather than running off-screen. Pure, so it can be unit tested.
 export function computePopoverPosition (
   trigger: RectLike,
   popover: Size,
@@ -50,29 +47,32 @@ export function computePopoverPosition (
   viewport: Size,
   gap = 4,
   margin = 8
-): { left: number, top: number, placement: PopoverPlacement } {
+): { left: number, top: number, maxHeight: number, placement: PopoverPlacement } {
   const preferTop = placement === 'top-left' || placement === 'top-right'
   const alignRight = placement === 'bottom-right' || placement === 'top-right'
 
   const roomBelow = viewport.height - trigger.bottom - gap - margin
   const roomAbove = trigger.top - gap - margin
-  // Flip only when the preferred side cannot fit and the other side can.
+  // Flip when the preferred side cannot fit the popover and the other side
+  // either can or, when neither can, has more room.
+  const preferredRoom = preferTop ? roomAbove : roomBelow
+  const otherRoom = preferTop ? roomBelow : roomAbove
   let onTop = preferTop
-  if (preferTop && roomAbove < popover.height && roomBelow >= popover.height) {
-    onTop = false
-  } else if (!preferTop && roomBelow < popover.height && roomAbove >= popover.height) {
-    onTop = true
+  if (preferredRoom < popover.height && (otherRoom >= popover.height || otherRoom > preferredRoom)) {
+    onTop = !preferTop
   }
 
-  const rawTop = onTop ? trigger.top - gap - popover.height : trigger.bottom + gap
+  const maxHeight = Math.max(0, onTop ? roomAbove : roomBelow)
+  const height = Math.min(popover.height, maxHeight)
+  const rawTop = onTop ? trigger.top - gap - height : trigger.bottom + gap
   const rawLeft = alignRight ? trigger.right - popover.width : trigger.left
 
   const maxLeft = Math.max(margin, viewport.width - popover.width - margin)
-  const maxTop = Math.max(margin, viewport.height - popover.height - margin)
+  const maxTop = Math.max(margin, viewport.height - height - margin)
   const left = clamp(rawLeft, margin, maxLeft)
   const top = clamp(rawTop, margin, maxTop)
 
-  return { left, top, placement: onTop ? (alignRight ? 'top-right' : 'top-left') : (alignRight ? 'bottom-right' : 'bottom-left') }
+  return { left, top, maxHeight, placement: onTop ? (alignRight ? 'top-right' : 'top-left') : (alignRight ? 'bottom-right' : 'bottom-left') }
 }
 
 function clamp (value: number, min: number, max: number): number {
@@ -101,14 +101,19 @@ export function useAnchoredPopover (opts: UseAnchoredPopoverOptions): void {
     if (!trigger || !pop) return
     const t = trigger.getBoundingClientRect()
     const p = pop.getBoundingClientRect()
-    const { left, top } = computePopoverPosition(
+    // The natural height, which the cap from the last position hides: the scroll
+    // height plus the border the box adds. Clearing the cap to measure would
+    // reset the popover's scroll position, and cost a layout per frame.
+    const height = pop.scrollHeight + p.height - pop.clientHeight
+    const { left, top, maxHeight } = computePopoverPosition(
       t,
-      { width: p.width, height: p.height },
+      { width: p.width, height },
       opts.placement(),
       { width: window.innerWidth, height: window.innerHeight }
     )
     pop.style.left = `${left}px`
     pop.style.top = `${top}px`
+    pop.style.maxHeight = `${maxHeight}px`
   }
 
   function schedulePosition (): void {

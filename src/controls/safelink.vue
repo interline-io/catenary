@@ -121,8 +121,13 @@ const clipboard = async (): Promise<void> => {
 </script>
 
 <style scoped>
+/* Relative, so that a scrolling ancestor clips the absolutely positioned status
+   region instead of the region widening the page. The max-width shrinks the
+   address to fit a narrow container, with an ellipsis. */
 .cat-safelink-outer {
   display: inline-block;
+  position: relative;
+  max-width: 100%;
 }
 
 .cat-safelink {
@@ -150,6 +155,7 @@ const clipboard = async (): Promise<void> => {
 
 .cat-safelink-action {
   width: 30px;
+  flex-shrink: 0;
   text-align: center;
   background: var(--bulma-background);
   display: flex;

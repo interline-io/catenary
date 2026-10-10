@@ -612,6 +612,41 @@ describe('cat-modal width and position bindings', () => {
   })
 })
 
+describe('cat-modal fallthrough attributes', () => {
+  it('puts a caller\'s class and attributes on the teleported root', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: true, title: 'X' },
+      attrs: { 'class': 'search-palette', 'data-testid': 'palette' }
+    })
+    await nextTick()
+    const root = findCard()!.closest('.modal')!
+    expect(root.classList.contains('search-palette')).toBe(true)
+    expect(root.classList.contains('cat-modal')).toBe(true)
+    expect(root.getAttribute('data-testid')).toBe('palette')
+    expect(warn).not.toHaveBeenCalled()
+  })
+
+  // On .modal they would describe a wrapper with no role, while the element
+  // assistive technology announces kept its own.
+  it('puts a caller\'s role and ARIA attributes on the dialog element', async () => {
+    mount(CatModal, {
+      attachTo: document.body,
+      props: { modelValue: true, title: 'X' },
+      attrs: { 'role': 'alertdialog', 'aria-labelledby': 'custom-heading', 'class': 'confirm' }
+    })
+    await nextTick()
+    const card = findCard()!
+    const root = card.closest('.modal')!
+    expect(card.getAttribute('role')).toBe('alertdialog')
+    expect(card.getAttribute('aria-labelledby')).toBe('custom-heading')
+    expect(root.hasAttribute('role')).toBe(false)
+    expect(root.hasAttribute('aria-labelledby')).toBe(false)
+    expect(root.classList.contains('confirm')).toBe(true)
+  })
+})
+
 describe('cat-modal initial focus', () => {
   // jsdom has no layout; simulate an overflowing body. `fieldTop` places the
   // body's controls relative to its 300px-tall visible area.
