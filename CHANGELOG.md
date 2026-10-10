@@ -1,5 +1,27 @@
 # @interline-io/catenary
 
+## 0.16.0
+
+### Minor Changes
+
+- [#112](https://github.com/interline-io/catenary/pull/112) [`e84d587`](https://github.com/interline-io/catenary/commit/e84d5879f8b7fa42c08665e473c65efcac02d272) Thanks [@irees](https://github.com/irees)! - `cat-field` hands its id to a wrapped control only when the field has a label. The id is there for the `<label for>` to name a control, but a field without a label gave it to every catenary control inside, so a label-less group, such as a filter bar's search input and select, rendered duplicate ids. The default slot's `id` follows the same rule and is `undefined` without a label. A `cat-taginput` in a label-less field now falls back to its `aria-label` (its placeholder, or "Search tags"), as it does outside a field.
+
+  A `#label` or `#message` slot passed only after mount now takes effect. The label renders and names the control, and the message reaches the control's `aria-describedby`. Slots are not reactive, so the field used to keep the answer from its first render.
+
+  `FieldIdKey` now provides a `ComputedRef<string | undefined>` rather than a string. A custom control that injects the key reads `.value` in script; a template unwraps the ref on its own.
+
+- [#112](https://github.com/interline-io/catenary/pull/112) [`e84d587`](https://github.com/interline-io/catenary/commit/e84d5879f8b7fa42c08665e473c65efcac02d272) Thanks [@irees](https://github.com/irees)! - `cat-modal` binds the attributes passed to it. A `role` and `aria-*` attributes go on the dialog element, so a caller's `role="alertdialog"` or `aria-labelledby` replaces the modal's own. Everything else, such as `class`, `style` and `data-*`, goes on the `.modal` root. The component's root is a Teleport, which cannot inherit attributes, so Vue used to drop them all with an "Extraneous non-props attributes" warning. The same warning fired on every server render of a component whose template root is a `cat-modal` and whose parent has scoped styles, because the server passes the parent's scope id to that root as an attribute.
+
+  Listeners other than `update:modelValue` now bind to the `.modal` element as native listeners, where before they were dropped.
+
+### Patch Changes
+
+- [#112](https://github.com/interline-io/catenary/pull/112) [`e84d587`](https://github.com/interline-io/catenary/commit/e84d5879f8b7fa42c08665e473c65efcac02d272) Thanks [@irees](https://github.com/irees)! - A `cat-dropdown` menu or `cat-datepicker` calendar shown in the top layer no longer runs off the viewport. Its height is capped to the room on its side of the trigger, so a long menu scrolls. When neither side has room for the whole menu, it opens on the side with more room rather than always on the preferred side. Browsers without the Popover API keep the absolute positioning, which has no cap.
+
+- [#112](https://github.com/interline-io/catenary/pull/112) [`e84d587`](https://github.com/interline-io/catenary/commit/e84d5879f8b7fa42c08665e473c65efcac02d272) Thanks [@irees](https://github.com/irees)! - `cat-safelink` fits its container. In a narrow container, such as a fixed-layout table's cell, the address shrinks with an ellipsis instead of overflowing, and the copy and open buttons keep their width. A table with automatic layout still widens its column to fit the whole safelink.
+
+  The safelink is also relatively positioned now, so its screen-reader status region stays inside a scrolling ancestor. Before, the region escaped a scroll container that was not itself positioned, and on phones it widened the page.
+
 ## 0.15.1
 
 ### Patch Changes
