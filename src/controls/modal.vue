@@ -128,8 +128,9 @@ interface Props {
   /**
    * Drop `fullScreen`'s inset at every width, so the dialog is the whole
    * viewport rather than a card with a margin around it. `fullScreen` already
-   * does this below Bulma's mobile breakpoint; this is for a dialog that should
-   * never read as a card, whatever the screen. No effect without `fullScreen`.
+   * does this below Bulma's mobile breakpoint and on short screens; this is for
+   * a dialog that should never read as a card, whatever the screen. No effect
+   * without `fullScreen`.
    * @default false
    */
   fullBleed?: boolean
@@ -623,6 +624,13 @@ onUnmounted(() => {
       // Measured at 600px, the margin, the 90vw cap and 2rem of body padding
       // between them took a third of the width.
       @include mx.mobile {
+        @include edge-to-edge;
+      }
+
+      // The same on a screen too short for the inset, such as a phone turned
+      // sideways, where the margin and the wider padding take a quarter of the
+      // height. Tablets and laptops start well above 500px.
+      @media screen and (max-height: 500px) {
         @include edge-to-edge;
       }
 
