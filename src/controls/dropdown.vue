@@ -30,11 +30,11 @@
           v-bind="triggerAttrs"
         >
           <span v-if="iconLeft" class="icon is-small">
-            <i :class="`mdi mdi-${iconLeft}`" aria-hidden="true" />
+            <icon-glyph :name="iconLeft" />
           </span>
           <span>{{ label }}</span>
           <span v-if="icon" class="icon is-small">
-            <i :class="`mdi mdi-${icon}`" aria-hidden="true" />
+            <icon-glyph :name="icon" />
           </span>
         </button>
       </slot>
@@ -64,6 +64,7 @@ import { ref, computed, provide, useId, nextTick } from 'vue'
 import { createTypeAhead } from '../util/type-ahead'
 import { useDismissablePopup } from '../util/dismissable-popup'
 import { useAnchoredPopover } from '../util/anchored-popover'
+import IconGlyph from './icon-glyph.vue'
 
 /**
  * Dropdown component using Bulma dropdown structure with WAI-ARIA keyboard support.

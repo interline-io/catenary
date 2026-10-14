@@ -1,4 +1,5 @@
 import type { App, Plugin } from 'vue'
+import { registerIcons } from './util/icons'
 
 import CatButton from './controls/button.vue'
 import CatCard from './controls/card.vue'
@@ -90,17 +91,27 @@ export { TreeNode } from './util/tree'
 export type { TreeNodeConfig, TreeNodeOptions } from './util/tree'
 export { sanitizeFilename, sanitizeUrl } from './util/sanitize'
 export { useDownload } from './util/download'
+export { registerIcons } from './util/icons'
 export type { DownloadOptions } from './util/download'
 
 export interface CatenaryPluginOptions {
   /** Component name prefix (default: 'Cat'). E.g. 'T' registers components as TButton, TInput, etc. */
   prefix?: string
+  /**
+   * Icons to render as inline SVG, by MDI name: `{ account: mdiAccount }` with
+   * path data from `@mdi/js`. Names not registered here or by Catenary itself
+   * fall back to the `@mdi/font` webfont class.
+   */
+  icons?: Record<string, string>
 }
 
 // Vue plugin that registers all components globally
 export const CatenaryPlugin: Plugin = {
   install (app: App, options?: CatenaryPluginOptions) {
     const prefix = options?.prefix ?? 'Cat'
+    if (options?.icons) {
+      registerIcons(options.icons)
+    }
     const components: Record<string, any> = {
       Button: CatButton,
       Card: CatCard,

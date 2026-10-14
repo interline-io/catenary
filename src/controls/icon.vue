@@ -14,15 +14,18 @@
     :aria-hidden="ariaLabel ? undefined : 'true'"
     @click="handleClick"
   >
-    <i :class="iconClass" />
+    <icon-glyph :name="icon" :px="glyphPx" />
   </span>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import IconGlyph from './icon-glyph.vue'
 
 /**
  * Icon component using Material Design Icons (MDI) with Bulma's icon container.
+ * A registered name renders as an inline SVG, any other as the `@mdi/font`
+ * class; see `registerIcons` (util/icons.ts) and the plugin's `icons` option.
  *
  * Icons are decorative by default: the rendered span carries
  * aria-hidden="true" so screen readers skip it (icon-font glyphs sit in a
@@ -87,28 +90,26 @@ const variantClass = computed(() => {
   return `has-text-${props.variant}`
 })
 
-const iconClass = computed(() => {
-  const classes = ['mdi', `mdi-${props.icon}`]
-  // Add MDI size classes to match Bulma container sizes.
-  // MDI default is ~18px which works for 'small'.
-  // Each size needs explicit MDI sizing to fill the Bulma container properly.
+// Glyph size to fill each Bulma container size: 'small' follows the
+// surrounding font size, the others match MDI's mdi-24px/36px/48px classes.
+const glyphPx = computed(() => {
   if (props.size === 'small') {
-    // Small uses default MDI size (~18px)
-  } else if (props.size === 'medium') {
-    classes.push('mdi-36px')
-  } else if (props.size === 'large') {
-    classes.push('mdi-48px')
-  } else {
-    // Normal/default size
-    classes.push('mdi-24px')
+    return undefined
   }
-  return classes
+  if (props.size === 'medium') {
+    return 36
+  }
+  if (props.size === 'large') {
+    return 48
+  }
+  return 24
 })
 </script>
 
 <style lang="scss" scoped>
 /**
- * Keep the MDI glyph from inflating its host's line box.
+ * Keep a webfont glyph from inflating its host's line box. (An SVG glyph is a
+ * flex item of the `.icon` box already and needs none of this.)
  *
  * Bulma's `.icon` is a fixed-size inline-flex box (1.5rem by default), but the
  * MDI webfont sets its glyph (`.mdi::before`) as a baseline-aligned inline-block

@@ -11,7 +11,7 @@
         :aria-label="copyLabel"
         @click="clipboard"
       >
-        <i class="mdi mdi-content-paste" aria-hidden="true" />
+        <icon-glyph name="content-paste" />
       </button>
       <a
         v-if="url && sanitizedUrl"
@@ -21,7 +21,7 @@
         class="cat-safelink-action"
         :aria-label="openLabel"
       >
-        <i class="mdi mdi-link" aria-hidden="true" />
+        <icon-glyph name="link" />
       </a>
     </div>
     <!-- Copying is silent otherwise: the clipboard write produces no visible
@@ -38,6 +38,7 @@
 <script setup lang="ts">
 import { computed, ref, nextTick, onBeforeUnmount } from 'vue'
 import { sanitizeUrl } from '../util/sanitize'
+import IconGlyph from './icon-glyph.vue'
 
 const props = withDefaults(defineProps<{
   url?: string | null

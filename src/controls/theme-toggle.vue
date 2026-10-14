@@ -5,7 +5,7 @@
     @click="toggleTheme"
   >
     <span class="icon" aria-hidden="true">
-      <i :class="`mdi mdi-${isDark ? 'weather-night' : 'weather-sunny'}`" />
+      <icon-glyph :name="isDark ? 'weather-night' : 'weather-sunny'" />
     </span>
     <span>{{ label }}</span>
   </cat-button>
@@ -14,6 +14,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import CatButton from './button.vue'
+import IconGlyph from './icon-glyph.vue'
 
 /**
  * Theme toggle component that switches between light and dark Bulma themes.

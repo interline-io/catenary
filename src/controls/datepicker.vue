@@ -54,7 +54,7 @@
               @click="toggle"
             >
               <span class="icon">
-                <i :class="`mdi mdi-${iconToggle}`" aria-hidden="true" />
+                <icon-glyph :name="iconToggle" />
               </span>
             </button>
           </div>
@@ -92,7 +92,7 @@
                 @click="previousMonth"
               >
                 <span class="icon">
-                  <i :class="`mdi mdi-${iconPrev}`" aria-hidden="true" />
+                  <icon-glyph :name="iconPrev" />
                 </span>
               </button>
 
@@ -135,7 +135,7 @@
                 @click="nextMonth"
               >
                 <span class="icon">
-                  <i :class="`mdi mdi-${iconNext}`" aria-hidden="true" />
+                  <icon-glyph :name="iconNext" />
                 </span>
               </button>
             </header>
@@ -226,6 +226,7 @@ import CatInput from './input.vue'
 import CatSelect from './select.vue'
 import { useDismissablePopup } from '../util/dismissable-popup'
 import { useAnchoredPopover } from '../util/anchored-popover'
+import IconGlyph from './icon-glyph.vue'
 
 const DATE_FORMAT = 'yyyy-MM-dd'
 

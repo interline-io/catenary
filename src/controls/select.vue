@@ -27,7 +27,7 @@
       </select>
     </div>
     <span v-if="icon" class="icon is-left" aria-hidden="true">
-      <i :class="`mdi mdi-${icon}`" />
+      <icon-glyph :name="icon" />
     </span>
   </div>
 </template>
@@ -37,6 +37,7 @@ import { computed, ref, watch, onMounted, nextTick, inject, useAttrs } from 'vue
 import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { SelectVariant, SelectSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
+import IconGlyph from './icon-glyph.vue'
 
 // Fallthrough *attributes* go to the native element only. Without this, Vue
 // also applied them to the root `.control` wrapper, so a consumer's `id`

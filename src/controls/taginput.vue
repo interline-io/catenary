@@ -83,7 +83,7 @@
           @keydown="handleKeydown"
         >
         <span v-if="icon" class="icon is-left">
-          <i :class="`mdi mdi-${icon}`" aria-hidden="true" />
+          <icon-glyph :name="icon" />
         </span>
       </div>
 
@@ -142,6 +142,7 @@
 import { computed, ref, watch, useSlots, useId, inject, nextTick } from 'vue'
 import type { TaginputVariant, TaginputSize, TagOption as TagOptionBase } from './types'
 import { FieldIdKey, FieldDescribedbyKey } from './types'
+import IconGlyph from './icon-glyph.vue'
 
 /**
  * Tag input component with autocomplete dropdown.
