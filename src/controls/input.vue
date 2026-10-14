@@ -196,6 +196,10 @@ const props = withDefaults(defineProps<{
   clearAriaLabel?: string
   /** Make input take full width (expanded). @default false */
   expanded?: boolean
+  // `& boolean` below is for the runtime declaration, not the type: Vue cannot
+  // derive a runtime type from a bare type parameter, so `optional?: O`
+  // compiled to `type: null`, and a bare `optional` attribute arrived as ""
+  // rather than being cast to true. The intersection compiles to Boolean.
   /**
    * For `type="number"`, marks a field that may have no value. An emptied
    * field, whether by deleting its text or with the clear button, emits
@@ -203,10 +207,6 @@ const props = withDefaults(defineProps<{
    * is converted to a number even while the bound value is `undefined` or
    * `null`, which also lets `decimals` format it. @default false
    */
-  // `& boolean` is for the runtime declaration, not the type: Vue cannot
-  // derive a runtime type from a bare type parameter, so `optional?: O`
-  // compiled to `type: null`, and a bare `optional` attribute arrived as ""
-  // rather than being cast to true. The intersection compiles to Boolean.
   optional?: O & boolean
   /**
    * Static text attached to the start of the input, such as a currency
