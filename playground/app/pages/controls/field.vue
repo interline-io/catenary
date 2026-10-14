@@ -86,12 +86,30 @@
       <demo-box label="Addons (Attached Controls)">
         <p class="mb-3">
           Addons attach controls that act, such as a button that submits the input. For a unit or currency symbol, use
-          <code>cat-input</code>'s <code>prefix</code> and <code>suffix</code> instead: a button there is a tab stop that does nothing.
+          <code>cat-input</code>'s <code>prefix</code> and <code>suffix</code> instead: a button there is a tab stop that does nothing. An input
+          with a prefix or suffix joins the addon group like any other control.
         </p>
-        <cat-field label="URL:" addons horizontal>
-          <cat-input v-model="urlPath" expanded placeholder="username" />
+        <cat-field label="GitHub profile:" addons horizontal>
+          <cat-input v-model="urlPath" expanded prefix="https://github.com/" placeholder="username" />
           <cat-button variant="primary">
             Check
+          </cat-button>
+        </cat-field>
+
+        <!-- The select takes an explicit id so the field's id, which its label
+             names, goes to the amount input alone. -->
+        <cat-field label="Monthly budget:" addons>
+          <cat-select id="budget-currency" v-model="budgetCurrency" aria-label="Currency">
+            <option value="USD">
+              USD
+            </option>
+            <option value="EUR">
+              EUR
+            </option>
+          </cat-select>
+          <cat-input v-model="budget" type="number" min="0" step="0.01" :decimals="2" suffix="/ month" expanded />
+          <cat-button variant="success">
+            Save
           </cat-button>
         </cat-field>
 
@@ -321,6 +339,8 @@ const horizontalEmail = ref('')
 const horizontalPhone = ref('')
 
 const urlPath = ref('')
+const budgetCurrency = ref('USD')
+const budget = ref(1200)
 const productQuery = ref('')
 const repoQuery = ref('')
 

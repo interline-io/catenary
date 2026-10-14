@@ -505,6 +505,39 @@ input[type="search"]::-webkit-search-decoration {
   }
 }
 
+/* Inside another addon group, such as a `<cat-field addons>` with a button
+   beside the input, this group is one link in that chain. Bulma joins the
+   links by squaring the corners each `.control` turns toward a neighbor and
+   overlapping their borders by 1px, but its rules match `.control` children by
+   position, and this group is a `.field`, so its outer corners stayed rounded
+   against the neighbor and the shared border doubled. The same treatment is
+   applied here to the edge controls of this group. `expanded` grows the group
+   the way `is-expanded` grows a `.control` there. */
+.field.has-addons > .field.cat-input-addons {
+  &.is-expanded {
+    flex-grow: 1;
+    flex-shrink: 1;
+  }
+
+  &:not(:last-child) {
+    margin-inline-end: -1px;
+
+    > .control:last-child .input,
+    > .control:last-child .button {
+      border-start-end-radius: 0;
+      border-end-end-radius: 0;
+    }
+  }
+
+  &:not(:first-child) {
+    > .control:first-child .input,
+    > .control:first-child .button {
+      border-start-start-radius: 0;
+      border-end-start-radius: 0;
+    }
+  }
+}
+
 /* Bulma colors a static addon with `text-weak` on `scheme-main-ter`, which
    measures 4.26:1 in the light theme and 4.20:1 in the dark one, short of the
    4.5:1 that WCAG 1.4.3 asks of text this size. The addon carries the unit, so
