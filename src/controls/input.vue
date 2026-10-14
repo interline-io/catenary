@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="hasAddons ? ['field', 'has-addons', 'cat-input-addons'] : ['control', ...controlClasses]"
+    :class="hasAddons ? ['field', 'has-addons', 'cat-input-addons', { 'is-expanded': expanded }] : ['control', ...controlClasses]"
     v-bind="rootAttrs"
   >
     <div v-if="prefix" class="control">
@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string">
-import { computed, inject, ref, useAttrs, useId } from 'vue'
+import { computed, inject, ref, useAttrs, useId, watch } from 'vue'
 import type { FunctionalComponent } from 'vue'
 import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { InputVariant, InputSize } from './types'
@@ -212,11 +212,17 @@ const props = withDefaults(defineProps<{
    * For `type="number"`, the number of decimal places to show while the input
    * is not focused: with 2, a value of 2.5 displays as "2.50". Only the display
    * is formatted, and only on blur, so the cursor never moves while someone is
-   * typing; the model keeps the number exactly as typed.
+   * typing; the model keeps the number exactly as typed. If rounding hides
+   * digits, as 2.125 shown as "2.13" does, focusing the input shows the full
+   * value, so editing starts from the number the model holds.
    *
-   * Also defaults `inputmode` to `decimal` (or `numeric` for 0), so a phone
-   * shows a number pad. Pass `inputmode` to override it, e.g. for a field that
-   * accepts negative numbers, which neither pad can type on iOS.
+   * Needs a number bound: a field whose model starts out `undefined` or `null`
+   * emits strings and is not formatted.
+   *
+   * With `min` at 0 or above, also defaults `inputmode` to `decimal` (or
+   * `numeric` for 0 places), so a phone shows a number pad. Neither iOS pad has
+   * a minus key, so there is no default when negative values are allowed. A
+   * caller's own `inputmode` always wins.
    */
   decimals?: number
 }>(), {
@@ -265,8 +271,9 @@ const fieldVariant = inject(FieldVariantKey, undefined)
 // aria-describedby at an aria-hidden element is deliberate: a referenced node's
 // text is included even when it is hidden, which is what lets a screen reader
 // in browse mode skip the bare "$" and still hear it on the focused input.
-const prefixId = useId()
-const suffixId = useId()
+const baseId = useId()
+const prefixId = `${baseId}-prefix`
+const suffixId = `${baseId}-suffix`
 const mergedDescribedby = computed(() => {
   const parts = [
     props.prefix ? prefixId : undefined,
@@ -340,44 +347,77 @@ const inputClasses = computed(() => {
   return classes
 })
 
-const formatsDecimals = computed(() => props.type === 'number' && props.decimals !== undefined)
+// Decimal places to format to, or undefined when the field is not formatted.
+// toFixed throws a RangeError outside 0..100.
+const places = computed(() => {
+  if (props.type !== 'number' || props.decimals === undefined || !Number.isFinite(props.decimals)) {
+    return undefined
+  }
+  return Math.max(0, Math.min(100, Math.trunc(props.decimals)))
+})
 
+// The number pads have no minus key on iOS, so they are only offered when the
+// field cannot take a negative value.
 const defaultInputmode = computed(() => {
-  if (!formatsDecimals.value) return undefined
-  return props.decimals! > 0 ? 'decimal' : 'numeric'
+  if (places.value === undefined || props.min === undefined || props.min === '' || !(Number(props.min) >= 0)) {
+    return undefined
+  }
+  return places.value > 0 ? 'decimal' : 'numeric'
 })
 
 // What handleInput emits for a numeric field's text, kept in one place so the
 // display can tell whether the model still matches what was typed.
 const parseNumber = (text: string): number => text === '' ? 0 : Number(text)
 
+const hasNumberModel = computed(() => props.type === 'number' && typeof props.modelValue === 'number')
+
+// The model as shown while the field is not being edited.
+function formatNumber (value: number): string {
+  return places.value === undefined || !Number.isFinite(value) ? String(value) : value.toFixed(places.value)
+}
+
+// The model as shown while it is being edited: formatted, unless rounding hid
+// digits. Editing starts from the number the model holds, so ArrowUp on 2.125
+// shown as "2.13" steps from 2.125 rather than silently from 2.13.
+function editableNumber (value: number): string {
+  const formatted = formatNumber(value)
+  return Number(formatted) === value ? formatted : String(value)
+}
+
 // While focused, a numeric field shows what the person typed. Without this, the
 // model's own rendering replaces the text on every keystroke that changes it:
 // deleting the last digit emits 0 and the field fills back in with "0" before
 // the next digit can be typed, and with `decimals` "2.50" would be redrawn as
-// "2.5" on focus. The typed text gives way only when the model changes to
-// something it does not parse to, i.e. when the value is set from outside, as
-// a reset button does.
+// "2.5" on focus.
 const focused = ref(false)
 const typed = ref('')
 
+// A model set from outside while focused, as a reset button does, replaces the
+// typed text. It is replaced here rather than only bypassed in displayValue, so
+// the text never lingers to match a later value it no longer describes.
+watch(() => props.modelValue, (value) => {
+  if (focused.value && hasNumberModel.value && parseNumber(typed.value) !== value) {
+    typed.value = editableNumber(value as number)
+  }
+})
+
 const displayValue = computed(() => {
   const value = props.modelValue
-  if (props.type !== 'number' || typeof value !== 'number') {
+  if (!hasNumberModel.value) {
     return value
   }
+  // Checked again in case the model changed without the watcher seeing it
+  // as a number change, e.g. from a string.
   if (focused.value && parseNumber(typed.value) === value) {
     return typed.value
   }
-  if (formatsDecimals.value && Number.isFinite(value)) {
-    // toFixed throws a RangeError outside 0..100.
-    return value.toFixed(Math.max(0, Math.min(100, Math.trunc(props.decimals!))))
-  }
-  return value
+  return focused.value ? editableNumber(value as number) : formatNumber(value as number)
 })
 
 function handleFocus (event: FocusEvent) {
-  typed.value = (event.target as HTMLInputElement).value
+  typed.value = hasNumberModel.value
+    ? editableNumber(props.modelValue as number)
+    : (event.target as HTMLInputElement).value
   focused.value = true
 }
 
@@ -416,6 +456,10 @@ function handleClear () {
   // The clear button disappears once the value is empty, so return focus to the
   // input rather than letting it fall back to the document body.
   inputRef.value?.focus()
+  // Focusing recorded the old value as typed. The field was just emptied, so
+  // it shows empty until blur, as it does when the digits are deleted by hand,
+  // rather than "0" waiting to have a digit typed after it.
+  typed.value = ''
 }
 
 defineExpose({
@@ -446,6 +490,19 @@ input[type="search"]::-webkit-search-decoration {
    outrank `.field:not(:last-child)` regardless of stylesheet order. */
 .field.cat-input-addons {
   margin-bottom: 0;
+}
+
+/* In a grouped field the addon group stands where a `.control` would, so it
+   takes the sizing Bulma gives one there: content width by default, and the
+   rest of the row with `expanded`. Outside a grouped field the group is a
+   block and fills its container either way. */
+.field.is-grouped > .field.cat-input-addons {
+  flex-shrink: 0;
+
+  &.is-expanded {
+    flex-grow: 1;
+    flex-shrink: 1;
+  }
 }
 
 /* Bulma colors a static addon with `text-weak` on `scheme-main-ter`, which

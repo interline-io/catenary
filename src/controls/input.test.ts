@@ -417,6 +417,14 @@ describe('CatInput', () => {
       expect(onKeydown).toHaveBeenCalledTimes(1)
     })
 
+    it('marks the addon group expanded so a grouped field can grow it', () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: '', suffix: 'min', expanded: true }
+      })
+
+      expect(wrapper.classes()).toEqual(expect.arrayContaining(['cat-input-addons', 'is-expanded']))
+    })
+
     it('adds and removes the addon group as the props change', async () => {
       const wrapper = mountComponent(CatInput, { props: { modelValue: '' } })
 
@@ -534,9 +542,9 @@ describe('CatInput', () => {
       expect(input.attributes('inputmode')).toBeUndefined()
     })
 
-    it('defaults inputmode to decimal, or numeric for whole numbers', async () => {
+    it('defaults inputmode to decimal, or numeric for whole numbers, when min is 0 or more', async () => {
       const wrapper = mountComponent(CatInput, {
-        props: { modelValue: 1, type: 'number', decimals: 2 }
+        props: { modelValue: 1, type: 'number', decimals: 2, min: '0' }
       })
       expect(wrapper.find('input').attributes('inputmode')).toBe('decimal')
 
@@ -545,13 +553,89 @@ describe('CatInput', () => {
       expect((wrapper.find('input').element as HTMLInputElement).value).toBe('1')
     })
 
+    // Neither iOS number pad has a minus key.
+    it('sets no inputmode when negative values are allowed', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 1, type: 'number', decimals: 2 }
+      })
+      expect(wrapper.find('input').attributes('inputmode')).toBeUndefined()
+
+      await wrapper.setProps({ min: -10 })
+      expect(wrapper.find('input').attributes('inputmode')).toBeUndefined()
+    })
+
     it('lets a caller-supplied inputmode win', () => {
       const wrapper = mountComponent(CatInput, {
-        props: { modelValue: 1, type: 'number', decimals: 2 },
+        props: { modelValue: 1, type: 'number', decimals: 2, min: 0 },
         attrs: { inputmode: 'text' }
       })
 
       expect(wrapper.find('input').attributes('inputmode')).toBe('text')
+    })
+
+    it('shows the full value on focus when rounding hid digits', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 2.125, type: 'number', decimals: 2 }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+      expect(el.value).toBe('2.13')
+
+      await input.trigger('focus')
+      expect(el.value).toBe('2.125')
+
+      await input.trigger('blur')
+      expect(el.value).toBe('2.13')
+      wrapper.unmount()
+    })
+
+    it('does not let typed text outlive a model set from outside', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 7, type: 'number' }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = ''
+      await input.trigger('input')
+      await wrapper.setProps({ modelValue: 0 })
+      expect(el.value).toBe('')
+
+      // Set to 7 and back to 0 while focus stays: the field shows the model,
+      // not the empty text left from before.
+      await wrapper.setProps({ modelValue: 7 })
+      expect(el.value).toBe('7')
+      await wrapper.setProps({ modelValue: 0 })
+      expect(el.value).toBe('0')
+      wrapper.unmount()
+    })
+
+    it('leaves the field empty after the clear button until blur', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: {
+          'modelValue': 3,
+          'type': 'number',
+          'decimals': 2,
+          'clearable': true,
+          'onUpdate:modelValue': (v: number) => wrapper.setProps({ modelValue: v })
+        }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await wrapper.find('.cat-input-clear-button').trigger('click')
+      await wrapper.vm.$nextTick()
+      expect(wrapper.props('modelValue')).toBe(0)
+      expect(document.activeElement).toBe(el)
+      expect(el.value).toBe('')
+
+      await input.trigger('blur')
+      expect(el.value).toBe('0.00')
+      wrapper.unmount()
     })
 
     it('sets no inputmode without decimals', () => {

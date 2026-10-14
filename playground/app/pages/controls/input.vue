@@ -148,9 +148,10 @@
             announced less reliably than a name, so the label should name the unit too (WCAG 1.3.1 and 3.3.2).
           </p>
           <p class="mt-2">
-            <code>decimals</code> reformats only on blur, never on a keystroke, so the caret never moves while typing. It also sets
-            <code>inputmode="decimal"</code> (<code>numeric</code> for 0) to show a number pad on phones; pass <code>inputmode</code> yourself for a field that
-            takes negative numbers, since neither iOS pad has a minus key.
+            <code>decimals</code> reformats only on blur, never on a keystroke, so the caret never moves while typing. If rounding hides digits,
+            focusing shows the full value, so editing starts from the number actually held. With <code>min</code> at 0 or above it also sets
+            <code>inputmode="decimal"</code> (<code>numeric</code> for 0) to show a number pad on phones. Neither iOS pad has a minus key, so a field that
+            takes negative numbers gets no default.
           </p>
           <p class="mt-2">
             Parents that need to focus the input programmatically can call <code>focus()</code> / <code>blur()</code> / <code>select()</code> via a template ref (exposed by <code>defineExpose</code>).
