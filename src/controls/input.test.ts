@@ -629,7 +629,7 @@ describe('CatInput', () => {
 
       await wrapper.find('.cat-input-clear-button').trigger('click')
       await wrapper.vm.$nextTick()
-      expect(wrapper.props('modelValue')).toBe(0)
+      expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([0])
       expect(document.activeElement).toBe(el)
       expect(el.value).toBe('')
 
