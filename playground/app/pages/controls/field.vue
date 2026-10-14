@@ -69,20 +69,14 @@
 
       <!-- Addons (Attached Controls) -->
       <demo-box label="Addons (Attached Controls)">
+        <p class="mb-3">
+          Addons attach controls that act, such as a button that submits the input. For a unit or currency symbol, use
+          <code>cat-input</code>'s <code>prefix</code> and <code>suffix</code> instead: a button there is a tab stop that does nothing.
+        </p>
         <cat-field label="URL:" addons horizontal>
           <cat-input v-model="urlPath" expanded placeholder="username" />
           <cat-button variant="primary">
             Check
-          </cat-button>
-        </cat-field>
-
-        <cat-field label="Amount:" addons horizontal>
-          <cat-button>
-            $
-          </cat-button>
-          <cat-input v-model="amount" type="number" expanded placeholder="0.00" />
-          <cat-button variant="success">
-            Submit
           </cat-button>
         </cat-field>
 
@@ -305,7 +299,6 @@ const horizontalEmail = ref('')
 const horizontalPhone = ref('')
 
 const urlPath = ref('')
-const amount = ref('')
 const searchQuery = ref('')
 
 const firstName = ref('')
