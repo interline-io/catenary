@@ -112,6 +112,22 @@
         </cat-button>
       </demo-box>
 
+      <demo-box label="Optional Number">
+        <p class="mb-3">
+          A numeric field normally emits <code>0</code> when emptied, which an app cannot tell apart from a typed 0. With <code>optional</code>, an
+          emptied field emits <code>undefined</code>, and typed text becomes a number even while the bound value is <code>undefined</code>.
+        </p>
+        <cat-field label="Duration in seconds" message="Leave blank if unknown">
+          <cat-input v-model="duration" type="number" min="1" suffix="s" optional clearable />
+        </cat-field>
+        <cat-field label="Late arrivals" message="0 is a value: none arrived late">
+          <cat-input v-model="lateArrivals" type="number" optional />
+        </cat-field>
+        <p class="has-text-grey">
+          Values: {{ JSON.stringify(duration) ?? 'undefined' }}, {{ JSON.stringify(lateArrivals) ?? 'undefined' }}
+        </p>
+      </demo-box>
+
       <demo-box label="Example: Maxlength" example>
         <cat-field label="Username (max 20 chars)">
           <cat-input v-model="username" maxlength="20" placeholder="Enter username" />
@@ -224,4 +240,6 @@ const username = ref('')
 const fare = ref(2.5)
 const frequency = ref(15)
 const perKm = ref(0.4)
+const duration = ref<number | undefined>(undefined)
+const lateArrivals = ref<number | undefined>(3)
 </script>

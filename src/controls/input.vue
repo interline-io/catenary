@@ -75,7 +75,7 @@
   </div>
 </template>
 
-<script setup lang="ts" generic="T extends string | number = string">
+<script setup lang="ts" generic="T extends string | number = string, O extends boolean = false">
 import { computed, inject, ref, useAttrs, useId, watch } from 'vue'
 import type { FunctionalComponent } from 'vue'
 import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
@@ -151,8 +151,8 @@ const props = withDefaults(defineProps<{
    */
   id?: string
 
-  /** Input value (v-model). Type is inferred from the binding: string for text inputs, number for numeric inputs. For type="number", bind to a number variable to get automatic number conversion. */
-  modelValue?: T
+  /** Input value (v-model). Type is inferred from the binding: string for text inputs, number for numeric inputs. For type="number", bind to a number variable, or set `optional`, to get automatic number conversion. `null` shows as an empty field. */
+  modelValue?: T | null
   /** Input type attribute. @default 'text' */
   type?: 'text' | 'email' | 'tel' | 'password' | 'url' | 'search' | 'number' | 'date' | 'time' | 'datetime-local' | 'month' | 'week'
   /** Placeholder text. */
@@ -197,6 +197,18 @@ const props = withDefaults(defineProps<{
   clearAriaLabel?: string
   /** Make input take full width (expanded). @default false */
   expanded?: boolean
+  // `& boolean` below is for the runtime declaration, not the type: Vue cannot
+  // derive a runtime type from a bare type parameter, so `optional?: O`
+  // compiled to `type: null`, and a bare `optional` attribute arrived as ""
+  // rather than being cast to true. The intersection compiles to Boolean.
+  /**
+   * For `type="number"`, marks a field that may have no value. An emptied
+   * field, whether by deleting its text or with the clear button, emits
+   * `undefined` instead of `0`, so 0 stays a value someone typed. Typed text
+   * is converted to a number even while the bound value is `undefined` or
+   * `null`, which also lets `decimals` format it. @default false
+   */
+  optional?: O & boolean
   /**
    * Static text attached to the start of the input, such as a currency
    * symbol. Renders as a Bulma static addon, which is not focusable.
@@ -256,11 +268,17 @@ const props = withDefaults(defineProps<{
   decimals: undefined
 })
 
+type EmittedValue = O extends true ? T | undefined : T
+
 const emit = defineEmits<{
-  'update:modelValue': [value: T]
+  'update:modelValue': [value: EmittedValue]
   'icon-right-click': [event: MouseEvent]
   'clear': []
 }>()
+
+// `undefined` is emitted only when `optional` is set, which the conditional
+// type expresses but cannot narrow on inside the component.
+const emitValue = (value: T | undefined): void => emit('update:modelValue', value as EmittedValue)
 
 // Merge the wrapping cat-field's help-message id (if any) with the
 // component's own ariaDescribedby, and reflect a danger validation state
@@ -367,8 +385,17 @@ const defaultInputmode = computed(() => {
 })
 
 // What handleInput emits for a numeric field's text, kept in one place so the
-// display can tell whether the model still matches what was typed.
-const parseNumber = (text: string): number => text === '' ? 0 : Number(text)
+// display can tell whether the model still matches what was typed. Empty is
+// `undefined` for an optional field, so it cannot be mistaken for a typed 0.
+const parseNumber = (text: string): number | undefined => {
+  if (text === '') return props.optional ? undefined : 0
+  return Number(text)
+}
+
+// A numeric field emits numbers once its model is a number. An optional one
+// does from the start, since its model is expected to begin unset.
+const convertsToNumber = computed(() =>
+  props.type === 'number' && (typeof props.modelValue === 'number' || props.optional))
 
 const hasNumberModel = computed(() => props.type === 'number' && typeof props.modelValue === 'number')
 
@@ -397,8 +424,8 @@ const typed = ref('')
 // typed text. It is replaced here rather than only bypassed in displayValue, so
 // the text never lingers to match a later value it no longer describes.
 watch(() => props.modelValue, (value) => {
-  if (focused.value && hasNumberModel.value && parseNumber(typed.value) !== value) {
-    typed.value = editableNumber(value as number)
+  if (focused.value && convertsToNumber.value && parseNumber(typed.value) !== value) {
+    typed.value = typeof value === 'number' ? editableNumber(value) : ''
   }
 })
 
@@ -430,12 +457,10 @@ function handleInput (event: Event) {
   const target = event.target as HTMLInputElement
   typed.value = target.value
 
-  // Convert to number if the modelValue type is number
-  if (props.type === 'number' && typeof props.modelValue === 'number') {
-    const numValue = parseNumber(target.value)
-    emit('update:modelValue', numValue as T)
+  if (convertsToNumber.value) {
+    emitValue(parseNumber(target.value) as T | undefined)
   } else {
-    emit('update:modelValue', target.value as T)
+    emitValue(target.value as T)
   }
 }
 
@@ -447,11 +472,12 @@ function handleIconRightClick (event: MouseEvent) {
 
 function handleClear () {
   // Mirror handleInput's number handling so the emitted empty value matches the
-  // bound type (0 for numeric inputs, '' otherwise).
-  if (props.type === 'number' && typeof props.modelValue === 'number') {
-    emit('update:modelValue', 0 as T)
+  // bound type: undefined for an optional numeric input, 0 for any other
+  // numeric one, '' otherwise.
+  if (convertsToNumber.value) {
+    emitValue(parseNumber('') as T | undefined)
   } else {
-    emit('update:modelValue', '' as T)
+    emitValue('' as T)
   }
   emit('clear')
   // The clear button disappears once the value is empty, so return focus to the
@@ -503,6 +529,39 @@ input[type="search"]::-webkit-search-decoration {
   &.is-expanded {
     flex-grow: 1;
     flex-shrink: 1;
+  }
+}
+
+/* Inside another addon group, such as a `<cat-field addons>` with a button
+   beside the input, this group is one link in that chain. Bulma joins the
+   links by squaring the corners each `.control` turns toward a neighbor and
+   overlapping their borders by 1px, but its rules match `.control` children by
+   position, and this group is a `.field`, so its outer corners stayed rounded
+   against the neighbor and the shared border doubled. The same treatment is
+   applied here to the edge controls of this group. `expanded` grows the group
+   the way `is-expanded` grows a `.control` there. */
+.field.has-addons > .field.cat-input-addons {
+  &.is-expanded {
+    flex-grow: 1;
+    flex-shrink: 1;
+  }
+
+  &:not(:last-child) {
+    margin-inline-end: -1px;
+
+    > .control:last-child .input,
+    > .control:last-child .button {
+      border-start-end-radius: 0;
+      border-end-end-radius: 0;
+    }
+  }
+
+  &:not(:first-child) {
+    > .control:first-child .input,
+    > .control:first-child .button {
+      border-start-start-radius: 0;
+      border-end-start-radius: 0;
+    }
   }
 }
 
