@@ -8,6 +8,9 @@
     :style="px ? { fontSize: `${px}px` } : undefined"
     :data-icon="name"
     viewBox="0 0 24 24"
+    width="1em"
+    height="1em"
+    fill="currentColor"
     aria-hidden="true"
     focusable="false"
   >
@@ -25,8 +28,7 @@
 
 <script setup lang="ts">
 import { computed, inject, onMounted } from 'vue'
-import { IconContextKey } from './types'
-import { expectIconSprite, iconPath, iconSymbolId, reportUnregisteredIcon } from '../util/icons'
+import { IconContextKey, expectIconSprite, iconPath, iconSymbolId, reportUnregisteredIcon } from '../util/icons'
 
 /**
  * One MDI icon glyph, with no container. Renders an inline SVG when the name is
@@ -61,10 +63,10 @@ const path = computed(() => {
   return found
 })
 
-// Only 'missing' falls back to the path: while 'pending' the sprite may still be
-// ahead (it renders last), and server and client agree on that, so hydration
-// matches.
-const useSprite = computed(() => !!context?.sprite && context.spriteState.value !== 'missing')
+// Falls back to the path only once the sprite is known to be missing: until
+// then it may still be ahead (it renders last), and server and client agree on
+// that, so hydration matches.
+const useSprite = computed(() => !!context?.sprite && !context.spriteMissing.value)
 
 onMounted(() => {
   if (context?.sprite) {
@@ -74,7 +76,10 @@ onMounted(() => {
 </script>
 
 <style lang="scss">
-// Not scoped, so a control can size or align the glyph from its own styles.
+// Not scoped, so a control can size or align the glyph from its own styles. The
+// size and fill repeat the <svg>'s own attributes, which are what keep it 1em
+// and currentColor in an app that has not loaded this stylesheet; without
+// them an unstyled <svg> is 300x150 and black.
 svg.cat-icon-glyph {
   width: 1em;
   height: 1em;

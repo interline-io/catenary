@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { createApp, createSSRApp, defineComponent, h, ref, Suspense } from 'vue'
+import { createApp, createSSRApp, defineComponent, h, KeepAlive, nextTick, ref, Suspense } from 'vue'
 import { renderToString } from 'vue/server-renderer'
 import { mount } from '@vue/test-utils'
 import { mdiAccount, mdiBell, mdiHome } from '@mdi/js'
 import CatIcon from './icon.vue'
 import CatIconSprite from './icon-sprite.vue'
+import * as catenary from '../index'
 import { CatenaryPlugin, type CatenaryPluginOptions } from '../index'
 import { registerIcons } from '../util/icons'
 
@@ -119,7 +120,7 @@ describe('iconSprite', () => {
     await flush()
     expect(wrapper.find('use').exists()).toBe(false)
     expect(wrapper.find('path').exists()).toBe(true)
-    expect(warnings('no <cat-icon-sprite> has mounted')).toHaveLength(1)
+    expect(warnings('no <cat-icon-sprite> is mounted')).toHaveLength(1)
     wrapper.unmount()
   })
 
@@ -136,6 +137,82 @@ describe('iconSprite', () => {
     await flush()
     expect(wrapper.find('#cat-icon-sprite-late-route path').attributes('d')).toBe(mdiBell)
     expect(wrapper.find('svg[data-icon="sprite-late-route"] use').attributes('href')).toBe('#cat-icon-sprite-late-route')
+    wrapper.unmount()
+  })
+
+  // One layout replacing another, as Nuxt does through <Suspense>: the incoming
+  // sprite sets up before the outgoing one unmounts. A single flag cleared by
+  // the outgoing sprite reported no sprite while one was on the page.
+  it('stays in sprite mode while one sprite replaces another', async () => {
+    const showA = ref(true)
+    const showB = ref(false)
+    const wrapper = mount(defineComponent({
+      render: () => [
+        h(CatIcon, { icon: 'check' }),
+        showA.value ? h(CatIconSprite, { key: 'a' }) : null,
+        showB.value ? h(CatIconSprite, { key: 'b' }) : null
+      ]
+    }), withPlugin({ iconSprite: true }))
+    await flush()
+    // Mounted before the outgoing sprite unmounts, the order <Suspense> gives
+    showB.value = true
+    await flush()
+    showA.value = false
+    await flush()
+    expect(wrapper.find('svg[data-icon="check"] use').exists()).toBe(true)
+    expect(wrapper.findAll('svg.cat-icon-sprite')).toHaveLength(1)
+    expect(warnings('cat-icon-sprite')).toHaveLength(0)
+    wrapper.unmount()
+  })
+
+  // Checked every time, not once per app: a later layout without a sprite is
+  // caught too, and a sprite that comes back restores <use>.
+  it('falls back when the last sprite goes away, and recovers when one returns', async () => {
+    const showSprite = ref(true)
+    const wrapper = mount(defineComponent({
+      render: () => [h(CatIcon, { icon: 'check' }), showSprite.value ? h(CatIconSprite) : null]
+    }), withPlugin({ iconSprite: true }))
+    await flush()
+    expect(wrapper.find('svg[data-icon="check"] use').exists()).toBe(true)
+
+    showSprite.value = false
+    await flush()
+    expect(wrapper.find('svg[data-icon="check"] path').exists()).toBe(true)
+    expect(warnings('no <cat-icon-sprite> is mounted')).toHaveLength(1)
+
+    showSprite.value = true
+    await flush()
+    expect(wrapper.find('svg[data-icon="check"] use').exists()).toBe(true)
+    wrapper.unmount()
+  })
+
+  // Inside <KeepAlive>, a page navigated away from keeps its sprite alive but
+  // moves the symbols out of the document, so <use> on the next page would
+  // point at nothing.
+  it('counts a sprite deactivated by KeepAlive as gone', async () => {
+    const PageWithSprite = defineComponent({ name: 'PageWithSprite', render: () => h('div', [h(CatIconSprite)]) })
+    const PageWithout = defineComponent({ name: 'PageWithout', render: () => h('div') })
+    const page = ref<'with' | 'without'>('with')
+    const wrapper = mount(defineComponent({
+      render: () => [
+        h(CatIcon, { icon: 'check' }),
+        h(KeepAlive, null, [page.value === 'with' ? h(PageWithSprite) : h(PageWithout)])
+      ]
+    }), withPlugin({ iconSprite: true }))
+    await flush()
+    expect(wrapper.find('svg[data-icon="check"] use').exists()).toBe(true)
+
+    page.value = 'without'
+    await flush()
+    expect(wrapper.find('svg[data-icon="check"] path').exists()).toBe(true)
+
+    page.value = 'with'
+    await nextTick()
+    await flush()
+    expect(wrapper.find('svg[data-icon="check"] use').exists()).toBe(true)
+
+    // Destroying the kept-alive sprite while it is inactive does not count it
+    // out a second time, which would leave the count below zero.
     wrapper.unmount()
   })
 
@@ -223,5 +300,15 @@ describe('iconSprite with server rendering', () => {
     app.mount(container)
     expect(container.querySelector('svg path')).not.toBeNull()
     app.unmount()
+  })
+})
+
+describe('icon exports', () => {
+  // The icon context is a small state machine; a consumer-provided one could
+  // corrupt it, so only the registration API is public.
+  it('exposes registerIcons but not the internal icon context', () => {
+    expect(typeof catenary.registerIcons).toBe('function')
+    expect('createIconContext' in catenary).toBe(false)
+    expect('IconContextKey' in catenary).toBe(false)
   })
 })

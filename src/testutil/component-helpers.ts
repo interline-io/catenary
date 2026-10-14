@@ -1,11 +1,26 @@
 import { mount } from '@vue/test-utils'
 import type { VueWrapper } from '@vue/test-utils'
-import { expect } from 'vitest'
+import { expect, vi } from 'vitest'
 import { axe } from './axe'
 
 /**
  * Helper utilities for testing t-* components
  */
+
+/**
+ * Stub `window.matchMedia`, which jsdom does not implement, for components that
+ * read the system color scheme. Uses `vi.stubGlobal`, so pair it with
+ * `afterEach(() => vi.unstubAllGlobals())` to keep the stub from leaking into
+ * later tests in the same worker.
+ */
+export function stubMatchMedia (matches = false): void {
+  vi.stubGlobal('matchMedia', (query: string) => ({
+    matches,
+    media: query,
+    addEventListener: () => {},
+    removeEventListener: () => {}
+  }))
+}
 
 /**
  * Mount a component with common test props and configuration

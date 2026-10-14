@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest'
+import { afterEach, describe, it, expect, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { mount } from '@vue/test-utils'
 import { mdiAccount, mdiCheck, mdiHome } from '@mdi/js'
@@ -8,7 +8,11 @@ import CatPagination from './pagination.vue'
 import CatThemeToggle from './theme-toggle.vue'
 import { CatenaryPlugin } from '../index'
 import { registerIcons } from '../util/icons'
-import { expectNoAxeViolations } from '../testutil/component-helpers'
+import { expectNoAxeViolations, stubMatchMedia } from '../testutil/component-helpers'
+
+afterEach(() => {
+  vi.unstubAllGlobals()
+})
 
 describe('cat-icon accessibility semantics', () => {
   it('is hidden from assistive technology by default (decorative)', () => {
@@ -70,12 +74,27 @@ describe('cat-icon rendering', () => {
       { size: 'large', px: '48px' }
     ]
     for (const { size, px } of cases) {
-      const svg = mount(CatIcon, { props: { icon: 'check', size } }).find('svg').element as SVGElement
+      const svgWrapper = mount(CatIcon, { props: { icon: 'check', size } })
+      const svg = svgWrapper.find('svg').element as SVGElement
       expect(svg.style.fontSize || undefined).toBe(px)
+      svgWrapper.unmount()
 
-      const font = mount(CatIcon, { props: { icon: 'not-a-registered-icon', size } }).find('i')
-      expect(font.classes().some(c => /^mdi-\d+px$/.test(c))).toBe(px !== undefined)
+      const fontWrapper = mount(CatIcon, { props: { icon: 'not-a-registered-icon', size } })
+      expect(fontWrapper.find('i').classes().some(c => /^mdi-\d+px$/.test(c))).toBe(px !== undefined)
+      fontWrapper.unmount()
     }
+  })
+
+  // An app that registers the components but never loads Catenary's stylesheet
+  // still gets 1em, currentColor glyphs rather than the 300x150 black box an
+  // unstyled <svg> renders as.
+  it('sizes and colors the SVG without the stylesheet', () => {
+    const wrapper = mount(CatIcon, { props: { icon: 'check' } })
+    const svg = wrapper.find('svg')
+    expect(svg.attributes('width')).toBe('1em')
+    expect(svg.attributes('height')).toBe('1em')
+    expect(svg.attributes('fill')).toBe('currentColor')
+    wrapper.unmount()
   })
 
   it('swaps in an icon registered after it rendered', async () => {
@@ -114,12 +133,7 @@ describe('icons inside other controls', () => {
     expect(pagination.find('svg[data-icon="chevron-right"]').exists()).toBe(true)
 
     // jsdom has no matchMedia, which the toggle reads for the system preference
-    window.matchMedia = ((query: string) => ({
-      matches: false,
-      media: query,
-      addEventListener: () => {},
-      removeEventListener: () => {}
-    })) as unknown as typeof window.matchMedia
+    stubMatchMedia()
     const toggle = mount(CatThemeToggle)
     expect(toggle.find('svg[data-icon^="weather-"]').exists()).toBe(true)
 

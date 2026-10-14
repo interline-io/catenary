@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { mountComponent } from '../testutil/component-helpers'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+import { mountComponent, stubMatchMedia } from '../testutil/component-helpers'
 import CatThemeToggle from './theme-toggle.vue'
 
 describe('CatThemeToggle', () => {
@@ -8,12 +8,11 @@ describe('CatThemeToggle', () => {
     document.documentElement.removeAttribute('data-theme')
     // jsdom does not implement matchMedia, which the component reads for the
     // system preference when nothing is stored.
-    window.matchMedia = ((query: string) => ({
-      matches: false,
-      media: query,
-      addEventListener: () => {},
-      removeEventListener: () => {}
-    })) as unknown as typeof window.matchMedia
+    stubMatchMedia()
+  })
+
+  afterEach(() => {
+    vi.unstubAllGlobals()
   })
 
   // Toggle button pattern: the label names what the button controls and stays

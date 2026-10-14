@@ -46,7 +46,6 @@
     }
   },
   "dependencies": {
-    "@mdi/js": "7.4.47",
     "csv-stringify": "^6.7.0",
     "date-fns": "4.1.0"
   },
@@ -54,6 +53,7 @@
     "@changesets/changelog-github": "0.7.0",
     "@changesets/cli": "2.31.0",
     "@mdi/font": "7.4.47",
+    "@mdi/js": "7.4.47",
     "@nuxt/eslint-config": "1.10.0",
     "@stylistic/eslint-plugin": "5.5.0",
     "@vitejs/plugin-vue": "6.0.8",

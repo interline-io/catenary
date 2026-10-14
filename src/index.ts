@@ -1,6 +1,5 @@
 import type { App, Plugin } from 'vue'
-import { IconContextKey } from './controls/types'
-import { createIconContext, registerIcons } from './util/icons'
+import { IconContextKey, createIconContext, registerIcons } from './util/icons'
 
 import CatButton from './controls/button.vue'
 import CatCard from './controls/card.vue'
@@ -94,8 +93,8 @@ export { TreeNode } from './util/tree'
 export type { TreeNodeConfig, TreeNodeOptions } from './util/tree'
 export { sanitizeFilename, sanitizeUrl } from './util/sanitize'
 export { useDownload } from './util/download'
-export { createIconContext, registerIcons } from './util/icons'
-export type { IconContext, IconOptions } from './util/icons'
+export { registerIcons } from './util/icons'
+export type { IconOptions } from './util/icons'
 export type { DownloadOptions } from './util/download'
 
 export interface CatenaryPluginOptions {

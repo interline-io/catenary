@@ -1,4 +1,4 @@
-import { nextTick, ref, shallowReactive, type Ref } from 'vue'
+import { nextTick, ref, shallowReactive, type InjectionKey, type Ref } from 'vue'
 import {
   mdiAlert,
   mdiAlertCircle,
@@ -81,20 +81,42 @@ export interface IconOptions {
  * Icon settings and state for one app, provided by the plugin. Per app rather
  * than module-wide, so concurrent server renders cannot share it. The registry
  * itself stays module-wide: it holds static path data, the same for every app.
+ *
+ * Internal, and deliberately not exported from the package: the sprite fields
+ * are a small state machine that a consumer-provided context could corrupt.
  */
 export interface IconContext extends IconOptions {
   /** Names already warned about, so each is reported once */
   warned: Set<string>
   /**
-   * 'pending' until a <cat-icon-sprite> sets up; 'missing' once the app has
-   * mounted without one, which makes icons fall back to inline paths.
+   * <cat-icon-sprite>s currently set up and active. A count rather than a flag:
+   * when one layout replaces another, the incoming sprite can set up before the
+   * outgoing one unmounts, and a flag the outgoing one cleared would report no
+   * sprite while one is on the page.
    */
-  spriteState: Ref<'pending' | 'mounted' | 'missing'>
-  spriteChecked: boolean
+  sprites: Ref<number>
+  /**
+   * True once the app has gone a tick with sprite mode on and no sprite, which
+   * makes icons fall back to inline paths. Until then they assume the sprite is
+   * still to come (it renders last), which is what server and client agree on,
+   * so hydration matches.
+   */
+  spriteMissing: Ref<boolean>
+  /** A check for a missing sprite is queued, so many icons queue one between them */
+  spriteCheckQueued: boolean
 }
 
+/**
+ * Injection key for the app's icon settings (`strictIcons`, `iconSprite`),
+ * provided by the plugin. Absent when components are imported individually,
+ * which means the defaults: inline paths, no strict reporting. Internal, like
+ * IconContext; it lives here rather than in types.ts, which the package
+ * re-exports wholesale.
+ */
+export const IconContextKey: InjectionKey<IconContext> = Symbol('catIcons')
+
 export function createIconContext (options: IconOptions = {}): IconContext {
-  return { ...options, warned: new Set(), spriteState: ref('pending'), spriteChecked: false }
+  return { ...options, warned: new Set(), sprites: ref(0), spriteMissing: ref(false), spriteCheckQueued: false }
 }
 
 /** Apply `strict` to a name that is not registered. */
@@ -116,28 +138,43 @@ export function reportUnregisteredIcon (context: IconContext | undefined, name: 
 }
 
 /**
- * Called by each icon once mounted in sprite mode. If the app has mounted and no
- * <cat-icon-sprite> has set up, icons switch to inline paths rather than point
- * at symbols that do not exist; a sprite that mounts later (inside a lazily
- * loaded layout, say) switches them back.
+ * Check, a tick from now, that a <cat-icon-sprite> is on the page. Called by
+ * each icon once mounted in sprite mode, and by a sprite as it goes away. With
+ * none, icons switch to inline paths rather than point at symbols that do not
+ * exist; a sprite that sets up later (inside a lazily loaded layout, say)
+ * switches them back. Runs every time it is needed, not once per app, so a
+ * later layout that drops the sprite is caught too.
  */
 export function expectIconSprite (context: IconContext): void {
-  if (context.spriteChecked) {
+  if (context.spriteCheckQueued || context.sprites.value > 0) {
     return
   }
-  context.spriteChecked = true
+  context.spriteCheckQueued = true
   nextTick(() => {
-    if (context.spriteState.value !== 'pending') {
+    context.spriteCheckQueued = false
+    if (context.sprites.value > 0 || context.spriteMissing.value) {
       return
     }
-    context.spriteState.value = 'missing'
+    context.spriteMissing.value = true
     if (process.env.NODE_ENV !== 'production') {
       console.warn(
-        '[catenary] iconSprite is on but no <cat-icon-sprite> has mounted, so icons render '
-        + 'their paths inline until one does. Place <cat-icon-sprite /> once, last in the root layout.'
+        '[catenary] iconSprite is on but no <cat-icon-sprite> is mounted, so icons render '
+        + 'their paths inline until one is. Place <cat-icon-sprite /> once, last in the root layout.'
       )
     }
   })
+}
+
+/** Called by a <cat-icon-sprite> as it sets up or is reactivated by <KeepAlive>. */
+export function spriteActivated (context: IconContext): void {
+  context.sprites.value++
+  context.spriteMissing.value = false
+}
+
+/** Called by a <cat-icon-sprite> as it unmounts or is deactivated by <KeepAlive>. */
+export function spriteDeactivated (context: IconContext): void {
+  context.sprites.value--
+  expectIconSprite(context)
 }
 
 // The icons Catenary's own controls render, including their default icon props

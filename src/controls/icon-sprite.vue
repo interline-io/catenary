@@ -16,9 +16,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, inject, onBeforeUnmount } from 'vue'
-import { IconContextKey } from './types'
-import { iconPath, iconSymbolId, registeredIcons } from '../util/icons'
+import { computed, inject, onActivated, onBeforeUnmount, onDeactivated } from 'vue'
+import { IconContextKey, iconPath, iconSymbolId, registeredIcons, spriteActivated, spriteDeactivated } from '../util/icons'
 
 /**
  * The shared <symbol>s icons draw from when the plugin's `iconSprite` is on.
@@ -39,11 +38,28 @@ import { iconPath, iconSymbolId, registeredIcons } from '../util/icons'
  */
 const context = inject(IconContextKey, undefined)
 
+// Counted in and out per instance. Inside <KeepAlive>, a page that is navigated
+// away from keeps its sprite alive but moves its symbols out of the document, so
+// deactivation counts as going away too. `active` keeps a kept-alive sprite that
+// is later destroyed from counting itself out twice.
 if (context?.sprite) {
-  context.spriteState.value = 'mounted'
-  onBeforeUnmount(() => {
-    context.spriteState.value = 'missing'
-  })
+  let active = false
+  const activate = (): void => {
+    if (!active) {
+      active = true
+      spriteActivated(context)
+    }
+  }
+  const deactivate = (): void => {
+    if (active) {
+      active = false
+      spriteDeactivated(context)
+    }
+  }
+  activate()
+  onActivated(activate)
+  onDeactivated(deactivate)
+  onBeforeUnmount(deactivate)
 }
 
 const names = computed(() => registeredIcons())
