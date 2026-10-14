@@ -646,4 +646,147 @@ describe('CatInput', () => {
       expect(wrapper.find('input').attributes('inputmode')).toBeUndefined()
     })
   })
+
+  describe('optional', () => {
+    it('emits undefined when a field holding a number is emptied', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 12, type: 'number', optional: true }
+      })
+      const input = wrapper.find('input')
+
+      ;(input.element as HTMLInputElement).value = ''
+      await input.trigger('input')
+
+      expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([undefined])
+    })
+
+    it('emits undefined from the clear button', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 12, type: 'number', optional: true, clearable: true }
+      })
+
+      await wrapper.find('.cat-input-clear-button').trigger('click')
+
+      expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([undefined])
+    })
+
+    it('keeps a typed 0 as 0', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 12, type: 'number', optional: true }
+      })
+      const input = wrapper.find('input')
+
+      ;(input.element as HTMLInputElement).value = '0'
+      await input.trigger('input')
+
+      expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([0])
+    })
+
+    it('emits numbers while the bound value is undefined or null', async () => {
+      for (const modelValue of [undefined, null]) {
+        const wrapper = mountComponent(CatInput, {
+          props: { modelValue, type: 'number', optional: true }
+        })
+        const input = wrapper.find('input')
+
+        expect((input.element as HTMLInputElement).value).toBe('')
+        ;(input.element as HTMLInputElement).value = '12.5'
+        await input.trigger('input')
+
+        expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([12.5])
+        wrapper.unmount()
+      }
+    })
+
+    it('formats with decimals once the first number is typed', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: {
+          'modelValue': undefined,
+          'type': 'number',
+          'optional': true,
+          'decimals': 2,
+          'onUpdate:modelValue': (v: number | undefined) => wrapper.setProps({ modelValue: v })
+        }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = '3'
+      await input.trigger('input')
+      await input.trigger('blur')
+
+      expect(el.value).toBe('3.00')
+      wrapper.unmount()
+    })
+
+    it('stays empty while focused when emptied, and after blur', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: {
+          'modelValue': 7,
+          'type': 'number',
+          'optional': true,
+          'onUpdate:modelValue': (v: number | undefined) => wrapper.setProps({ modelValue: v })
+        }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = ''
+      await input.trigger('input')
+      expect(el.value).toBe('')
+
+      await input.trigger('blur')
+      expect(el.value).toBe('')
+      wrapper.unmount()
+    })
+
+    it('replaces typed text when the model is reset to undefined while focused', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 5, type: 'number', optional: true }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      await wrapper.setProps({ modelValue: undefined })
+      expect(el.value).toBe('')
+
+      await wrapper.setProps({ modelValue: 5 })
+      expect(el.value).toBe('5')
+      wrapper.unmount()
+    })
+
+    // A template's bare `optional` attribute arrives as "". It is cast to true
+    // only if the prop has a Boolean runtime type, which a bare generic
+    // parameter did not give it.
+    it('takes effect from a bare attribute', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: undefined, type: 'number' },
+        attrs: { optional: '' }
+      })
+      const input = wrapper.find('input')
+
+      ;(input.element as HTMLInputElement).value = '45'
+      await input.trigger('input')
+      ;(input.element as HTMLInputElement).value = ''
+      await input.trigger('input')
+
+      expect(wrapper.emitted('update:modelValue')).toEqual([[45], [undefined]])
+    })
+
+    it('has no effect on a text input', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 'abc', optional: true, clearable: true }
+      })
+
+      await wrapper.find('.cat-input-clear-button').trigger('click')
+
+      expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([''])
+    })
+  })
 })
