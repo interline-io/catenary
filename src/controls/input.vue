@@ -448,6 +448,16 @@ input[type="search"]::-webkit-search-decoration {
   margin-bottom: 0;
 }
 
+/* Bulma colors a static addon with `text-weak` on `scheme-main-ter`, which
+   measures 4.26:1 in the light theme and 4.20:1 in the dark one, short of the
+   4.5:1 that WCAG 1.4.3 asks of text this size. The addon carries the unit, so
+   it is real content rather than decoration. `text` follows the theme and
+   measures 8.59:1 and 7.66:1. Set through Bulma's own token so a consumer can
+   still restyle it. */
+.button.cat-input-addon {
+  --bulma-button-static-color: var(--bulma-text);
+}
+
 /* Override default button styling so the clickable right icon visually
    matches the non-clickable span variant. */
 .cat-input-icon-button {
