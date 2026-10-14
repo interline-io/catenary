@@ -44,7 +44,7 @@ Tests use **Vitest** with jsdom environment. Test files live alongside component
 
 - **vue** (peer) — Vue 3.5+
 - **bulma** — CSS framework (classes applied via computed properties, some SCSS imports)
-- **@mdi/js** — Material Design Icons path data. Icons render through `controls/icon-glyph.vue`: a name registered in `util/icons.ts` (Catenary registers every icon its controls use; apps add theirs via the plugin's `icons` option or `registerIcons`) is an inline SVG, any other falls back to the **@mdi/font** class (`mdi mdi-check`), an optional peer. When a control gains a built-in icon, register it in `util/icons.ts`.
+- **@mdi/js** — Material Design Icons path data. Icons render through `controls/icon-glyph.vue`: a name registered in `util/icons.ts` (Catenary registers every icon its controls use; apps add theirs via the plugin's `icons` option or `registerIcons`) is an inline SVG, any other falls back to the **@mdi/font** class (`mdi mdi-check`), an optional peer. When a control gains a built-in icon, register it in `util/icons.ts`. Per-app icon settings (`strictIcons`, `iconSprite`) live in an `IconContext` the plugin provides under `IconContextKey`; the sprite renders every registered icon because a server render cannot know the icons of async components that render after it.
 - **date-fns** — Used only by the datepicker component
 
 ### CSS Conventions

@@ -11,7 +11,8 @@
     aria-hidden="true"
     focusable="false"
   >
-    <path :d="path" />
+    <use v-if="useSprite" :href="`#${iconSymbolId(name)}`" />
+    <path v-else :d="path" />
   </svg>
   <i
     v-else
@@ -23,8 +24,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { iconPath } from '../util/icons'
+import { computed, inject, onMounted } from 'vue'
+import { IconContextKey } from './types'
+import { expectIconSprite, iconPath, iconSymbolId, reportUnregisteredIcon } from '../util/icons'
 
 /**
  * One MDI icon glyph, with no container. Renders an inline SVG when the name is
@@ -32,6 +34,10 @@ import { iconPath } from '../util/icons'
  * 1em square, so a glyph is the same size either way: `px` sets it the way the
  * font's `mdi-24px`/`mdi-36px`/`mdi-48px` classes do, and without it the glyph
  * follows the surrounding font size, as the webfont's does.
+ *
+ * With the plugin's `iconSprite`, the SVG references the icon's <symbol> in
+ * <cat-icon-sprite> instead of carrying its path; `strictIcons` reports names
+ * that fall back to the webfont.
  *
  * Internal: controls use it inside their own Bulma `.icon` containers;
  * cat-icon is the public component.
@@ -45,7 +51,26 @@ const props = defineProps<{
   spin?: boolean
 }>()
 
-const path = computed(() => iconPath(props.name))
+const context = inject(IconContextKey, undefined)
+
+const path = computed(() => {
+  const found = iconPath(props.name)
+  if (!found) {
+    reportUnregisteredIcon(context, props.name)
+  }
+  return found
+})
+
+// Only 'missing' falls back to the path: while 'pending' the sprite may still be
+// ahead (it renders last), and server and client agree on that, so hydration
+// matches.
+const useSprite = computed(() => !!context?.sprite && context.spriteState.value !== 'missing')
+
+onMounted(() => {
+  if (context?.sprite) {
+    expectIconSprite(context)
+  }
+})
 </script>
 
 <style lang="scss">

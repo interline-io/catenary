@@ -1,5 +1,6 @@
 import type { App, Plugin } from 'vue'
-import { registerIcons } from './util/icons'
+import { IconContextKey } from './controls/types'
+import { createIconContext, registerIcons } from './util/icons'
 
 import CatButton from './controls/button.vue'
 import CatCard from './controls/card.vue'
@@ -15,6 +16,7 @@ import CatField from './controls/field.vue'
 import CatFieldset from './controls/fieldset.vue'
 import CatLink from './controls/link.vue'
 import CatIcon from './controls/icon.vue'
+import CatIconSprite from './controls/icon-sprite.vue'
 import CatInput from './controls/input.vue'
 import CatLoading from './controls/loading.vue'
 import CatModal from './controls/modal.vue'
@@ -57,6 +59,7 @@ export {
   CatField,
   CatFieldset,
   CatIcon,
+  CatIconSprite,
   CatLink,
   CatInput,
   CatLoading,
@@ -91,7 +94,8 @@ export { TreeNode } from './util/tree'
 export type { TreeNodeConfig, TreeNodeOptions } from './util/tree'
 export { sanitizeFilename, sanitizeUrl } from './util/sanitize'
 export { useDownload } from './util/download'
-export { registerIcons } from './util/icons'
+export { createIconContext, registerIcons } from './util/icons'
+export type { IconContext, IconOptions } from './util/icons'
 export type { DownloadOptions } from './util/download'
 
 export interface CatenaryPluginOptions {
@@ -103,6 +107,18 @@ export interface CatenaryPluginOptions {
    * fall back to the `@mdi/font` webfont class.
    */
   icons?: Record<string, string>
+  /**
+   * Report an icon name that is not registered (it would need the webfont):
+   * 'warn' logs once per name outside production, 'error' throws, for tests.
+   * Off by default.
+   */
+  strictIcons?: 'warn' | 'error'
+  /**
+   * Draw icons from shared <symbol>s, each path once per page, instead of
+   * inline paths. Requires one <cat-icon-sprite /> in the app, last in the root
+   * layout. Off by default.
+   */
+  iconSprite?: boolean
 }
 
 // Vue plugin that registers all components globally
@@ -112,6 +128,7 @@ export const CatenaryPlugin: Plugin = {
     if (options?.icons) {
       registerIcons(options.icons)
     }
+    app.provide(IconContextKey, createIconContext({ strict: options?.strictIcons, sprite: options?.iconSprite }))
     const components: Record<string, any> = {
       Button: CatButton,
       Card: CatCard,
@@ -126,6 +143,7 @@ export const CatenaryPlugin: Plugin = {
       Field: CatField,
       Fieldset: CatFieldset,
       Icon: CatIcon,
+      IconSprite: CatIconSprite,
       Input: CatInput,
       Link: CatLink,
       Loading: CatLoading,
@@ -177,6 +195,7 @@ declare module 'vue' {
     CatField: typeof CatField
     CatFieldset: typeof CatFieldset
     CatIcon: typeof CatIcon
+    CatIconSprite: typeof CatIconSprite
     CatInput: typeof CatInput
     CatLink: typeof CatLink
     CatLoading: typeof CatLoading

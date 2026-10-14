@@ -5,6 +5,7 @@
 
 // Core variants and sizes that most components support
 import type { ComputedRef, InjectionKey } from 'vue'
+import type { IconContext } from '../util/icons'
 
 export const CoreVariants = ['primary', 'link', 'info', 'success', 'warning', 'danger'] as const
 export type CoreVariant = typeof CoreVariants[number]
@@ -221,3 +222,10 @@ export const RadioGroupNameKey: InjectionKey<ComputedRef<string | undefined>> = 
  * Consumers provide a Record<string, string> mapping route keys to vue-router route names.
  */
 export const LinkRoutesKey: InjectionKey<Record<string, string>> = Symbol('linkRoutes')
+
+/**
+ * Injection key for the app's icon settings (`strictIcons`, `iconSprite`),
+ * provided by the plugin. Absent when components are imported individually,
+ * which means the defaults: inline paths, no strict reporting.
+ */
+export const IconContextKey: InjectionKey<IconContext> = Symbol('catIcons')

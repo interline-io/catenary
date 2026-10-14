@@ -103,6 +103,11 @@ app.use(CatenaryPlugin, { icons: { account: mdiAccount, cog: mdiCog } })
 // or, outside the plugin: registerIcons({ account: mdiAccount })
 ```
 
+Two opt-in plugin options, both off by default:
+
+- `strictIcons: 'warn' | 'error'` reports a name that is not registered, which would show nothing without the webfont. `'warn'` logs once per name outside production; `'error'` throws while rendering, for test suites.
+- `iconSprite: true` draws each icon as a `<use>` of a shared `<symbol>`, so each path appears once per page. Place `<cat-icon-sprite />` once, last in your root layout. It holds every registered icon rather than only the page's, because a server render cannot know the icons of async components that render after it; that also keeps hydration in step. Without a mounted sprite, icons fall back to inline paths and warn in development.
+
 ## Components
 
 ### Form controls

@@ -1,4 +1,4 @@
-import { shallowReactive } from 'vue'
+import { nextTick, ref, shallowReactive, type Ref } from 'vue'
 import {
   mdiAlert,
   mdiAlertCircle,
@@ -51,6 +51,93 @@ export function registerIcons (icons: Record<string, string>): void {
 /** SVG path data for a registered icon, or undefined if the name is not registered. */
 export function iconPath (name: string): string | undefined {
   return registry.get(name)
+}
+
+/** Every registered name, in registration order. Reactive. */
+export function registeredIcons (): string[] {
+  return [...registry.keys()]
+}
+
+/** Element id of an icon's `<symbol>` in `<cat-icon-sprite>`. */
+export function iconSymbolId (name: string): string {
+  return `cat-icon-${name}`
+}
+
+export interface IconOptions {
+  /**
+   * Report a name that is not registered, which would render as the webfont
+   * class and show nothing once an app has dropped `@mdi/font`. 'warn' logs once
+   * per name outside production; 'error' throws, for test suites.
+   */
+  strict?: 'warn' | 'error'
+  /**
+   * Draw each icon as `<use>` of a `<symbol>` that `<cat-icon-sprite>` renders
+   * once per page, instead of repeating its path inline.
+   */
+  sprite?: boolean
+}
+
+/**
+ * Icon settings and state for one app, provided by the plugin. Per app rather
+ * than module-wide, so concurrent server renders cannot share it. The registry
+ * itself stays module-wide: it holds static path data, the same for every app.
+ */
+export interface IconContext extends IconOptions {
+  /** Names already warned about, so each is reported once */
+  warned: Set<string>
+  /**
+   * 'pending' until a <cat-icon-sprite> sets up; 'missing' once the app has
+   * mounted without one, which makes icons fall back to inline paths.
+   */
+  spriteState: Ref<'pending' | 'mounted' | 'missing'>
+  spriteChecked: boolean
+}
+
+export function createIconContext (options: IconOptions = {}): IconContext {
+  return { ...options, warned: new Set(), spriteState: ref('pending'), spriteChecked: false }
+}
+
+/** Apply `strict` to a name that is not registered. */
+export function reportUnregisteredIcon (context: IconContext | undefined, name: string): void {
+  if (!context?.strict) {
+    return
+  }
+  const message = `[catenary] Icon "${name}" is not registered, so it renders as the @mdi/font class `
+    + `"mdi-${name}", which shows nothing without the webfont. Register it with the plugin's \`icons\` `
+    + 'option or registerIcons().'
+  if (context.strict === 'error') {
+    throw new Error(message)
+  }
+  // Bare process.env check so bundlers strip it; see radio.vue.
+  if (process.env.NODE_ENV !== 'production' && !context.warned.has(name)) {
+    context.warned.add(name)
+    console.warn(message)
+  }
+}
+
+/**
+ * Called by each icon once mounted in sprite mode. If the app has mounted and no
+ * <cat-icon-sprite> has set up, icons switch to inline paths rather than point
+ * at symbols that do not exist; a sprite that mounts later (inside a lazily
+ * loaded layout, say) switches them back.
+ */
+export function expectIconSprite (context: IconContext): void {
+  if (context.spriteChecked) {
+    return
+  }
+  context.spriteChecked = true
+  nextTick(() => {
+    if (context.spriteState.value !== 'pending') {
+      return
+    }
+    context.spriteState.value = 'missing'
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn(
+        '[catenary] iconSprite is on but no <cat-icon-sprite> has mounted, so icons render '
+        + 'their paths inline until one does. Place <cat-icon-sprite /> once, last in the root layout.'
+      )
+    }
+  })
 }
 
 // The icons Catenary's own controls render, including their default icon props
