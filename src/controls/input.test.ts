@@ -1,12 +1,16 @@
 import { describe, it, expect, vi } from 'vitest'
+import { mount } from '@vue/test-utils'
+import { h } from 'vue'
 import CatInput from './input.vue'
+import CatField from './field.vue'
 import {
   mountComponent,
   testVModel,
   variantProps,
   sizeProps,
   testBulmaClasses,
-  testDisabledState
+  testDisabledState,
+  expectNoAxeViolations
 } from '../testutil/component-helpers'
 
 describe('CatInput', () => {
@@ -323,6 +327,239 @@ describe('CatInput', () => {
 
       expect(onInvalid).toHaveBeenCalledTimes(1)
       wrapper.unmount()
+    })
+  })
+
+  describe('prefix and suffix', () => {
+    it('renders no addon group without a prefix or suffix', () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: '' } })
+
+      expect(wrapper.find('.has-addons').exists()).toBe(false)
+      expect(wrapper.classes()).toEqual(['control'])
+    })
+
+    it('renders prefix and suffix as static addons around the input', () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 5, type: 'number', prefix: '$', suffix: 'per trip' }
+      })
+
+      testBulmaClasses(wrapper, ['field', 'has-addons', 'cat-input-addons'])
+      const controls = wrapper.findAll(':scope > .control')
+      expect(controls).toHaveLength(3)
+      expect(controls[0]!.text()).toBe('$')
+      expect(controls[1]!.find('input').exists()).toBe(true)
+      expect(controls[2]!.text()).toBe('per trip')
+      // The input takes the width the addons leave, as a lone input would.
+      expect(controls[1]!.classes()).toContain('is-expanded')
+    })
+
+    it('keeps the addons out of the tab order', () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: '', prefix: '$', suffix: 'USD' }
+      })
+
+      for (const addon of wrapper.findAll('.cat-input-addon')) {
+        expect(addon.element.tagName).toBe('SPAN')
+        expect(addon.classes()).toEqual(expect.arrayContaining(['button', 'is-static']))
+        expect(addon.attributes('tabindex')).toBeUndefined()
+      }
+      expect(wrapper.findAll('button')).toHaveLength(0)
+    })
+
+    it('hides the addons where drawn and adds them to the input description', () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: '', prefix: '$', suffix: 'USD', ariaDescribedby: 'hint' }
+      })
+
+      const [prefix, suffix] = wrapper.findAll('.cat-input-addon')
+      expect(prefix!.attributes('aria-hidden')).toBe('true')
+      expect(suffix!.attributes('aria-hidden')).toBe('true')
+      expect(wrapper.find('input').attributes('aria-describedby'))
+        .toBe(`${prefix!.attributes('id')} ${suffix!.attributes('id')} hint`)
+    })
+
+    it('sizes the addons with the input', () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: '', suffix: 'm', size: 'small' }
+      })
+
+      expect(wrapper.find('.cat-input-addon').classes()).toContain('is-small')
+    })
+
+    it('keeps icons and the clear button working beside an addon', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 3, type: 'number', prefix: '$', icon: 'cash', clearable: true }
+      })
+
+      const control = wrapper.find('.control.has-icons-left')
+      expect(control.classes()).toContain('has-icons-right')
+      await wrapper.find('.cat-input-clear-button').trigger('click')
+      expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([0])
+    })
+
+    // The group is the root once there is one, so layout classes space the
+    // whole group and a listener still sees events from every part of it.
+    it('routes root attributes to the addon group', async () => {
+      const onKeydown = vi.fn()
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: '', suffix: 'm' },
+        attrs: { class: 'mt-2', id: 'radius', onKeydown }
+      })
+
+      expect(wrapper.classes()).toEqual(expect.arrayContaining(['field', 'has-addons', 'mt-2']))
+      expect(wrapper.attributes('id')).toBeUndefined()
+      expect(wrapper.find('input').attributes('id')).toBe('radius')
+      for (const control of wrapper.findAll('.control')) {
+        expect(control.classes()).not.toContain('mt-2')
+      }
+
+      await wrapper.find('input').trigger('keydown', { key: 'Enter' })
+      expect(onKeydown).toHaveBeenCalledTimes(1)
+    })
+
+    it('adds and removes the addon group as the props change', async () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: '' } })
+
+      await wrapper.setProps({ suffix: 'minutes' })
+      expect(wrapper.find('.has-addons').exists()).toBe(true)
+
+      await wrapper.setProps({ suffix: undefined })
+      expect(wrapper.find('.has-addons').exists()).toBe(false)
+      expect(wrapper.find('input').attributes('aria-describedby')).toBeUndefined()
+    })
+
+    it('has no axe violations with a prefix and suffix', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 2.5, type: 'number', prefix: '$', suffix: 'USD', decimals: 2, ariaLabel: 'Maximum fare in dollars' }
+      })
+
+      await expectNoAxeViolations(wrapper)
+      wrapper.unmount()
+    })
+
+    it('has no axe violations with a suffix inside a labelled cat-field', async () => {
+      const wrapper = mount(CatField, {
+        attachTo: document.body,
+        props: { label: 'Headway', message: 'Average time between trips' },
+        slots: { default: () => h(CatInput, { modelValue: 10, type: 'number', suffix: 'minutes' }) }
+      })
+
+      const input = wrapper.find('input')
+      expect(wrapper.find('label').attributes('for')).toBe(input.attributes('id'))
+      const describedby = input.attributes('aria-describedby')!.split(' ')
+      expect(describedby).toHaveLength(2)
+      expect(document.getElementById(describedby[0]!)?.textContent).toBe('minutes')
+      expect(document.getElementById(describedby[1]!)?.textContent?.trim()).toBe('Average time between trips')
+
+      await expectNoAxeViolations(wrapper)
+      wrapper.unmount()
+    })
+  })
+
+  describe('decimals', () => {
+    it('formats the value to the given places while not focused', () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 2.5, type: 'number', decimals: 2 }
+      })
+
+      expect((wrapper.find('input').element as HTMLInputElement).value).toBe('2.50')
+    })
+
+    it('emits the unrounded number typed, and formats only on blur', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 2.5, type: 'number', decimals: 2 }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      // Focusing does not redraw "2.50" as the model's "2.5".
+      expect(el.value).toBe('2.50')
+
+      el.value = '3.125'
+      await input.trigger('input')
+      expect(wrapper.emitted('update:modelValue')?.slice(-1)[0]).toEqual([3.125])
+      await wrapper.setProps({ modelValue: 3.125 })
+      expect(el.value).toBe('3.125')
+
+      await input.trigger('blur')
+      expect(el.value).toBe('3.13')
+      wrapper.unmount()
+    })
+
+    it('replaces the typed text when the model is set from outside while focused', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 2.5, type: 'number', decimals: 2 }
+      })
+      const input = wrapper.find('input')
+
+      await input.trigger('focus')
+      await wrapper.setProps({ modelValue: 4 })
+
+      expect((input.element as HTMLInputElement).value).toBe('4.00')
+      wrapper.unmount()
+    })
+
+    it('leaves an emptied numeric field empty until blur', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 7, type: 'number' }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = ''
+      await input.trigger('input')
+      expect(wrapper.emitted('update:modelValue')?.slice(-1)[0]).toEqual([0])
+      await wrapper.setProps({ modelValue: 0 })
+      // Before, the field refilled with "0" before the next digit could be typed.
+      expect(el.value).toBe('')
+
+      await input.trigger('blur')
+      expect(el.value).toBe('0')
+      wrapper.unmount()
+    })
+
+    it('ignores decimals for a non-numeric type', () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: '2.5', decimals: 2 }
+      })
+
+      const input = wrapper.find('input')
+      expect((input.element as HTMLInputElement).value).toBe('2.5')
+      expect(input.attributes('inputmode')).toBeUndefined()
+    })
+
+    it('defaults inputmode to decimal, or numeric for whole numbers', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 1, type: 'number', decimals: 2 }
+      })
+      expect(wrapper.find('input').attributes('inputmode')).toBe('decimal')
+
+      await wrapper.setProps({ decimals: 0 })
+      expect(wrapper.find('input').attributes('inputmode')).toBe('numeric')
+      expect((wrapper.find('input').element as HTMLInputElement).value).toBe('1')
+    })
+
+    it('lets a caller-supplied inputmode win', () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 1, type: 'number', decimals: 2 },
+        attrs: { inputmode: 'text' }
+      })
+
+      expect(wrapper.find('input').attributes('inputmode')).toBe('text')
+    })
+
+    it('sets no inputmode without decimals', () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 1, type: 'number' }
+      })
+
+      expect(wrapper.find('input').attributes('inputmode')).toBeUndefined()
     })
   })
 })

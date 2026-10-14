@@ -1,62 +1,83 @@
 <template>
   <div
-    class="control"
-    :class="controlClasses"
+    :class="hasAddons ? ['field', 'has-addons', 'cat-input-addons'] : ['control', ...controlClasses]"
     v-bind="rootAttrs"
   >
-    <input
-      :id="id ?? fieldId"
-      ref="inputRef"
-      class="input"
-      :class="inputClasses"
-      :type="type"
-      :value="modelValue"
-      :placeholder="placeholder"
-      :disabled="disabled"
-      :readonly="readonly || static"
-      :aria-label="ariaLabel"
-      :aria-describedby="mergedDescribedby"
-      :aria-invalid="ariaInvalid"
-      :maxlength="maxlength"
-      :min="min"
-      :max="max"
-      :step="step"
-      v-bind="controlAttrs"
-      @input="handleInput"
-    >
-    <span v-if="icon" class="icon is-left">
-      <i :class="`mdi mdi-${icon}`" aria-hidden="true" />
-    </span>
-    <button
-      v-if="showClear"
-      type="button"
-      class="icon is-right is-clickable cat-input-icon-button cat-input-clear-button"
-      :aria-label="clearAriaLabel"
-      @click="handleClear"
-    >
-      <i class="mdi mdi-close-circle" aria-hidden="true" />
-    </button>
-    <button
-      v-else-if="iconRight && iconRightClickable"
-      type="button"
-      class="icon is-right is-clickable cat-input-icon-button"
-      :aria-label="iconRightAriaLabel || 'Action'"
-      @click="handleIconRightClick"
-    >
-      <i :class="`mdi mdi-${iconRight}`" aria-hidden="true" />
-    </button>
-    <span
-      v-else-if="iconRight"
-      class="icon is-right"
-      aria-hidden="true"
-    >
-      <i :class="`mdi mdi-${iconRight}`" />
-    </span>
+    <div v-if="prefix" class="control">
+      <span
+        :id="prefixId"
+        class="button is-static cat-input-addon"
+        :class="addonClasses"
+        aria-hidden="true"
+      >{{ prefix }}</span>
+    </div>
+    <component :is="hasAddons ? 'div' : Passthrough" v-bind="hasAddons ? { class: ['control', ...controlClasses] } : {}">
+      <input
+        :id="id ?? fieldId"
+        ref="inputRef"
+        class="input"
+        :class="inputClasses"
+        :type="type"
+        :value="displayValue"
+        :placeholder="placeholder"
+        :disabled="disabled"
+        :readonly="readonly || static"
+        :aria-label="ariaLabel"
+        :aria-describedby="mergedDescribedby"
+        :aria-invalid="ariaInvalid"
+        :maxlength="maxlength"
+        :min="min"
+        :max="max"
+        :step="step"
+        :inputmode="defaultInputmode"
+        v-bind="controlAttrs"
+        @input="handleInput"
+        @focus="handleFocus"
+        @blur="handleBlur"
+      >
+      <span v-if="icon" class="icon is-left">
+        <i :class="`mdi mdi-${icon}`" aria-hidden="true" />
+      </span>
+      <button
+        v-if="showClear"
+        type="button"
+        class="icon is-right is-clickable cat-input-icon-button cat-input-clear-button"
+        :aria-label="clearAriaLabel"
+        @click="handleClear"
+      >
+        <i class="mdi mdi-close-circle" aria-hidden="true" />
+      </button>
+      <button
+        v-else-if="iconRight && iconRightClickable"
+        type="button"
+        class="icon is-right is-clickable cat-input-icon-button"
+        :aria-label="iconRightAriaLabel || 'Action'"
+        @click="handleIconRightClick"
+      >
+        <i :class="`mdi mdi-${iconRight}`" aria-hidden="true" />
+      </button>
+      <span
+        v-else-if="iconRight"
+        class="icon is-right"
+        aria-hidden="true"
+      >
+        <i :class="`mdi mdi-${iconRight}`" />
+      </span>
+    </component>
+    <div v-if="suffix" class="control">
+      <span
+        :id="suffixId"
+        class="button is-static cat-input-addon"
+        :class="addonClasses"
+        aria-hidden="true"
+      >{{ suffix }}</span>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string">
-import { computed, inject, ref, useAttrs } from 'vue'
+import { computed, inject, ref, useAttrs, useId } from 'vue'
+import type { FunctionalComponent } from 'vue'
 import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { InputVariant, InputSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
@@ -79,6 +100,10 @@ import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
 // clear button, which are siblings of the native element rather than inside it.
 // The native element gets what the root cannot see — `@focus`, `@blur`,
 // `@invalid`, `@scroll`. See `util/attrs.ts` for the split.
+//
+// With a `prefix` or `suffix` the root is the addon group rather than the
+// `.control`, so `mt-2` spaces the whole group and a listener still sees events
+// from every part of it.
 defineOptions({
   inheritAttrs: false
 })
@@ -87,6 +112,14 @@ const attrs = useAttrs()
 
 // class and style reach both; a bubbling listener is the wrapper's alone.
 const rootAttrs = computed(() => filterAttrs(attrs, isRootAttr))
+
+// With a prefix or suffix the root is a Bulma addon group, which layout classes
+// and listeners land on, and the input and its icons sit in a `.control` of
+// their own inside it. Without one, the root *is* that `.control` and this
+// stands in for the inner one, rendering its children with no element of its
+// own, so the markup is the single `.control` it always was. It is never the
+// root itself: a fragment root would drop a parent's scoped-style id and `$el`.
+const Passthrough: FunctionalComponent = (_props, { slots }) => slots.default?.()
 const controlAttrs = computed(() => filterAttrs(attrs, isControlAttr))
 const fieldId = inject(FieldIdKey, undefined)
 const inputRef = ref<HTMLInputElement | null>(null)
@@ -101,6 +134,8 @@ const inputRef = ref<HTMLInputElement | null>(null)
  * <cat-input v-model="email" type="email" variant="primary" />
  * <cat-input v-model="numberValue" type="number" />
  * <cat-input v-model="query" clearable @clear="onClear" />
+ * <cat-input v-model="fare" type="number" prefix="$" :decimals="2" aria-label="Maximum fare in dollars" />
+ * <cat-input v-model="headway" type="number" suffix="minutes" />
  */
 
 const props = withDefaults(defineProps<{
@@ -161,6 +196,29 @@ const props = withDefaults(defineProps<{
   clearAriaLabel?: string
   /** Make input take full width (expanded). @default false */
   expanded?: boolean
+  /**
+   * Static text attached to the start of the input, such as a currency
+   * symbol. Renders as a Bulma static addon, which is not focusable.
+   *
+   * The visible text is hidden from assistive technology and added to the
+   * input's accessible description instead, so it is announced with the input
+   * rather than as a stray "$" before it. It is still only a description: give
+   * the input a name that carries the unit too, e.g. "Maximum fare in dollars".
+   */
+  prefix?: string
+  /** Static text attached to the end of the input, such as a unit ("minutes", "m"). Exposed the same way as `prefix`. */
+  suffix?: string
+  /**
+   * For `type="number"`, the number of decimal places to show while the input
+   * is not focused: with 2, a value of 2.5 displays as "2.50". Only the display
+   * is formatted, and only on blur, so the cursor never moves while someone is
+   * typing; the model keeps the number exactly as typed.
+   *
+   * Also defaults `inputmode` to `decimal` (or `numeric` for 0), so a phone
+   * shows a number pad. Pass `inputmode` to override it, e.g. for a field that
+   * accepts negative numbers, which neither pad can type on iOS.
+   */
+  decimals?: number
 }>(), {
   id: undefined,
   modelValue: undefined,
@@ -185,7 +243,10 @@ const props = withDefaults(defineProps<{
   iconRightAriaLabel: undefined,
   clearable: false,
   clearAriaLabel: 'Clear',
-  expanded: false
+  expanded: false,
+  prefix: undefined,
+  suffix: undefined,
+  decimals: undefined
 })
 
 const emit = defineEmits<{
@@ -199,8 +260,20 @@ const emit = defineEmits<{
 // (the field's or this component's own variant) as aria-invalid.
 const fieldDescribedby = inject(FieldDescribedbyKey, undefined)
 const fieldVariant = inject(FieldVariantKey, undefined)
+// A prefix or suffix is hidden from assistive technology where it is drawn, so
+// it reaches the input through the description instead. Pointing
+// aria-describedby at an aria-hidden element is deliberate: a referenced node's
+// text is included even when it is hidden, which is what lets a screen reader
+// in browse mode skip the bare "$" and still hear it on the focused input.
+const prefixId = useId()
+const suffixId = useId()
 const mergedDescribedby = computed(() => {
-  const parts = [props.ariaDescribedby, fieldDescribedby?.value].filter(Boolean)
+  const parts = [
+    props.prefix ? prefixId : undefined,
+    props.suffix ? suffixId : undefined,
+    props.ariaDescribedby,
+    fieldDescribedby?.value
+  ].filter(Boolean)
   return parts.length > 0 ? parts.join(' ') : undefined
 })
 const ariaInvalid = computed(() => {
@@ -214,6 +287,11 @@ const showClear = computed(() => {
   const hasValue = value !== undefined && value !== null && String(value).length > 0
   return props.clearable && hasValue && !props.disabled && !props.readonly && !props.static
 })
+
+const hasAddons = computed(() => !!(props.prefix || props.suffix))
+
+// Sized with the input so the addon and the input share a height.
+const addonClasses = computed(() => props.size ? [`is-${props.size}`] : [])
 
 const controlClasses = computed(() => {
   const classes: string[] = []
@@ -230,7 +308,10 @@ const controlClasses = computed(() => {
     classes.push('is-loading')
   }
 
-  if (props.expanded) {
+  // In an addon group the input takes whatever width the addons leave, so it
+  // fills its container the way a lone input does. Bulma's addon controls
+  // otherwise shrink to their content.
+  if (props.expanded || hasAddons.value) {
     classes.push('is-expanded')
   }
 
@@ -259,12 +340,58 @@ const inputClasses = computed(() => {
   return classes
 })
 
+const formatsDecimals = computed(() => props.type === 'number' && props.decimals !== undefined)
+
+const defaultInputmode = computed(() => {
+  if (!formatsDecimals.value) return undefined
+  return props.decimals! > 0 ? 'decimal' : 'numeric'
+})
+
+// What handleInput emits for a numeric field's text, kept in one place so the
+// display can tell whether the model still matches what was typed.
+const parseNumber = (text: string): number => text === '' ? 0 : Number(text)
+
+// While focused, a numeric field shows what the person typed. Without this, the
+// model's own rendering replaces the text on every keystroke that changes it:
+// deleting the last digit emits 0 and the field fills back in with "0" before
+// the next digit can be typed, and with `decimals` "2.50" would be redrawn as
+// "2.5" on focus. The typed text gives way only when the model changes to
+// something it does not parse to, i.e. when the value is set from outside, as
+// a reset button does.
+const focused = ref(false)
+const typed = ref('')
+
+const displayValue = computed(() => {
+  const value = props.modelValue
+  if (props.type !== 'number' || typeof value !== 'number') {
+    return value
+  }
+  if (focused.value && parseNumber(typed.value) === value) {
+    return typed.value
+  }
+  if (formatsDecimals.value && Number.isFinite(value)) {
+    // toFixed throws a RangeError outside 0..100.
+    return value.toFixed(Math.max(0, Math.min(100, Math.trunc(props.decimals!))))
+  }
+  return value
+})
+
+function handleFocus (event: FocusEvent) {
+  typed.value = (event.target as HTMLInputElement).value
+  focused.value = true
+}
+
+function handleBlur () {
+  focused.value = false
+}
+
 function handleInput (event: Event) {
   const target = event.target as HTMLInputElement
+  typed.value = target.value
 
   // Convert to number if the modelValue type is number
   if (props.type === 'number' && typeof props.modelValue === 'number') {
-    const numValue = target.value === '' ? 0 : Number(target.value)
+    const numValue = parseNumber(target.value)
     emit('update:modelValue', numValue as T)
   } else {
     emit('update:modelValue', target.value as T)
@@ -310,6 +437,15 @@ input[type="search"]::-webkit-search-cancel-button,
 input[type="search"]::-webkit-search-decoration {
   appearance: none;
   -webkit-appearance: none;
+}
+
+/* The addon group is a .field only because Bulma's addon rules are written
+   against `.field.has-addons`. It is part of one control, so it must not take
+   the spacing Bulma gives a field that is followed by another, which would
+   push a cat-field's help text away from its input. `.field` repeats here to
+   outrank `.field:not(:last-child)` regardless of stylesheet order. */
+.field.cat-input-addons {
+  margin-bottom: 0;
 }
 
 /* Override default button styling so the clickable right icon visually

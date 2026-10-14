@@ -90,6 +90,28 @@
         </p>
       </demo-box>
 
+      <demo-box label="Prefix, Suffix and Decimals">
+        <p class="mb-3">
+          <code>prefix</code> and <code>suffix</code> attach static text, such as a currency symbol or a unit. <code>decimals</code> formats a
+          <code>type="number"</code> value to a fixed number of places whenever the input is not focused; the model keeps the number as typed.
+        </p>
+        <cat-field label="Maximum fare in dollars">
+          <cat-input v-model="fare" type="number" min="0" step="0.25" prefix="$" :decimals="2" />
+        </cat-field>
+        <cat-field label="Average frequency" message="Average time between trips">
+          <cat-input v-model="frequency" type="number" min="0" suffix="minutes" />
+        </cat-field>
+        <cat-field label="Price per kilometer">
+          <cat-input v-model="perKm" type="number" min="0" step="0.01" prefix="$" suffix="/ km" :decimals="2" size="small" icon="cash" clearable />
+        </cat-field>
+        <p class="has-text-grey">
+          Values: {{ fare }}, {{ frequency }}, {{ perKm }}
+        </p>
+        <cat-button class="mt-2" size="small" @click="fare = 3; frequency = 15; perKm = 0.4">
+          Reset
+        </cat-button>
+      </demo-box>
+
       <demo-box label="Example: Maxlength" example>
         <cat-field label="Username (max 20 chars)">
           <cat-input v-model="username" maxlength="20" placeholder="Enter username" />
@@ -118,6 +140,17 @@
           </p>
           <p class="mt-2">
             The <code>clearable</code> button is likewise a real <code>&lt;button&gt;</code>, focusable in tab order, labelled <code>"Clear"</code> by default (override with <code>clear-aria-label</code>). Its <code>mdi-close-circle</code> icon is <code>aria-hidden</code>, and activating it returns focus to the input so keyboard users are not stranded when the button disappears.
+          </p>
+          <p class="mt-2">
+            A <code>prefix</code> or <code>suffix</code> is a <code>&lt;span&gt;</code> styled as a Bulma static addon, so it is never focusable. It is
+            <code>aria-hidden</code> where it is drawn and added to the input's <code>aria-describedby</code> instead, so a screen reader announces
+            "Maximum fare in dollars, 3.00, $" on the focused input rather than reading a bare "$" before it in browse mode. A description is
+            announced less reliably than a name, so the label should name the unit too (WCAG 1.3.1 and 3.3.2).
+          </p>
+          <p class="mt-2">
+            <code>decimals</code> reformats only on blur, never on a keystroke, so the caret never moves while typing. It also sets
+            <code>inputmode="decimal"</code> (<code>numeric</code> for 0) to show a number pad on phones; pass <code>inputmode</code> yourself for a field that
+            takes negative numbers, since neither iOS pad has a minus key.
           </p>
           <p class="mt-2">
             Parents that need to focus the input programmatically can call <code>focus()</code> / <code>blur()</code> / <code>select()</code> via a template ref (exposed by <code>defineExpose</code>).
@@ -187,4 +220,7 @@ const clearable = ref('Type to test')
 const clearText = ref('Clear me')
 const clearCount = ref(0)
 const username = ref('')
+const fare = ref(2.5)
+const frequency = ref(15)
+const perKm = ref(0.4)
 </script>
