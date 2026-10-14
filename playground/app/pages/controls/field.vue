@@ -46,10 +46,25 @@
 
       <!-- Required Field -->
       <demo-box label="Required Field">
-        <cat-field label="Full Name:">
-          <cat-input v-model="fullName" placeholder="John Doe" />
+        <p class="mb-3">
+          Fields marked with an asterisk (*) are required.
+        </p>
+        <!-- `required` reaches the native input, which exposes the state to
+             assistive technology and to constraint validation. The asterisk
+             is the visible cue and is hidden from assistive technology, which
+             would otherwise hear "star" on top of "required". The sentence
+             above explains it, since an unexplained asterisk is not an
+             instruction (WCAG 3.3.2). -->
+        <cat-field>
+          <template #label>
+            Full Name: <span aria-hidden="true">*</span>
+          </template>
+          <cat-input v-model="fullName" required placeholder="John Doe" />
         </cat-field>
-        <cat-field label="Company:" message="This information is required">
+        <cat-field message="Leave blank if you are not ordering for a business">
+          <template #label>
+            Company:
+          </template>
           <cat-input v-model="company" placeholder="Acme Corp" />
         </cat-field>
       </demo-box>
@@ -81,10 +96,10 @@
         </cat-field>
 
         <cat-field label="Search:" addons>
-          <cat-input v-model="searchQuery" expanded placeholder="Search products..." />
-          <cat-button variant="info">
-            <cat-icon icon="magnify" />
-          </cat-button>
+          <cat-input v-model="productQuery" expanded placeholder="Search products..." />
+          <!-- Icon-only, so the name goes on the button: cat-icon is hidden
+               from assistive technology unless it is given a label itself. -->
+          <cat-button variant="info" icon="magnify" aria-label="Search" />
         </cat-field>
       </demo-box>
 
@@ -105,7 +120,7 @@
         </cat-fieldset>
 
         <cat-field label="Search with button:" grouped>
-          <cat-input v-model="searchQuery" expanded placeholder="Find a repository..." />
+          <cat-input v-model="repoQuery" expanded placeholder="Find a repository..." />
           <cat-button variant="info">
             Search
           </cat-button>
@@ -125,7 +140,11 @@
           <cat-field addons>
             <cat-input v-model="startDate" aria-label="Start date" type="date" expanded />
             <div class="control">
-              <span class="button is-static">to</span>
+              <!-- Bulma's static addon text is text-weak, about 4.2:1 on its
+                   background in either theme; has-text-text follows the
+                   theme and clears 4.5:1. cat-input's prefix and suffix do
+                   the same. -->
+              <span class="button is-static has-text-text">to</span>
             </div>
             <cat-input v-model="endDate" aria-label="End date" type="date" expanded />
           </cat-field>
@@ -265,7 +284,10 @@
             <strong>Two controls under one labeled field share its id.</strong> The field mints a single id for its label to name, so a second <code>cat-input</code> inside the same field would render a duplicate. Give every control after the first an explicit <code>id</code>, or split them into separate fields inside a <code>cat-fieldset</code>. A field without a label hands out no id, so the controls of a label-less group, such as a filter bar, need nothing extra.
           </p>
           <p class="mt-3">
-            <strong>Validation.</strong> Pass the error through <code>variant</code> and <code>message</code> rather than writing a <code>&lt;p class="help"&gt;</code> by hand. The message gets a stable id that wrapped controls merge into their <code>aria-describedby</code>, and <code>variant="danger"</code> renders <code>aria-invalid="true"</code> on the control — neither of which a hand-written paragraph provides. Colour is never the only signal: the message text carries the meaning.
+            <strong>Validation.</strong> Pass the error through <code>variant</code> and <code>message</code> rather than writing a <code>&lt;p class="help"&gt;</code> by hand. The message gets a stable id that wrapped controls merge into their <code>aria-describedby</code>, and <code>variant="danger"</code> renders <code>aria-invalid="true"</code> on the control — neither of which a hand-written paragraph provides. Color is never the only signal: the message text carries the meaning.
+          </p>
+          <p class="mt-3">
+            <strong>Units and currency.</strong> Put a unit or currency symbol on the input with <code>cat-input</code>'s <code>prefix</code> or <code>suffix</code>, not on an addon button, which would be a tab stop that does nothing. The field label still names the input, so it should carry the unit too ("Maximum fare in dollars"). The unit text is hidden where it is drawn and placed first in the input's <code>aria-describedby</code>, ahead of the field's <code>message</code>, so a fare field with the help text "Peak hours only" is described as "$ Peak hours only".
           </p>
           <p class="mt-3">
             In development, <code>cat-field</code> warns in the console whenever its label resolves to nothing, to more than one element, or to no form control at all, and names the fix for that case.
@@ -299,7 +321,8 @@ const horizontalEmail = ref('')
 const horizontalPhone = ref('')
 
 const urlPath = ref('')
-const searchQuery = ref('')
+const productQuery = ref('')
+const repoQuery = ref('')
 
 const firstName = ref('')
 const lastName = ref('')
