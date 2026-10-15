@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { h } from 'vue'
+import { createSSRApp, h, nextTick, ref } from 'vue'
+import { renderToString } from 'vue/server-renderer'
 import CatInput from './input.vue'
 import CatField from './field.vue'
 import {
@@ -507,7 +508,8 @@ describe('CatInput', () => {
       await input.trigger('focus')
       await wrapper.setProps({ modelValue: 4 })
 
-      expect((input.element as HTMLInputElement).value).toBe('4.00')
+      // As with Vue's v-model, the number itself while focused; formatted on blur
+      expect((input.element as HTMLInputElement).value).toBe('4')
       wrapper.unmount()
     })
 
@@ -787,6 +789,369 @@ describe('CatInput', () => {
       await wrapper.find('.cat-input-clear-button').trigger('click')
 
       expect(wrapper.emitted('update:modelValue')?.[0]).toEqual([''])
+    })
+  })
+
+  // The parent stores the value somewhere that applies it late or not at all,
+  // such as the URL. The input must still show the model once editing ends,
+  // and must not mistake a late echo of its own emit for an outside change.
+  describe('a parent that ignores or delays emitted values', () => {
+    it('restores the model on blur when the parent ignores a cleared field', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: {
+          'modelValue': 2.75,
+          'type': 'number',
+          'optional': true,
+          'decimals': 2,
+          // Applies numbers only, so the undefined from clearing is dropped
+          'onUpdate:modelValue': (v: number | undefined) => { if (v != null) wrapper.setProps({ modelValue: v }) }
+        }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = ''
+      await input.trigger('input')
+      expect(el.value).toBe('')
+
+      await input.trigger('blur')
+      await nextTick()
+      expect(el.value).toBe('2.75')
+      wrapper.unmount()
+    })
+
+    it('restores the model on blur when the parent ignores typed text', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { 'modelValue': 4, 'type': 'number', 'onUpdate:modelValue': () => {} }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = '9'
+      await input.trigger('input')
+      // Still the person's text while they edit
+      expect(el.value).toBe('9')
+
+      await input.trigger('blur')
+      await nextTick()
+      expect(el.value).toBe('4')
+      wrapper.unmount()
+    })
+
+    // As with Vue's own v-model on <input>, the model is expected to update as
+    // soon as a value is emitted. Late updates are the parent's to avoid, by
+    // binding to synchronous state and writing slow stores from there.
+    // jsdom sanitizes "2." to "" when it is assigned to a number input, so the
+    // half-typed decimal is checked in a browser instead.
+    it('keeps the typed text with a parent that applies each emit at once', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: {
+          'modelValue': 1,
+          'type': 'number',
+          'decimals': 2,
+          'onUpdate:modelValue': (v: number) => wrapper.setProps({ modelValue: v })
+        }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      for (const text of ['2', '2.7', '2.75']) {
+        el.value = text
+        await input.trigger('input')
+        await nextTick()
+        expect(el.value).toBe(text)
+      }
+      expect(wrapper.emitted('update:modelValue')).toEqual([[2], [2.7], [2.75]])
+
+      await input.trigger('blur')
+      expect(el.value).toBe('2.75')
+      wrapper.unmount()
+    })
+
+    it('replaces the typed text when the model changes to something else while focused', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 1, type: 'number', decimals: 2 }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = '2'
+      await input.trigger('input')
+      // A reset from outside, such as a button that sets the value
+      await wrapper.setProps({ modelValue: 5 })
+      expect(el.value).toBe('5')
+      wrapper.unmount()
+    })
+  })
+
+  // v-model.lazy on a component arrives as modelModifiers: { lazy: true }
+  describe('v-model.lazy', () => {
+    it('emits on change rather than on each keystroke', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 'a', modelModifiers: { lazy: true } }
+      })
+      const input = wrapper.find('input')
+
+      ;(input.element as HTMLInputElement).value = 'ab'
+      await input.trigger('input')
+      ;(input.element as HTMLInputElement).value = 'abc'
+      await input.trigger('input')
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+
+      await input.trigger('change')
+      expect(wrapper.emitted('update:modelValue')).toEqual([['abc']])
+    })
+
+    it('converts and formats a number committed on change', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: {
+          'modelValue': undefined,
+          'type': 'number',
+          'optional': true,
+          'decimals': 2,
+          'modelModifiers': { lazy: true },
+          'onUpdate:modelValue': (v: number | undefined) => wrapper.setProps({ modelValue: v })
+        }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = '2.5'
+      await input.trigger('input')
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+      expect(el.value).toBe('2.5')
+
+      // The browser fires change, then blur, when the field is left
+      await input.trigger('change')
+      await input.trigger('blur')
+      await nextTick()
+      expect(wrapper.emitted('update:modelValue')).toEqual([[2.5]])
+      expect(el.value).toBe('2.50')
+      wrapper.unmount()
+    })
+
+    it('commits an emptied optional field as undefined on change', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 3, type: 'number', optional: true, modelModifiers: { lazy: true } }
+      })
+      const input = wrapper.find('input')
+
+      ;(input.element as HTMLInputElement).value = ''
+      await input.trigger('input')
+      await input.trigger('change')
+
+      expect(wrapper.emitted('update:modelValue')).toEqual([[undefined]])
+    })
+
+    it('still clears at once from the clear button', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 'abc', clearable: true, modelModifiers: { lazy: true } }
+      })
+
+      await wrapper.find('.cat-input-clear-button').trigger('click')
+
+      expect(wrapper.emitted('update:modelValue')).toEqual([['']])
+    })
+
+    it('ignores change without the modifier, which already emitted on input', async () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: 'a' } })
+      const input = wrapper.find('input')
+
+      ;(input.element as HTMLInputElement).value = 'ab'
+      await input.trigger('input')
+      await input.trigger('change')
+
+      expect(wrapper.emitted('update:modelValue')).toEqual([['ab']])
+    })
+
+    it('does not leak modelModifiers onto the native input as an attribute', () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: 'a', modelModifiers: { lazy: true } } })
+      expect(wrapper.find('input').attributes('modelmodifiers')).toBeUndefined()
+    })
+  })
+
+  describe('IME composition and server rendering', () => {
+    // Text mid-composition (Japanese, Chinese, Korean input methods) is not a
+    // value yet, so it is emitted once the composition ends, as Vue's v-model
+    // does.
+    it('emits once when a composition ends, not on each keystroke within it', async () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: '' } })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('compositionstart')
+      el.value = 'に'
+      await input.trigger('input')
+      el.value = 'にほ'
+      await input.trigger('input')
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+
+      el.value = '日本'
+      await input.trigger('compositionend')
+      expect(wrapper.emitted('update:modelValue')).toEqual([['日本']])
+    })
+
+    it('does not rewrite the field while a composition is under way', async () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: 'a' } })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('compositionstart')
+      el.value = 'aに'
+      await wrapper.setProps({ modelValue: 'b' })
+      expect(el.value).toBe('aに')
+    })
+
+    it('renders the formatted value into the server HTML', async () => {
+      const app = createSSRApp(() => h(CatInput, { modelValue: 2.5, type: 'number', decimals: 2 }))
+      const html = await renderToString(app)
+      expect(html).toContain('value="2.50"')
+    })
+  })
+
+  // Findings from review: cases where Vue's own v-model keeps the field right
+  describe('matching Vue v-model edge cases', () => {
+    it('keeps uncommitted lazy text through a re-render for another reason', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 2.5, type: 'number', modelModifiers: { lazy: true } }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      el.focus()
+      await nextTick()
+      el.value = '7'
+      await input.trigger('input')
+      await wrapper.setProps({ variant: 'danger' })
+
+      expect(el.value).toBe('7')
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+      wrapper.unmount()
+    })
+
+    it('still shows a lazy model changed from outside while editing', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 2.5, type: 'number', modelModifiers: { lazy: true } }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = '7'
+      await input.trigger('input')
+      await wrapper.setProps({ modelValue: 9 })
+
+      expect(el.value).toBe('9')
+      wrapper.unmount()
+    })
+
+    it('ends a composition the browser never finished when the field changes', async () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: '' } })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('compositionstart')
+      el.value = 'にほん'
+      await input.trigger('input')
+      // No compositionend, as when Safari leaves the field mid-composition
+      await input.trigger('change')
+      expect(wrapper.emitted('update:modelValue')).toEqual([['にほん']])
+
+      // Later typing emits again rather than staying stuck as mid-composition
+      el.value = 'にほんご'
+      await input.trigger('input')
+      expect(wrapper.emitted('update:modelValue')?.slice(-1)[0]).toEqual(['にほんご'])
+    })
+
+    // Safari fires compositionend before the composition's last input event.
+    // Vue's v-model then assigns the same value twice, a no-op for a v-model
+    // binding; cat-input does what Vue does.
+    it('ends with the composed text when Safari fires input after compositionend', async () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: '' } })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('compositionstart')
+      el.value = '日本'
+      await input.trigger('compositionend')
+      await input.trigger('input')
+
+      const emitted = wrapper.emitted('update:modelValue') ?? []
+      expect(new Set(emitted.map(args => args[0]))).toEqual(new Set(['日本']))
+    })
+
+    // Focus taken before the component hydrated, as with autofocus or a click
+    // before the page's JavaScript loaded, fires no focus event afterwards
+    it('treats a field focused before hydration as being edited', async () => {
+      const model = ref(2.5)
+      const Root = () => h(CatInput, {
+        'modelValue': model.value,
+        'type': 'number',
+        'decimals': 2,
+        'onUpdate:modelValue': (v: unknown) => { model.value = v as number }
+      })
+      const container = document.createElement('div')
+      container.innerHTML = await renderToString(createSSRApp(Root))
+      document.body.appendChild(container)
+      const el = container.querySelector('input')!
+      el.focus()
+      expect(el.value).toBe('2.50')
+
+      const app = createSSRApp(Root)
+      app.mount(container)
+      await nextTick()
+      // Still the text as it was, not reformatted under the person
+      expect(el.value).toBe('2.50')
+
+      el.value = '3'
+      el.dispatchEvent(new Event('input'))
+      await nextTick()
+      expect(model.value).toBe(3)
+      // Raw while being edited; formatted only when the field is left
+      expect(el.value).toBe('3')
+      app.unmount()
+      container.remove()
+    })
+
+    it('shows the clear button for the field\'s text, not the lazy model', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: '', clearable: true, modelModifiers: { lazy: true } }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      el.focus()
+      await nextTick()
+      el.value = 'abc'
+      await input.trigger('input')
+      expect(wrapper.find('.cat-input-clear-button').exists()).toBe(true)
+
+      el.value = ''
+      await input.trigger('input')
+      expect(wrapper.find('.cat-input-clear-button').exists()).toBe(false)
+      wrapper.unmount()
+    })
+
+    it('keeps focus in the field on a mouse press of the clear button', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 'abc', clearable: true }
+      })
+      const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true })
+      wrapper.find('.cat-input-clear-button').element.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(true)
     })
   })
 })
