@@ -22,6 +22,88 @@
         </div>
       </demo-box>
 
+      <!-- Inline SVG or webfont -->
+      <demo-box label="Inline SVG or Webfont">
+        <p class="mb-3">
+          A registered icon name renders as an inline <code>&lt;svg&gt;</code> with its path from
+          <a href="https://pictogrammers.com/docs/library/mdi/getting-started/vuejs/" target="_blank" rel="noopener noreferrer"><code>@mdi/js</code><span class="is-sr-only"> (opens in a new tab)</span></a>.
+          Any other name falls back to the <code>mdi mdi-&lt;name&gt;</code> class from
+          <a href="https://pictogrammers.com/docs/library/mdi/getting-started/webfont/" target="_blank" rel="noopener noreferrer"><code>@mdi/font</code><span class="is-sr-only"> (opens in a new tab)</span></a>,
+          which shows nothing unless the webfont is loaded. Both are the same size, so they can sit side by side. Most demos on this
+          page use names Catenary does not register, so they render through the webfont, which this playground loads.
+        </p>
+        <table class="table is-narrow">
+          <thead>
+            <tr>
+              <th scope="col">
+                Icon
+              </th>
+              <th scope="col">
+                Name
+              </th>
+              <th scope="col">
+                Renders as
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="name in comparedIcons" :key="name">
+              <td><cat-icon :icon="name" /></td>
+              <td><code>{{ name }}</code></td>
+              <td>{{ iconPath(name) ? 'Inline SVG (registered)' : 'Webfont class (not registered)' }}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p class="mt-4 mb-2">
+          Register an app's own icons through the plugin, or with <code>registerIcons()</code> anywhere before they render. An app
+          that registers every icon it uses can stop loading <code>@mdi/font</code>.
+        </p>
+        <pre v-pre class="content"><code>import { mdiAccount, mdiCog } from '@mdi/js'
+import { CatenaryPlugin, registerIcons } from '@interline-io/catenary'
+
+app.use(CatenaryPlugin, { icons: { account: mdiAccount, cog: mdiCog } })
+// or, outside the plugin:
+registerIcons({ account: mdiAccount })</code></pre>
+
+        <p class="mt-4 mb-2">
+          Catenary registers the {{ builtInIcons.length }} icons its own controls use, so they need no webfont:
+        </p>
+        <div class="tags">
+          <span v-for="name in builtInIcons" :key="name" class="tag">
+            <cat-icon :icon="name" size="small" class="mr-1" />{{ name }}
+          </span>
+        </div>
+      </demo-box>
+
+      <!-- Plugin options -->
+      <demo-box label="Plugin Options">
+        <p class="mb-2">
+          Two options, both off by default and both set on the plugin:
+        </p>
+        <ul class="content ml-5" style="list-style: disc;">
+          <li>
+            <code>strictIcons: 'warn' | 'error'</code> reports a name that is not registered, which would show nothing without the
+            webfont. <code>'warn'</code> logs once per name outside production, which is the way to find every name an app uses
+            before dropping the font. <code>'error'</code> throws while rendering, for test suites.
+          </li>
+          <li>
+            <code>iconSprite: true</code> draws each icon as a <code>&lt;use&gt;</code> of a shared <code>&lt;symbol&gt;</code>, so
+            each path appears once per page. Place <code>&lt;cat-icon-sprite /&gt;</code> once, last in the root layout. Without a
+            mounted sprite, icons fall back to inline paths and warn in development.
+          </li>
+        </ul>
+        <pre v-pre class="content mt-3"><code>app.use(CatenaryPlugin, { strictIcons: 'warn', iconSprite: true })
+
+&lt;!-- app.vue, after everything else --&gt;
+&lt;cat-icon-sprite /&gt;</code></pre>
+        <p class="mt-3">
+          To style or select an icon, target <code>.cat-icon-glyph</code>, or <code>[data-icon="&lt;name&gt;"]</code> for one icon.
+          Both work whether the icon renders as SVG or as the webfont class. The SVG fills with <code>currentColor</code>, so a
+          <code>color</code> on the icon or its container applies to either.
+        </p>
+      </demo-box>
+
       <!-- Sizes -->
       <demo-box label="Sizes">
         <div class="is-flex is-align-items-center" style="gap: 1rem;">
@@ -365,20 +447,16 @@
 
       <!-- Icon Reference -->
       <demo-box label="Icon Reference">
-        <div class="notification is-info is-light">
-          <p>
-            <strong>Material Design Icons</strong>
-          </p>
-          <p class="mt-2">
-            This component uses <a href="https://materialdesignicons.com/" target="_blank">Material Design Icons</a>.
-            Browse the full icon library at:
-          </p>
-          <p class="mt-2">
-            <a href="https://materialdesignicons.com/" target="_blank">
-              https://materialdesignicons.com/
-            </a>
-          </p>
-        </div>
+        <p>
+          Icons come from <strong>Material Design Icons</strong> by Pictogrammers. Icon props take a name from the library
+          without its <code>mdi-</code> prefix.
+        </p>
+        <ul class="content ml-5 mt-2" style="list-style: disc;">
+          <li v-for="link in referenceLinks" :key="link.url">
+            <a :href="link.url" target="_blank" rel="noopener noreferrer">{{ link.label }}<span class="is-sr-only"> (opens in a new tab)</span></a>
+            <span v-if="link.note">: {{ link.note }}</span>
+          </li>
+        </ul>
       </demo-box>
       <demo-a11y
         :references="[
@@ -387,7 +465,7 @@
         ]"
       >
         <template #intro>
-          Icons render with <code>aria-hidden="true"</code> by default: icon-font glyphs sit in a private-use codepoint range that some screen readers otherwise voice as garbage, and an icon next to text usually just repeats the text. Passing <code>aria-label</code> switches the icon to <code>role="img"</code> with that accessible name, for icons that carry meaning on their own (status markers, warnings).
+          Icons render with <code>aria-hidden="true"</code> by default: an icon next to text usually just repeats the text, and webfont glyphs sit in a private-use codepoint range that some screen readers otherwise voice as garbage. The inline SVG of a registered icon is likewise <code>aria-hidden</code>, and <code>focusable="false"</code> so older browsers do not put it in the tab order. Passing <code>aria-label</code> switches the icon to <code>role="img"</code> with that accessible name, for icons that carry meaning on their own (status markers, warnings).
         </template>
         <template #notes>
           <p class="mt-3">
@@ -402,4 +480,20 @@
 <script setup lang="ts">
 import DemoBox from '../../components/demo-box.vue'
 import DemoA11y from '../../components/demo-a11y.vue'
+import { iconPath, registeredIcons } from '../../../../src/util/icons'
+
+// Three Catenary registers and three it does not, to show the two side by side
+const comparedIcons = ['check', 'magnify', 'close-circle', 'home', 'account', 'cog']
+
+// The playground registers nothing of its own, so this is Catenary's built-in set
+const builtInIcons = registeredIcons()
+
+const referenceLinks = [
+  { label: 'Material Design Icons library', url: 'https://pictogrammers.com/library/mdi/', note: 'browse and search icon names' },
+  { label: 'Using @mdi/js with Vue', url: 'https://pictogrammers.com/docs/library/mdi/getting-started/vuejs/', note: 'path data for registering icons' },
+  { label: 'Using the @mdi/font webfont', url: 'https://pictogrammers.com/docs/library/mdi/getting-started/webfont/', note: 'the fallback for unregistered names' },
+  { label: 'License', url: 'https://pictogrammers.com/docs/general/license/' },
+  { label: 'MaterialDesign-JS on GitHub', url: 'https://github.com/Templarian/MaterialDesign-JS', note: 'source of @mdi/js' },
+  { label: 'MaterialDesign-Webfont on GitHub', url: 'https://github.com/Templarian/MaterialDesign-Webfont', note: 'source of @mdi/font' }
+]
 </script>
