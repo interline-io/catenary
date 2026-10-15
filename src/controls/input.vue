@@ -15,10 +15,10 @@
       <input
         :id="id ?? fieldId"
         ref="inputRef"
+        v-shown="shownText"
         class="input"
         :class="inputClasses"
         :type="type"
-        :value="displayValue"
         :placeholder="placeholder"
         :disabled="disabled"
         :readonly="readonly || static"
@@ -33,6 +33,8 @@
         v-bind="controlAttrs"
         @input="handleInput"
         @change="handleChange"
+        @compositionstart="composing = true"
+        @compositionend="handleCompositionEnd"
         @focus="handleFocus"
         @blur="handleBlur"
       >
@@ -77,8 +79,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string, O extends boolean = false">
-import { computed, inject, nextTick, ref, useAttrs, useId, watch } from 'vue'
-import type { FunctionalComponent } from 'vue'
+import { computed, inject, ref, useAttrs, useId, type FunctionalComponent, type ObjectDirective } from 'vue'
 import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { InputVariant, InputSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
@@ -293,15 +294,8 @@ const emit = defineEmits<{
 }>()
 
 // `undefined` is emitted only when `optional` is set, which the conditional
-// type expresses but cannot narrow on inside the component. A value emitted
-// while editing is remembered until the model echoes it back; see the
-// modelValue watcher.
-const emitValue = (value: T | undefined): void => {
-  if (focused.value && convertsToNumber.value) {
-    pendingEchoes.push(value)
-  }
-  emit('update:modelValue', value as EmittedValue)
-}
+// type expresses but cannot narrow on inside the component.
+const emitValue = (value: T | undefined): void => emit('update:modelValue', value as EmittedValue)
 
 // Merge the wrapping cat-field's help-message id (if any) with the
 // component's own ariaDescribedby, and reflect a danger validation state
@@ -420,8 +414,6 @@ const parseNumber = (text: string): number | undefined => {
 const convertsToNumber = computed(() =>
   props.type === 'number' && (typeof props.modelValue === 'number' || props.optional))
 
-const hasNumberModel = computed(() => props.type === 'number' && typeof props.modelValue === 'number')
-
 // The model as shown while the field is not being edited.
 function formatNumber (value: number): string {
   return places.value === undefined || !Number.isFinite(value) ? String(value) : value.toFixed(places.value)
@@ -435,80 +427,74 @@ function editableNumber (value: number): string {
   return Number(formatted) === value ? formatted : String(value)
 }
 
-// While focused, a numeric field shows what the person typed, and only that.
-// Without this, the model's own rendering replaces the text on every keystroke
-// that changes it: deleting the last digit emits 0 and the field fills back in
-// with "0" before the next digit can be typed, and with `decimals` "2.50"
-// would be redrawn as "2.5" on focus. On blur the field shows the model again,
-// whatever the parent made of the emits.
+// The text the field shows for the model: formatted while it is not being
+// edited; while it is, the raw value, or the full one if rounding hid digits.
 const focused = ref(false)
-const typed = ref('')
-
-// Values emitted since focus that the model has not yet echoed back. A parent
-// that applies emits late, such as one that keeps the value in the URL, echoes
-// "2" after "2.7" and "2.75" have been typed; that echo is not an outside
-// change and must not replace the typed text. Matched and dropped one at a
-// time, so echoes that arrive out of order are recognized too. Cleared on
-// focus and blur, and by an outside change.
-let pendingEchoes: unknown[] = []
-
-// A model set from outside while focused, as a reset button does, replaces the
-// typed text. A value the input emitted itself is an echo, not a reset.
-watch(() => props.modelValue, (value) => {
-  if (!focused.value || !convertsToNumber.value) {
-    return
-  }
-  const echo = pendingEchoes.findIndex(emitted => Object.is(emitted, value))
-  if (echo !== -1) {
-    pendingEchoes.splice(echo, 1)
-    return
-  }
-  if (parseNumber(typed.value) === value) {
-    return
-  }
-  typed.value = typeof value === 'number' ? editableNumber(value) : ''
-  pendingEchoes = []
-})
-
-const displayValue = computed(() => {
+const shownText = computed((): string => {
   const value = props.modelValue
-  if (!convertsToNumber.value) {
-    return value
+  if (value == null) {
+    return ''
   }
-  if (focused.value) {
-    return typed.value
+  if (props.type === 'number' && typeof value === 'number') {
+    return focused.value ? editableNumber(value) : formatNumber(value)
   }
-  return typeof value === 'number' ? formatNumber(value) : value
+  return String(value)
 })
 
-function handleFocus (event: FocusEvent) {
-  typed.value = hasNumberModel.value
-    ? editableNumber(props.modelValue as number)
-    : (event.target as HTMLInputElement).value
-  pendingEchoes = []
+// Whether the field's text already stands for the model's value, compared the
+// way it would be emitted: "2." and "2.50" both mean 2.5, and an empty numeric
+// field means 0, or undefined when optional.
+function textMatchesModel (text: string): boolean {
+  if (convertsToNumber.value) {
+    return Object.is(parseNumber(text), props.modelValue ?? undefined)
+  }
+  return text === String(props.modelValue ?? '')
+}
+
+// Writes shownText into the input the way Vue's own v-model on <input> does
+// (vModelText in @vue/runtime-dom): never during IME composition, and while
+// focused, not when the text already means the model's value, so typing "2."
+// or emptying a field is not undone by the model's own rendering of it. Unlike
+// a plain `:value` binding, which Vue rewrites on every render whose string
+// differs. Like Vue's, it assumes the model updates as soon as a value is
+// emitted: bind the input to synchronous state and write it to slow stores,
+// such as the URL, from there.
+function syncShown (el: HTMLInputElement, text: string, editing: boolean): void {
+  if (composing.value || el.value === text) {
+    return
+  }
+  if (editing && textMatchesModel(el.value)) {
+    return
+  }
+  el.value = text
+}
+
+// `focused` tracks the field's own focus and blur events, which is the same
+// thing Vue checks through document.activeElement.
+const vShown: ObjectDirective<HTMLInputElement, string> = {
+  getSSRProps: ({ value }) => ({ value }),
+  mounted: (el, { value }) => { el.value = value },
+  updated: (el, { value }) => { syncShown(el, value, focused.value) }
+}
+
+const composing = ref(false)
+
+function handleFocus () {
   focused.value = true
 }
 
-// Leaving the field shows the model, whatever the parent did with the emits. A
-// parent that ignored the last one leaves the model where it was, so the
-// display can come out as the very string it was before editing; Vue sees no
-// change and does not patch the input, which would keep showing the rejected
-// text. The element is set directly when it disagrees. Also clears a number
-// input stuck on text it could not parse, such as a lone "-", whose value
-// reads as "" and so would match an empty model without being empty.
+// Leaving the field shows the model, formatted. Done directly as well as by the
+// re-render, which does not come when the shown text is the very string it was
+// before editing: a parent that ignored the last emit, such as a cleared field
+// whose undefined was dropped, leaves the model and so that string unchanged,
+// and the field would keep the rejected text. Also clears a number input stuck
+// on text it could not parse, such as a lone "-", whose value reads as "".
 function handleBlur () {
   focused.value = false
-  pendingEchoes = []
-  if (!convertsToNumber.value) {
-    return
+  const el = inputRef.value
+  if (el && (el.value !== shownText.value || el.validity?.badInput)) {
+    el.value = shownText.value
   }
-  nextTick(() => {
-    const el = inputRef.value
-    const shown = displayValue.value == null ? '' : String(displayValue.value)
-    if (el && document.activeElement !== el && (el.value !== shown || el.validity?.badInput)) {
-      el.value = shown
-    }
-  })
 }
 
 // The value the field's text stands for, converted as the bound type expects
@@ -521,14 +507,21 @@ function emitText (text: string): void {
 }
 
 function handleInput (event: Event) {
-  const target = event.target as HTMLInputElement
-  typed.value = target.value
-  // With `.lazy` the text is tracked for display but committed on change
+  // Mid-composition text is not a value yet; compositionend emits it
+  if (composing.value || props.modelModifiers.lazy) {
+    return
+  }
+  emitText((event.target as HTMLInputElement).value)
+}
+
+function handleCompositionEnd (event: CompositionEvent) {
+  composing.value = false
   if (!props.modelModifiers.lazy) {
-    emitText(target.value)
+    emitText((event.target as HTMLInputElement).value)
   }
 }
 
+// With `.lazy` the text is committed on change rather than on each keystroke
 function handleChange (event: Event) {
   if (props.modelModifiers.lazy) {
     emitText((event.target as HTMLInputElement).value)
@@ -554,10 +547,13 @@ function handleClear () {
   // The clear button disappears once the value is empty, so return focus to the
   // input rather than letting it fall back to the document body.
   inputRef.value?.focus()
-  // Focusing recorded the old value as typed. The field was just emptied, so
-  // it shows empty until blur, as it does when the digits are deleted by hand,
-  // rather than "0" waiting to have a digit typed after it.
-  typed.value = ''
+  // Emptied at once rather than left to the re-render, which would show the
+  // emitted 0 as "0" (or "0.00") with the caret waiting after it. Empty means
+  // the same value, so the focused field keeps it until blur, as it does when
+  // the digits are deleted by hand.
+  if (inputRef.value) {
+    inputRef.value.value = ''
+  }
 }
 
 defineExpose({

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
-import { h, nextTick } from 'vue'
+import { createSSRApp, h, nextTick } from 'vue'
+import { renderToString } from 'vue/server-renderer'
 import CatInput from './input.vue'
 import CatField from './field.vue'
 import {
@@ -840,39 +841,39 @@ describe('CatInput', () => {
       wrapper.unmount()
     })
 
-    it('does not let a late echo of an earlier keystroke replace the typed text', async () => {
+    // As with Vue's own v-model on <input>, the model is expected to update as
+    // soon as a value is emitted. Late updates are the parent's to avoid, by
+    // binding to synchronous state and writing slow stores from there.
+    // jsdom sanitizes "2." to "" when it is assigned to a number input, so the
+    // half-typed decimal is checked in a browser instead.
+    it('keeps the typed text with a parent that applies each emit at once', async () => {
       const wrapper = mountComponent(CatInput, {
         attachTo: document.body,
-        props: { modelValue: 1, type: 'number', decimals: 2 }
+        props: {
+          'modelValue': 1,
+          'type': 'number',
+          'decimals': 2,
+          'onUpdate:modelValue': (v: number) => wrapper.setProps({ modelValue: v })
+        }
       })
       const input = wrapper.find('input')
       const el = input.element as HTMLInputElement
-      const type = async (text: string) => {
-        el.value = text
-        await input.trigger('input')
-      }
 
       await input.trigger('focus')
-      await type('2')
-      await type('2.7')
-      await type('2.75')
+      for (const text of ['2', '2.7', '2.75']) {
+        el.value = text
+        await input.trigger('input')
+        await nextTick()
+        expect(el.value).toBe(text)
+      }
       expect(wrapper.emitted('update:modelValue')).toEqual([[2], [2.7], [2.75]])
 
-      // The parent applies each emit late, in order
-      await wrapper.setProps({ modelValue: 2 })
-      expect(el.value).toBe('2.75')
-      await wrapper.setProps({ modelValue: 2.7 })
-      expect(el.value).toBe('2.75')
-      await wrapper.setProps({ modelValue: 2.75 })
-      expect(el.value).toBe('2.75')
-
       await input.trigger('blur')
-      await nextTick()
       expect(el.value).toBe('2.75')
       wrapper.unmount()
     })
 
-    it('still treats a value it never emitted as an outside change', async () => {
+    it('replaces the typed text when the model changes to something else while focused', async () => {
       const wrapper = mountComponent(CatInput, {
         attachTo: document.body,
         props: { modelValue: 1, type: 'number', decimals: 2 }
@@ -883,7 +884,7 @@ describe('CatInput', () => {
       await input.trigger('focus')
       el.value = '2'
       await input.trigger('input')
-      // A reset to a value the input never emitted, while a late echo is pending
+      // A reset from outside, such as a button that sets the value
       await wrapper.setProps({ modelValue: 5 })
       expect(el.value).toBe('5.00')
       wrapper.unmount()
@@ -975,6 +976,45 @@ describe('CatInput', () => {
     it('does not leak modelModifiers onto the native input as an attribute', () => {
       const wrapper = mountComponent(CatInput, { props: { modelValue: 'a', modelModifiers: { lazy: true } } })
       expect(wrapper.find('input').attributes('modelmodifiers')).toBeUndefined()
+    })
+  })
+
+  describe('IME composition and server rendering', () => {
+    // Text mid-composition (Japanese, Chinese, Korean input methods) is not a
+    // value yet, so it is emitted once the composition ends, as Vue's v-model
+    // does.
+    it('emits once when a composition ends, not on each keystroke within it', async () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: '' } })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('compositionstart')
+      el.value = 'に'
+      await input.trigger('input')
+      el.value = 'にほ'
+      await input.trigger('input')
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+
+      el.value = '日本'
+      await input.trigger('compositionend')
+      expect(wrapper.emitted('update:modelValue')).toEqual([['日本']])
+    })
+
+    it('does not rewrite the field while a composition is under way', async () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: 'a' } })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('compositionstart')
+      el.value = 'aに'
+      await wrapper.setProps({ modelValue: 'b' })
+      expect(el.value).toBe('aに')
+    })
+
+    it('renders the formatted value into the server HTML', async () => {
+      const app = createSSRApp(() => h(CatInput, { modelValue: 2.5, type: 'number', decimals: 2 }))
+      const html = await renderToString(app)
+      expect(html).toContain('value="2.50"')
     })
   })
 })
