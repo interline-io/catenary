@@ -76,7 +76,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string, O extends boolean = false">
-import { computed, inject, ref, useAttrs, useId, watch } from 'vue'
+import { computed, inject, nextTick, ref, useAttrs, useId, watch } from 'vue'
 import type { FunctionalComponent } from 'vue'
 import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { InputVariant, InputSize } from './types'
@@ -277,8 +277,15 @@ const emit = defineEmits<{
 }>()
 
 // `undefined` is emitted only when `optional` is set, which the conditional
-// type expresses but cannot narrow on inside the component.
-const emitValue = (value: T | undefined): void => emit('update:modelValue', value as EmittedValue)
+// type expresses but cannot narrow on inside the component. A value emitted
+// while editing is remembered until the model echoes it back; see the
+// modelValue watcher.
+const emitValue = (value: T | undefined): void => {
+  if (focused.value && convertsToNumber.value) {
+    pendingEchoes.push(value)
+  }
+  emit('update:modelValue', value as EmittedValue)
+}
 
 // Merge the wrapping cat-field's help-message id (if any) with the
 // component's own ariaDescribedby, and reflect a danger validation state
@@ -412,45 +419,80 @@ function editableNumber (value: number): string {
   return Number(formatted) === value ? formatted : String(value)
 }
 
-// While focused, a numeric field shows what the person typed. Without this, the
-// model's own rendering replaces the text on every keystroke that changes it:
-// deleting the last digit emits 0 and the field fills back in with "0" before
-// the next digit can be typed, and with `decimals` "2.50" would be redrawn as
-// "2.5" on focus.
+// While focused, a numeric field shows what the person typed, and only that.
+// Without this, the model's own rendering replaces the text on every keystroke
+// that changes it: deleting the last digit emits 0 and the field fills back in
+// with "0" before the next digit can be typed, and with `decimals` "2.50"
+// would be redrawn as "2.5" on focus. On blur the field shows the model again,
+// whatever the parent made of the emits.
 const focused = ref(false)
 const typed = ref('')
 
+// Values emitted since focus that the model has not yet echoed back. A parent
+// that applies emits late, such as one that keeps the value in the URL, echoes
+// "2" after "2.7" and "2.75" have been typed; that echo is not an outside
+// change and must not replace the typed text. Matched and dropped one at a
+// time, so echoes that arrive out of order are recognized too. Cleared on
+// focus and blur, and by an outside change.
+let pendingEchoes: unknown[] = []
+
 // A model set from outside while focused, as a reset button does, replaces the
-// typed text. It is replaced here rather than only bypassed in displayValue, so
-// the text never lingers to match a later value it no longer describes.
+// typed text. A value the input emitted itself is an echo, not a reset.
 watch(() => props.modelValue, (value) => {
-  if (focused.value && convertsToNumber.value && parseNumber(typed.value) !== value) {
-    typed.value = typeof value === 'number' ? editableNumber(value) : ''
+  if (!focused.value || !convertsToNumber.value) {
+    return
   }
+  const echo = pendingEchoes.findIndex(emitted => Object.is(emitted, value))
+  if (echo !== -1) {
+    pendingEchoes.splice(echo, 1)
+    return
+  }
+  if (parseNumber(typed.value) === value) {
+    return
+  }
+  typed.value = typeof value === 'number' ? editableNumber(value) : ''
+  pendingEchoes = []
 })
 
 const displayValue = computed(() => {
   const value = props.modelValue
-  if (!hasNumberModel.value) {
+  if (!convertsToNumber.value) {
     return value
   }
-  // Checked again in case the model changed without the watcher seeing it
-  // as a number change, e.g. from a string.
-  if (focused.value && parseNumber(typed.value) === value) {
+  if (focused.value) {
     return typed.value
   }
-  return focused.value ? editableNumber(value as number) : formatNumber(value as number)
+  return typeof value === 'number' ? formatNumber(value) : value
 })
 
 function handleFocus (event: FocusEvent) {
   typed.value = hasNumberModel.value
     ? editableNumber(props.modelValue as number)
     : (event.target as HTMLInputElement).value
+  pendingEchoes = []
   focused.value = true
 }
 
+// Leaving the field shows the model, whatever the parent did with the emits. A
+// parent that ignored the last one leaves the model where it was, so the
+// display can come out as the very string it was before editing; Vue sees no
+// change and does not patch the input, which would keep showing the rejected
+// text. The element is set directly when it disagrees. Also clears a number
+// input stuck on text it could not parse, such as a lone "-", whose value
+// reads as "" and so would match an empty model without being empty.
 function handleBlur () {
   focused.value = false
+  pendingEchoes = []
+  if (!convertsToNumber.value) {
+    return
+  }
+  nextTick(() => {
+    const el = inputRef.value
+    const shown = displayValue.value == null ? '' : String(displayValue.value)
+    if (el && document.activeElement !== el && (el.value !== shown || el.validity?.badInput)) {
+      el.value = shown
+    }
+  })
 }
 
 function handleInput (event: Event) {
