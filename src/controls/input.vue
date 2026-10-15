@@ -31,8 +31,8 @@
         :step="step"
         :inputmode="defaultInputmode"
         v-bind="nativeAttrs"
-        @input="noteFieldText"
-        @focus="focused = true"
+        @input="noteField($event.target as HTMLInputElement)"
+        @focus="handleFocus"
         @blur="focused = false"
       >
       <span v-if="icon" class="icon is-left">
@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts" generic="T extends string | number = string, O extends boolean = false">
-import { computed, inject, onMounted, ref, useAttrs, useId, vModelText, type DirectiveBinding, type FunctionalComponent, type ObjectDirective } from 'vue'
+import { computed, inject, onMounted, reactive, ref, useAttrs, useId, vModelText, type DirectiveBinding, type FunctionalComponent, type ObjectDirective } from 'vue'
 import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { InputVariant, InputSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
@@ -246,10 +246,12 @@ const props = withDefaults(defineProps<{
    * such as one that keeps the value in the URL. A binding without `v-model`
    * passes `:model-modifiers="{ lazy: true }"` for the same effect.
    *
-   * On blur the field shows the model, so a parent that applies the value late
-   * shows its old value until it does: about one frame for `router.replace`.
-   * Bind the input to state the parent updates at once, and write it to the
-   * slow store from there.
+   * `.trim` is passed through to Vue's directive as well.
+   *
+   * On blur a numeric field shows the model, so a parent that applies the
+   * value late shows its old value until it does: about one frame for
+   * `router.replace`. Bind the input to state the parent updates at once, and
+   * write it to the slow store from there.
    */
   modelModifiers?: { lazy?: boolean, trim?: boolean }
 }>(), {
@@ -325,8 +327,14 @@ const ariaInvalid = computed(() => {
 // the input cannot be edited (disabled/readonly/static).
 // Follows the field's own text rather than the model, which with `.lazy` lags
 // until the text is committed.
+// While the field is being edited, its own text decides, since with `.lazy`
+// the model lags until the text is committed; text a number field cannot
+// parse yet, such as a lone "-", counts as text. Otherwise the model decides.
 const showClear = computed(() => {
-  return props.clearable && fieldHasText.value && !props.disabled && !props.readonly && !props.static
+  const hasText = focused.value
+    ? field.text !== '' || field.badInput
+    : String(props.modelValue ?? '') !== ''
+  return props.clearable && hasText && !props.disabled && !props.readonly && !props.static
 })
 
 const hasAddons = computed(() => !!(props.prefix || props.suffix))
@@ -418,38 +426,48 @@ function formatNumber (value: number): string {
 }
 
 // The field is written and read by Vue's own v-model directive for <input>
-// (vModelText), so it behaves as a native `<input v-model>` does: the text is
-// not rewritten while it already means the model's value ("2." for 2, "2.50"
-// for 2.5), IME composition is left alone until it ends, and `.lazy` commits on
-// change. What is Catenary's own is below: the value Vue compares the field
-// against, and how the field's text becomes the emitted value. Like Vue's
-// v-model, it expects the bound value to update as soon as it is emitted: bind
-// the input to synchronous state and write slow stores, such as the URL, from
-// there.
+// (vModelText), so it behaves as a native `<input v-model>` does: while the
+// field is focused its text is not rewritten when it already means the model's
+// value ("2." for 2, "2.50" for 2.5), IME composition is left alone until it
+// ends, and `.lazy` commits on change. Vue's own rules also apply: a number
+// field's text is normalized when it changes (Enter or a step button turns
+// "2.50" into "2.5" until the field is left), and a leading zero ("05") is
+// rewritten as the number it means. What is Catenary's own is below: the value
+// Vue compares the field against, and how the field's text becomes the emitted
+// value. Like Vue's v-model, it expects the bound value to update as soon as
+// it is emitted: bind the input to synchronous state and write slow stores,
+// such as the URL, from there.
 
 const focused = ref(false)
 
-// Whether the field holds any text, for the clear button, which with `.lazy`
-// must follow the field rather than the not yet committed model
-const fieldHasText = ref(String(props.modelValue ?? '') !== '')
+// The field's own text while it is being edited. A number input reports text
+// it cannot parse yet, such as a lone "-", as "", flagged by badInput.
+const field = reactive({ text: '', badInput: false })
 
-function noteFieldText (event: Event) {
-  fieldHasText.value = (event.target as HTMLInputElement).value !== ''
+function noteField (el: HTMLInputElement): void {
+  field.text = el.value
+  field.badInput = !!el.validity?.badInput
+}
+
+function handleFocus (event: FocusEvent) {
+  noteField(event.target as HTMLInputElement)
+  focused.value = true
 }
 
 // What Vue compares the field against. While focused, the number itself: Vue
 // leaves text that reads as it alone, and rewrites the field when the model
-// changes to something else. Not focused, the formatted text, so leaving the
-// field always rewrites it to the model, which also restores a value the
-// parent ignored. An emptied field stands for 0, or undefined when optional,
-// so it is compared as empty rather than refilled with "0".
+// changes to something else. Not focused, the formatted text, so leaving a
+// numeric field always rewrites it to the model, which also restores a value
+// the parent ignored. A text field, as with Vue's v-model, keeps what was typed.
+// An emptied numeric field stands for 0, or undefined when optional, so it is
+// compared as empty rather than refilled with "0".
 const boundValue = computed(() => {
   const value = props.modelValue
   if (props.type === 'number' && typeof value === 'number') {
     if (!focused.value) {
       return formatNumber(value)
     }
-    if (!fieldHasText.value && Object.is(parseNumber(''), value)) {
+    if (field.text === '' && Object.is(parseNumber(''), value)) {
       return ''
     }
     return value
@@ -457,22 +475,21 @@ const boundValue = computed(() => {
   return value ?? ''
 })
 
-// Called by Vue's directive with the field's value; numeric fields convert the
-// field's own text as the bound type expects
+// Called by Vue's directive with the field's value. A number field converts
+// its own text as the bound type expects; any other field takes Vue's value,
+// trimmed with `.trim`.
 function assignFromField (cast: unknown) {
   const el = inputRef.value
-  // Before emitting: the browser flushes Vue's render between this listener
-  // and the template's own @input, so the flag must already be current when
-  // the emitted value re-renders, or an emptied field compares as "0" and is
-  // refilled.
-  if (el) {
-    fieldHasText.value = el.value !== ''
+  if (!el) {
+    return
   }
-  if (convertsToNumber.value && el) {
-    emitValue(parseNumber(el.value) as T | undefined)
-  } else if (props.type === 'number' && el) {
-    // A number field bound to a string has always emitted the text as typed
-    emitValue(el.value as T)
+  // Before emitting: the browser flushes Vue's render between this listener
+  // and the template's own @input, so the field must already be noted when the
+  // emitted value re-renders, or an emptied field compares as "0" and is
+  // refilled.
+  noteField(el)
+  if (props.type === 'number') {
+    emitText(el.value)
   } else {
     emitValue(cast as T)
   }
@@ -491,19 +508,25 @@ const modifiers = (binding: DirectiveBinding) => ({
 })
 const vModelNative: ObjectDirective<HTMLInputElement> = {
   created: (el, binding, vnode, prev) => vModelText.created?.(el as never, modifiers(binding) as never, vnode as never, prev as never),
-  mounted: (el, binding, vnode, prev) => {
-    vModelText.mounted?.(el as never, binding as never, vnode as never, prev as never)
-    fieldHasText.value = el.value !== ''
-  },
+  mounted: (el, binding, vnode, prev) => vModelText.mounted?.(el as never, binding as never, vnode as never, prev as never),
   beforeUpdate: (el, binding, vnode, prev) => vModelText.beforeUpdate?.(el as never, modifiers(binding) as never, vnode as never, prev as never),
-  updated: (el) => { fieldHasText.value = el.value !== '' },
+  // Vue rewrote the field for a model changed from outside, such as a reset.
+  // Only read while focused, so a field nobody is editing never re-renders
+  // for it.
+  updated: (el) => {
+    if (focused.value) {
+      noteField(el)
+    }
+  },
   getSSRProps: ({ value }) => ({ value: value ?? '' })
 }
 
 // Focus the field took before these listeners existed, such as `autofocus` or
 // a click before hydration
 onMounted(() => {
-  if (inputRef.value && inputRef.value.ownerDocument.activeElement === inputRef.value) {
+  const el = inputRef.value
+  if (el && el.ownerDocument.activeElement === el) {
+    noteField(el)
     focused.value = true
   }
 })
@@ -524,9 +547,10 @@ function handleIconRightClick (event: MouseEvent) {
 }
 
 // Commits the empty value at once, even with `.lazy`. The button keeps a mouse
-// press from taking focus (`mousedown.prevent`), so the field is not left and
-// does not commit its typed text first, which would make one click two
-// commits.
+// press from taking focus (`mousedown.prevent`), so a click does not leave the
+// field and commit its typed text first. Tabbing to the button does leave the
+// field, which with `.lazy` commits the text, as leaving it always does; the
+// clear is then a second commit.
 function handleClear () {
   emitText('')
   emit('clear')
@@ -539,7 +563,7 @@ function handleClear () {
   // the digits are deleted by hand.
   if (inputRef.value) {
     inputRef.value.value = ''
-    fieldHasText.value = false
+    noteField(inputRef.value)
   }
 }
 
