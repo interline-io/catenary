@@ -128,6 +128,19 @@
         </p>
       </demo-box>
 
+      <demo-box label="Lazy Updates">
+        <p class="mb-3">
+          With <code>v-model.lazy</code>, the value is committed when the field is left, Enter is pressed, or a step button is used,
+          rather than on every keystroke. Use it when each update is costly, such as a filter kept in the URL.
+        </p>
+        <cat-field label="Fare at most, in dollars">
+          <cat-input v-model.lazy="lazyFare" type="number" min="0" step="0.25" prefix="$" :decimals="2" optional />
+        </cat-field>
+        <p class="has-text-grey">
+          Value: {{ JSON.stringify(lazyFare) ?? 'undefined' }} — {{ lazyUpdates }} update(s)
+        </p>
+      </demo-box>
+
       <demo-box label="Example: Maxlength" example>
         <cat-field label="Username (max 20 chars)">
           <cat-input v-model="username" maxlength="20" placeholder="Enter username" />
@@ -179,7 +192,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, watch } from 'vue'
 import { InputVariants, InputSizes, InputTypes } from '../../../../src/controls/types'
 import DemoBox from '../../components/demo-box.vue'
 import DemoA11y from '../../components/demo-a11y.vue'
@@ -242,4 +255,7 @@ const frequency = ref(15)
 const perKm = ref(0.4)
 const duration = ref<number | undefined>(undefined)
 const lateArrivals = ref<number | undefined>(3)
+const lazyFare = ref<number | undefined>(2.5)
+const lazyUpdates = ref(0)
+watch(lazyFare, () => { lazyUpdates.value++ })
 </script>

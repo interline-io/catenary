@@ -889,4 +889,92 @@ describe('CatInput', () => {
       wrapper.unmount()
     })
   })
+
+  // v-model.lazy on a component arrives as modelModifiers: { lazy: true }
+  describe('v-model.lazy', () => {
+    it('emits on change rather than on each keystroke', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 'a', modelModifiers: { lazy: true } }
+      })
+      const input = wrapper.find('input')
+
+      ;(input.element as HTMLInputElement).value = 'ab'
+      await input.trigger('input')
+      ;(input.element as HTMLInputElement).value = 'abc'
+      await input.trigger('input')
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+
+      await input.trigger('change')
+      expect(wrapper.emitted('update:modelValue')).toEqual([['abc']])
+    })
+
+    it('converts and formats a number committed on change', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: {
+          'modelValue': undefined,
+          'type': 'number',
+          'optional': true,
+          'decimals': 2,
+          'modelModifiers': { lazy: true },
+          'onUpdate:modelValue': (v: number | undefined) => wrapper.setProps({ modelValue: v })
+        }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = '2.5'
+      await input.trigger('input')
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+      expect(el.value).toBe('2.5')
+
+      // The browser fires change, then blur, when the field is left
+      await input.trigger('change')
+      await input.trigger('blur')
+      await nextTick()
+      expect(wrapper.emitted('update:modelValue')).toEqual([[2.5]])
+      expect(el.value).toBe('2.50')
+      wrapper.unmount()
+    })
+
+    it('commits an emptied optional field as undefined on change', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 3, type: 'number', optional: true, modelModifiers: { lazy: true } }
+      })
+      const input = wrapper.find('input')
+
+      ;(input.element as HTMLInputElement).value = ''
+      await input.trigger('input')
+      await input.trigger('change')
+
+      expect(wrapper.emitted('update:modelValue')).toEqual([[undefined]])
+    })
+
+    it('still clears at once from the clear button', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 'abc', clearable: true, modelModifiers: { lazy: true } }
+      })
+
+      await wrapper.find('.cat-input-clear-button').trigger('click')
+
+      expect(wrapper.emitted('update:modelValue')).toEqual([['']])
+    })
+
+    it('ignores change without the modifier, which already emitted on input', async () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: 'a' } })
+      const input = wrapper.find('input')
+
+      ;(input.element as HTMLInputElement).value = 'ab'
+      await input.trigger('input')
+      await input.trigger('change')
+
+      expect(wrapper.emitted('update:modelValue')).toEqual([['ab']])
+    })
+
+    it('does not leak modelModifiers onto the native input as an attribute', () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: 'a', modelModifiers: { lazy: true } } })
+      expect(wrapper.find('input').attributes('modelmodifiers')).toBeUndefined()
+    })
+  })
 })

@@ -32,6 +32,7 @@
         :inputmode="defaultInputmode"
         v-bind="controlAttrs"
         @input="handleInput"
+        @change="handleChange"
         @focus="handleFocus"
         @blur="handleBlur"
       >
@@ -238,6 +239,20 @@ const props = withDefaults(defineProps<{
    * caller's own `inputmode` always wins.
    */
   decimals?: number
+  /**
+   * Set by Vue from `v-model` modifiers; not passed directly. With
+   * `v-model.lazy`, the value is emitted on the native `change` event (when
+   * the field is left, Enter is pressed, or a number's step buttons are used)
+   * rather than on every keystroke, for a parent whose updates are costly,
+   * such as one that keeps the value in the URL. A binding without `v-model`
+   * passes `:model-modifiers="{ lazy: true }"` for the same effect.
+   *
+   * On blur the field shows the model, so a parent that applies the value late
+   * shows its old value until it does: about one frame for `router.replace`.
+   * Bind the input to state the parent updates at once, and write it to the
+   * slow store from there.
+   */
+  modelModifiers?: { lazy?: boolean }
 }>(), {
   id: undefined,
   modelValue: undefined,
@@ -265,7 +280,8 @@ const props = withDefaults(defineProps<{
   expanded: false,
   prefix: undefined,
   suffix: undefined,
-  decimals: undefined
+  decimals: undefined,
+  modelModifiers: () => ({})
 })
 
 type EmittedValue = O extends true ? T | undefined : T
@@ -495,14 +511,27 @@ function handleBlur () {
   })
 }
 
+// The value the field's text stands for, converted as the bound type expects
+function emitText (text: string): void {
+  if (convertsToNumber.value) {
+    emitValue(parseNumber(text) as T | undefined)
+  } else {
+    emitValue(text as T)
+  }
+}
+
 function handleInput (event: Event) {
   const target = event.target as HTMLInputElement
   typed.value = target.value
+  // With `.lazy` the text is tracked for display but committed on change
+  if (!props.modelModifiers.lazy) {
+    emitText(target.value)
+  }
+}
 
-  if (convertsToNumber.value) {
-    emitValue(parseNumber(target.value) as T | undefined)
-  } else {
-    emitValue(target.value as T)
+function handleChange (event: Event) {
+  if (props.modelModifiers.lazy) {
+    emitText((event.target as HTMLInputElement).value)
   }
 }
 
