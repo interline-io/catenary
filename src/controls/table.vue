@@ -53,8 +53,8 @@
                 <!-- Sort state is exposed via aria-sort on the header cell;
                      the glyph is decorative. -->
                 <span class="cat-sort-icon" aria-hidden="true">
-                  <i v-if="sortField === column.field" :class="sortIcon" />
-                  <i v-else class="mdi mdi-sort" />
+                  <icon-glyph v-if="sortField === column.field" :name="sortIcon" />
+                  <icon-glyph v-else name="sort" />
                 </span>
               </button>
               <template v-else>
@@ -82,6 +82,7 @@
 
 <script setup lang="ts">
 import { ref, computed, provide, useSlots, nextTick } from 'vue'
+import IconGlyph from './icon-glyph.vue'
 
 const slots = useSlots()
 
@@ -212,7 +213,7 @@ const tableClasses = computed(() => {
 })
 
 const sortIcon = computed(() => {
-  return sortDirection.value === 'asc' ? 'mdi mdi-sort-ascending' : 'mdi mdi-sort-descending'
+  return sortDirection.value === 'asc' ? 'sort-ascending' : 'sort-descending'
 })
 
 const sortedData = computed(() => {
@@ -340,7 +341,7 @@ provide('registerColumn', registerColumn)
   .cat-sort-icon {
     margin-left: 0.25rem;
 
-    .mdi {
+    .cat-icon-glyph {
       font-size: $size-normal;
       vertical-align: middle;
     }

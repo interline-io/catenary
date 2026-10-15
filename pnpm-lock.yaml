@@ -47,6 +47,9 @@ importers:
       '@mdi/font':
         specifier: 7.4.47
         version: 7.4.47
+      '@mdi/js':
+        specifier: 7.4.47
+        version: 7.4.47
       '@nuxt/eslint-config':
         specifier: 1.10.0
         version: 1.10.0(@typescript-eslint/utils@8.58.0(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3))(@vue/compiler-sfc@3.5.40)(eslint@9.39.4(jiti@2.7.0))(typescript@5.9.3)
@@ -760,6 +763,9 @@ packages:
 
   '@mdi/font@7.4.47':
     resolution: {integrity: sha512-43MtGpd585SNzHZPcYowu/84Vz2a2g31TvPMTm9uTiCSWzaheQySUcSyUH/46fPnuPQWof2yd0pGBtzee/IQWw==}
+
+  '@mdi/js@7.4.47':
+    resolution: {integrity: sha512-KPnNOtm5i2pMabqZxpUz7iQf+mfrYZyKCZ8QNz85czgEt7cuHcGorWfdzUMWYA0SD+a6Hn4FmJ+YhzzzjkTZrQ==}
 
   '@napi-rs/wasm-runtime@0.2.12':
     resolution: {integrity: sha512-ZVWUcfwY4E/yPitQJl481FjFo3K22D6qF0DuFH6Y/nbnE11GY5uguDxZMGXPQ8WQ0128MXQD7TnfHyK4oWoIJQ==}
@@ -5967,6 +5973,8 @@ snapshots:
       - supports-color
 
   '@mdi/font@7.4.47': {}
+
+  '@mdi/js@7.4.47': {}
 
   '@napi-rs/wasm-runtime@0.2.12':
     dependencies:

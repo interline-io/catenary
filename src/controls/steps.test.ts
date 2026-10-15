@@ -77,7 +77,7 @@ describe('cat-steps progress list', () => {
   it('shows a check on completed markers and the position on the others', async () => {
     const { wrapper } = await mountSteps({}, 'two')
     const markers = wrapper.findAll('.cat-step-marker')
-    expect(markers[0]?.find('.mdi-check').exists()).toBe(true)
+    expect(markers[0]?.find('[data-icon="check"]').exists()).toBe(true)
     expect(markers[1]?.text()).toBe('2')
     expect(markers[2]?.text()).toBe('3')
     wrapper.unmount()
@@ -403,7 +403,7 @@ describe('cat-steps dynamic step items', () => {
 
     const failed = wrapper.findAll('li.cat-step')[1]
     expect(failed?.classes()).toContain('is-danger')
-    expect(failed?.find('.mdi-alert-circle').exists()).toBe(true)
+    expect(failed?.find('[data-icon="alert-circle"]').exists()).toBe(true)
     wrapper.unmount()
   })
 })

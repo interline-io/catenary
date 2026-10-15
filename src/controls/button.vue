@@ -16,7 +16,7 @@
       @click="handleClick"
     >
       <span v-if="loading" class="icon is-small" aria-hidden="true">
-        <i class="mdi mdi-loading mdi-spin" />
+        <icon-glyph name="loading" spin />
       </span>
       <!-- The spinner glyph has no text alternative, so expose the loading
            state as text. Joins the visible label in the accessible name
@@ -37,6 +37,7 @@
 import { computed, useSlots } from 'vue'
 import type { ButtonVariant, ButtonSize } from './types'
 import CatIcon from './icon.vue'
+import IconGlyph from './icon-glyph.vue'
 
 /**
  * Button component with Bulma styling.

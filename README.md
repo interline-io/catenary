@@ -29,7 +29,7 @@ Your project must provide:
 
 - `vue` 3.5+
 - `bulma` 1.0+ -- CSS framework (configured and loaded by your app)
-- `@mdi/font` 7.4+ -- Material Design Icons (loaded by your app)
+- `@mdi/font` 7.4+ -- optional: Material Design Icons webfont, for icon names you have not registered (see [Icons](#icons))
 
 `date-fns` 4.x is a direct dependency and installed automatically.
 
@@ -78,7 +78,7 @@ No Nuxt module configuration is needed. The plugin handles global registration o
 
 ### Bulma and icon CSS
 
-The `@interline-io/catenary/style.css` export includes the component-scoped styles extracted from the library. It does **not** include the full Bulma stylesheet or Material Design Icons font. You must load those in your app's global styles:
+The `@interline-io/catenary/style.css` export includes the component-scoped styles extracted from the library. It does **not** include the full Bulma stylesheet, which you load in your app's global styles:
 
 ```scss
 // In your app's main stylesheet or entry point
@@ -86,10 +86,27 @@ The `@interline-io/catenary/style.css` export includes the component-scoped styl
   $primary: #9e0e84,  // customize as needed
 );
 
+// Only if you use icons you have not registered (see Icons)
 @use "@mdi/font/css/materialdesignicons.css";
 ```
 
 Or via CDN/link tags if you prefer.
+
+### Icons
+
+Icon props take [Material Design Icons](https://pictogrammers.com/library/mdi/) names without the `mdi-` prefix. A registered name renders as an inline SVG; any other name renders the `@mdi/font` class, so that needs the webfont loaded. Catenary registers the icons its own controls use. Register yours with path data from `@mdi/js` (a dependency of your app), and an app that registers every icon it uses can drop the webfont:
+
+```ts
+import { mdiAccount, mdiCog } from '@mdi/js'
+
+app.use(CatenaryPlugin, { icons: { account: mdiAccount, cog: mdiCog } })
+// or, outside the plugin: registerIcons({ account: mdiAccount })
+```
+
+Two opt-in plugin options, both off by default:
+
+- `strictIcons: 'warn' | 'error'` reports a name that is not registered, which would show nothing without the webfont. `'warn'` logs once per name outside production; `'error'` throws while rendering, for test suites.
+- `iconSprite: true` draws each icon as a `<use>` of a shared `<symbol>`, so each path appears once per page. Place `<cat-icon-sprite />` once, last in your root layout. It holds every registered icon rather than only the page's, because a server render cannot know the icons of async components that render after it; that also keeps hydration in step. Without a mounted sprite, icons fall back to inline paths and warn in development.
 
 ## Components
 

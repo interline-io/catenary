@@ -86,7 +86,7 @@ describe('CatButton', () => {
     expect(button.attributes('aria-busy')).toBe('true')
     expect(wrapper.find('.is-sr-only').text()).toBe('Loading')
     // The spinner glyph itself stays hidden; the text carries the state.
-    expect(wrapper.find('.mdi-loading').element.closest('[aria-hidden="true"]')).not.toBeNull()
+    expect(wrapper.find('svg[data-icon="loading"]').element.closest('[aria-hidden="true"]')).not.toBeNull()
 
     const notLoading = mountComponent(CatButton, { slots: { default: 'Save' } })
     expect(notLoading.find('button').attributes('aria-busy')).toBeUndefined()
@@ -137,9 +137,9 @@ describe('CatButton', () => {
       attrs: { 'aria-label': 'Search' }
     })
 
-    const icon = wrapper.find('button .icon i')
+    const icon = wrapper.find('button .icon svg')
     expect(icon.exists()).toBe(true)
-    expect(icon.classes()).toContain('mdi-magnify')
+    expect(icon.attributes('data-icon')).toBe('magnify')
     // The glyph is decorative; the accessible name comes from aria-label.
     expect(wrapper.find('button .icon').attributes('aria-hidden')).toBe('true')
     expect(wrapper.find('button').attributes('aria-label')).toBe('Search')

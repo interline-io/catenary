@@ -178,7 +178,7 @@ describe('CatInput', () => {
     const clearButton = wrapper.find('.cat-input-clear-button')
     expect(clearButton.attributes('aria-label')).toBe('Clear')
     // The icon itself is hidden from assistive tech; the button carries the label.
-    expect(clearButton.find('i.mdi-close-circle').attributes('aria-hidden')).toBe('true')
+    expect(clearButton.find('svg[data-icon="close-circle"]').attributes('aria-hidden')).toBe('true')
   })
 
   it('supports a custom clear-aria-label', () => {

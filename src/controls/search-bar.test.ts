@@ -19,7 +19,7 @@ describe('CatSearchBar', () => {
     const input = wrapper.find('input')
     expect(input.exists()).toBe(true)
     expect(input.attributes('aria-label')).toBe('Search')
-    expect(wrapper.find('.icon.is-left i.mdi-magnify').exists()).toBe(true)
+    expect(wrapper.find('.icon.is-left svg[data-icon="magnify"]').exists()).toBe(true)
   })
 
   it('allows overriding the accessible name', () => {

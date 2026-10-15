@@ -36,7 +36,7 @@
         @blur="handleBlur"
       >
       <span v-if="icon" class="icon is-left">
-        <i :class="`mdi mdi-${icon}`" aria-hidden="true" />
+        <icon-glyph :name="icon" />
       </span>
       <button
         v-if="showClear"
@@ -45,7 +45,7 @@
         :aria-label="clearAriaLabel"
         @click="handleClear"
       >
-        <i class="mdi mdi-close-circle" aria-hidden="true" />
+        <icon-glyph name="close-circle" />
       </button>
       <button
         v-else-if="iconRight && iconRightClickable"
@@ -54,14 +54,14 @@
         :aria-label="iconRightAriaLabel || 'Action'"
         @click="handleIconRightClick"
       >
-        <i :class="`mdi mdi-${iconRight}`" aria-hidden="true" />
+        <icon-glyph :name="iconRight" />
       </button>
       <span
         v-else-if="iconRight"
         class="icon is-right"
         aria-hidden="true"
       >
-        <i :class="`mdi mdi-${iconRight}`" />
+        <icon-glyph :name="iconRight" />
       </span>
     </component>
     <div v-if="suffix" class="control">
@@ -81,6 +81,7 @@ import type { FunctionalComponent } from 'vue'
 import { filterAttrs, isRootAttr, isControlAttr } from '../util/attrs'
 import type { InputVariant, InputSize } from './types'
 import { FieldIdKey, FieldDescribedbyKey, FieldVariantKey } from './types'
+import IconGlyph from './icon-glyph.vue'
 
 // Fallthrough *attributes* go to the native element only. Without this, Vue
 // also applied them to the root `.control` wrapper, so a consumer's `id`

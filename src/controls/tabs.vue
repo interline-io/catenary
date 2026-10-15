@@ -28,7 +28,7 @@
           @keydown="onTablistKeydown"
         >
           <span v-if="tab.icon" class="icon">
-            <i :class="`mdi mdi-${tab.icon}`" aria-hidden="true" />
+            <icon-glyph :name="tab.icon" />
           </span>
           <span>{{ tab.label }}</span>
         </button>
@@ -68,6 +68,7 @@ import { computed, provide, ref, watch, nextTick } from 'vue'
 
 import type { TabsSize, TabsPosition, TabsType, TabRegistration } from './types'
 import { TabsContextKey } from './types'
+import IconGlyph from './icon-glyph.vue'
 
 const props = withDefaults(defineProps<{
   /** The active tab value (v-model) */
