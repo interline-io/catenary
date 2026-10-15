@@ -33,7 +33,7 @@
         v-bind="controlAttrs"
         @input="handleInput"
         @change="handleChange"
-        @compositionstart="composing = true"
+        @compositionstart="handleCompositionStart"
         @compositionend="handleCompositionEnd"
         @focus="handleFocus"
         @blur="handleBlur"
@@ -46,6 +46,7 @@
         type="button"
         class="icon is-right is-clickable cat-input-icon-button cat-input-clear-button"
         :aria-label="clearAriaLabel"
+        @mousedown.prevent
         @click="handleClear"
       >
         <icon-glyph name="close-circle" />
@@ -325,10 +326,10 @@ const ariaInvalid = computed(() => {
 
 // The clear button only appears once the input holds a value, and never when
 // the input cannot be edited (disabled/readonly/static).
+// Follows the field's own text rather than the model, which with `.lazy` lags
+// until the text is committed.
 const showClear = computed(() => {
-  const value = props.modelValue
-  const hasValue = value !== undefined && value !== null && String(value).length > 0
-  return props.clearable && hasValue && !props.disabled && !props.readonly && !props.static
+  return props.clearable && fieldHasText.value && !props.disabled && !props.readonly && !props.static
 })
 
 const hasAddons = computed(() => !!(props.prefix || props.suffix))
@@ -441,6 +442,10 @@ const shownText = computed((): string => {
   return String(value)
 })
 
+// Whether the field holds any text, for the clear button. Kept in step with
+// every write to the field and every input event.
+const fieldHasText = ref(shownText.value !== '')
+
 // Whether the field's text already stands for the model's value, compared the
 // way it would be emitted: "2." and "2.50" both mean 2.5, and an empty numeric
 // field means 0, or undefined when optional.
@@ -451,33 +456,48 @@ function textMatchesModel (text: string): boolean {
   return text === String(props.modelValue ?? '')
 }
 
-// Writes shownText into the input the way Vue's own v-model on <input> does
-// (vModelText in @vue/runtime-dom): never during IME composition, and while
-// focused, not when the text already means the model's value, so typing "2."
-// or emptying a field is not undone by the model's own rendering of it. Unlike
-// a plain `:value` binding, which Vue rewrites on every render whose string
-// differs. Like Vue's, it assumes the model updates as soon as a value is
-// emitted: bind the input to synchronous state and write it to slow stores,
-// such as the URL, from there.
-function syncShown (el: HTMLInputElement, text: string, editing: boolean): void {
-  if (composing.value || el.value === text) {
-    return
-  }
-  if (editing && textMatchesModel(el.value)) {
-    return
-  }
-  el.value = text
+// Text mid-way through an IME composition (Japanese, Chinese, Korean input
+// methods) is not a value yet
+let composing = false
+
+// Whether the person is editing the field. `focused` follows its focus and blur
+// events; document.activeElement, which is what Vue checks, also covers focus
+// the field took before those listeners existed, such as `autofocus` or a
+// click before hydration.
+function isEditing (el: HTMLInputElement): boolean {
+  return focused.value || el.ownerDocument.activeElement === el
 }
 
-// `focused` tracks the field's own focus and blur events, which is the same
-// thing Vue checks through document.activeElement.
+function writeField (el: HTMLInputElement, text: string): void {
+  el.value = text
+  fieldHasText.value = text !== ''
+}
+
+// Writes shownText into the input the way Vue's own v-model on <input> does
+// (vModelText in @vue/runtime-dom): never during IME composition, and while the
+// field is being edited, not when its text already means the model's value, so
+// typing "2." or emptying a field is not undone by the model's own rendering
+// of it; with `.lazy`, not at all unless the model changed, so a re-render for
+// any other reason keeps text not yet committed. Unlike a plain `:value`
+// binding, which Vue rewrites on every render whose string differs. Like
+// Vue's, it assumes the model updates as soon as a value is emitted: bind the
+// input to synchronous state and write it to slow stores, such as the URL,
+// from there.
+function syncShown (el: HTMLInputElement, text: string, previous: string | undefined, editing: boolean): void {
+  if (composing || el.value === text) {
+    return
+  }
+  if (editing && (textMatchesModel(el.value) || (props.modelModifiers.lazy && text === previous))) {
+    return
+  }
+  writeField(el, text)
+}
+
 const vShown: ObjectDirective<HTMLInputElement, string> = {
   getSSRProps: ({ value }) => ({ value }),
-  mounted: (el, { value }) => { el.value = value },
-  updated: (el, { value }) => { syncShown(el, value, focused.value) }
+  mounted: (el, { value }) => { writeField(el, value) },
+  updated: (el, { value, oldValue }) => { syncShown(el, value, oldValue ?? undefined, isEditing(el)) }
 }
-
-const composing = ref(false)
 
 function handleFocus () {
   focused.value = true
@@ -492,8 +512,13 @@ function handleFocus () {
 function handleBlur () {
   focused.value = false
   const el = inputRef.value
-  if (el && (el.value !== shownText.value || el.validity?.badInput)) {
-    el.value = shownText.value
+  if (!el) {
+    return
+  }
+  if (el.validity?.badInput) {
+    writeField(el, shownText.value)
+  } else {
+    syncShown(el, shownText.value, undefined, false)
   }
 }
 
@@ -506,25 +531,56 @@ function emitText (text: string): void {
   }
 }
 
+// Safari fires compositionend before the composition's last input event, so
+// that input would emit the text a second time.
+let justComposed: string | undefined
+
 function handleInput (event: Event) {
-  // Mid-composition text is not a value yet; compositionend emits it
-  if (composing.value || props.modelModifiers.lazy) {
+  const text = (event.target as HTMLInputElement).value
+  fieldHasText.value = text !== ''
+  if (justComposed !== undefined) {
+    const repeat = text === justComposed
+    justComposed = undefined
+    if (repeat) {
+      return
+    }
+  }
+  if (composing || props.modelModifiers.lazy) {
     return
   }
-  emitText((event.target as HTMLInputElement).value)
+  emitText(text)
+}
+
+function handleCompositionStart () {
+  composing = true
+}
+
+// Emits the composed text, as Vue does, unless the composition was already
+// ended (by change, below) or `.lazy` commits on change instead
+function endComposition (el: HTMLInputElement): void {
+  if (!composing) {
+    return
+  }
+  composing = false
+  if (!props.modelModifiers.lazy) {
+    justComposed = el.value
+    emitText(el.value)
+  }
 }
 
 function handleCompositionEnd (event: CompositionEvent) {
-  composing.value = false
-  if (!props.modelModifiers.lazy) {
-    emitText((event.target as HTMLInputElement).value)
-  }
+  endComposition(event.target as HTMLInputElement)
 }
 
-// With `.lazy` the text is committed on change rather than on each keystroke
+// With `.lazy` the text is committed on change rather than on each keystroke.
+// Change also ends a composition the browser never finished with
+// compositionend, as Safari can when the field is left mid-composition, which
+// would otherwise leave every later keystroke unemitted; Vue does the same.
 function handleChange (event: Event) {
+  const el = event.target as HTMLInputElement
+  endComposition(el)
   if (props.modelModifiers.lazy) {
-    emitText((event.target as HTMLInputElement).value)
+    emitText(el.value)
   }
 }
 
@@ -534,15 +590,12 @@ function handleIconRightClick (event: MouseEvent) {
   }
 }
 
+// Commits the empty value at once, even with `.lazy`. The button keeps a mouse
+// press from taking focus (`mousedown.prevent`), so the field is not left and
+// does not commit its typed text first, which would make one click two
+// commits.
 function handleClear () {
-  // Mirror handleInput's number handling so the emitted empty value matches the
-  // bound type: undefined for an optional numeric input, 0 for any other
-  // numeric one, '' otherwise.
-  if (convertsToNumber.value) {
-    emitValue(parseNumber('') as T | undefined)
-  } else {
-    emitValue('' as T)
-  }
+  emitText('')
   emit('clear')
   // The clear button disappears once the value is empty, so return focus to the
   // input rather than letting it fall back to the document body.
@@ -552,7 +605,7 @@ function handleClear () {
   // the same value, so the focused field keeps it until blur, as it does when
   // the digits are deleted by hand.
   if (inputRef.value) {
-    inputRef.value.value = ''
+    writeField(inputRef.value, '')
   }
 }
 

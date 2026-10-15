@@ -1017,4 +1017,129 @@ describe('CatInput', () => {
       expect(html).toContain('value="2.50"')
     })
   })
+
+  // Findings from review: cases where Vue's own v-model keeps the field right
+  describe('matching Vue v-model edge cases', () => {
+    it('keeps uncommitted lazy text through a re-render for another reason', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 2.5, type: 'number', modelModifiers: { lazy: true } }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = '7'
+      await input.trigger('input')
+      await wrapper.setProps({ variant: 'danger' })
+
+      expect(el.value).toBe('7')
+      expect(wrapper.emitted('update:modelValue')).toBeUndefined()
+      wrapper.unmount()
+    })
+
+    it('still shows a lazy model changed from outside while editing', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: 2.5, type: 'number', modelModifiers: { lazy: true } }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = '7'
+      await input.trigger('input')
+      await wrapper.setProps({ modelValue: 9 })
+
+      expect(el.value).toBe('9')
+      wrapper.unmount()
+    })
+
+    it('ends a composition the browser never finished when the field changes', async () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: '' } })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('compositionstart')
+      el.value = 'にほん'
+      await input.trigger('input')
+      // No compositionend, as when Safari leaves the field mid-composition
+      await input.trigger('change')
+      expect(wrapper.emitted('update:modelValue')).toEqual([['にほん']])
+
+      // Later typing emits again rather than staying stuck as mid-composition
+      el.value = 'にほんご'
+      await input.trigger('input')
+      expect(wrapper.emitted('update:modelValue')?.slice(-1)[0]).toEqual(['にほんご'])
+    })
+
+    it('emits once when Safari fires the last input after compositionend', async () => {
+      const wrapper = mountComponent(CatInput, { props: { modelValue: '' } })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('compositionstart')
+      el.value = '日本'
+      await input.trigger('compositionend')
+      await input.trigger('input')
+
+      expect(wrapper.emitted('update:modelValue')).toEqual([['日本']])
+    })
+
+    it('treats a field focused before the component listened as being edited', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: {
+          'modelValue': 1,
+          'type': 'number',
+          'onUpdate:modelValue': (v: number) => wrapper.setProps({ modelValue: v })
+        }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      // Focused without the component seeing it, as with autofocus or a click
+      // before hydration: a synthetic blur event leaves the element active
+      // while the component's own focus state says it is not
+      el.focus()
+      await input.trigger('blur')
+      expect(document.activeElement).toBe(el)
+      el.value = '05'
+      await input.trigger('input')
+      await new Promise(resolve => setTimeout(resolve, 0))
+      // The model did change to 5 and re-render, and "05" means 5, so the
+      // field is left as typed rather than rewritten
+      expect((wrapper.vm.$props as { modelValue?: number }).modelValue).toBe(5)
+      expect(el.value).toBe('05')
+      wrapper.unmount()
+    })
+
+    it('shows the clear button for the field\'s text, not the lazy model', async () => {
+      const wrapper = mountComponent(CatInput, {
+        attachTo: document.body,
+        props: { modelValue: '', clearable: true, modelModifiers: { lazy: true } }
+      })
+      const input = wrapper.find('input')
+      const el = input.element as HTMLInputElement
+
+      await input.trigger('focus')
+      el.value = 'abc'
+      await input.trigger('input')
+      expect(wrapper.find('.cat-input-clear-button').exists()).toBe(true)
+
+      el.value = ''
+      await input.trigger('input')
+      expect(wrapper.find('.cat-input-clear-button').exists()).toBe(false)
+      wrapper.unmount()
+    })
+
+    it('keeps focus in the field on a mouse press of the clear button', async () => {
+      const wrapper = mountComponent(CatInput, {
+        props: { modelValue: 'abc', clearable: true }
+      })
+      const event = new MouseEvent('mousedown', { bubbles: true, cancelable: true })
+      wrapper.find('.cat-input-clear-button').element.dispatchEvent(event)
+      expect(event.defaultPrevented).toBe(true)
+    })
+  })
 })
