@@ -103,7 +103,7 @@ describe('cat-tooltip', () => {
     })
     const tooltip = wrapper.find('.cat-tooltip')
 
-    await tooltip.trigger('mouseenter')
+    await tooltip.trigger('pointerenter')
     expect(tooltip.classes()).toContain('is-visible')
 
     await tooltip.trigger('keydown', { key: 'Escape' })
@@ -177,13 +177,13 @@ describe('cat-tooltip', () => {
       expect(bubble.attributes('popover')).toBe('manual')
 
       const tooltip = wrapper.find('.cat-tooltip')
-      await tooltip.trigger('mouseenter')
+      await tooltip.trigger('pointerenter')
       await wrapper.vm.$nextTick()
       expect(showCalls).toBe(1)
 
-      // mouseleave now schedules the hide rather than doing it immediately,
+      // pointerleave now schedules the hide rather than doing it immediately,
       // so that crossing the gap onto the bubble does not dismiss it.
-      await tooltip.trigger('mouseleave')
+      await tooltip.trigger('pointerleave')
       expect(hideCalls).toBe(0)
       await new Promise(resolve => setTimeout(resolve, 250))
       expect(hideCalls).toBe(1)
@@ -197,7 +197,7 @@ describe('cat-tooltip', () => {
         slots: { default: '<button class="button">Trigger</button>' }
       })
       const tooltip = wrapper.find('.cat-tooltip')
-      await tooltip.trigger('mouseenter')
+      await tooltip.trigger('pointerenter')
       await wrapper.vm.$nextTick()
 
       await tooltip.trigger('keydown', { key: 'Escape' })
@@ -251,7 +251,7 @@ describe('cat-tooltip', () => {
 
   describe('hover content and dismissal (WCAG 1.4.13)', () => {
     // The bubble sat behind pointer-events: none, so any move toward it fired
-    // mouseleave on the wrapper and dismissed it — a user magnifying the page
+    // pointerleave on the wrapper and dismissed it — a user magnifying the page
     // or selecting a long tooltip's text could never reach it.
     it('stays open when the pointer moves onto the bubble', async () => {
       const wrapper = mount(CatTooltip, {
@@ -260,19 +260,19 @@ describe('cat-tooltip', () => {
         slots: { default: '<button class="button">Trigger</button>' }
       })
       const tooltip = wrapper.find('.cat-tooltip')
-      await tooltip.trigger('mouseenter')
+      await tooltip.trigger('pointerenter')
       expect(tooltip.classes()).toContain('is-visible')
 
       // relatedTarget is the bubble, which is a DOM child of the wrapper even
       // when rendered in the top layer.
-      await tooltip.trigger('mouseleave', { relatedTarget: wrapper.find('[role="tooltip"]').element })
+      await tooltip.trigger('pointerleave', { relatedTarget: wrapper.find('[role="tooltip"]').element })
       await new Promise(resolve => setTimeout(resolve, 250))
       expect(tooltip.classes()).toContain('is-visible')
       wrapper.unmount()
     })
 
     // Making the bubble hoverable moved the dismissal boundary: the wrapper's
-    // mouseleave fires when the pointer crosses onto the bubble, so nothing
+    // pointerleave fires when the pointer crosses onto the bubble, so nothing
     // was left to dismiss it once the pointer left the bubble again. With 129
     // call sites across the consumer apps, mostly icons in dense tables, a
     // tooltip stuck open would be worse than the bug being fixed.
@@ -284,12 +284,12 @@ describe('cat-tooltip', () => {
       })
       const tooltip = wrapper.find('.cat-tooltip')
       const bubble = wrapper.find('[role="tooltip"]')
-      await tooltip.trigger('mouseenter')
-      await tooltip.trigger('mouseleave', { relatedTarget: bubble.element })
-      await bubble.trigger('mouseenter')
+      await tooltip.trigger('pointerenter')
+      await tooltip.trigger('pointerleave', { relatedTarget: bubble.element })
+      await bubble.trigger('pointerenter')
       expect(tooltip.classes()).toContain('is-visible')
 
-      await bubble.trigger('mouseleave', { relatedTarget: document.body })
+      await bubble.trigger('pointerleave', { relatedTarget: document.body })
       await new Promise(resolve => setTimeout(resolve, 250))
       expect(tooltip.classes()).not.toContain('is-visible')
       wrapper.unmount()
@@ -303,8 +303,8 @@ describe('cat-tooltip', () => {
       })
       const tooltip = wrapper.find('.cat-tooltip')
       const bubble = wrapper.find('[role="tooltip"]')
-      await tooltip.trigger('mouseenter')
-      await bubble.trigger('mouseleave', { relatedTarget: wrapper.find('button').element })
+      await tooltip.trigger('pointerenter')
+      await bubble.trigger('pointerleave', { relatedTarget: wrapper.find('button').element })
       await new Promise(resolve => setTimeout(resolve, 250))
       expect(tooltip.classes()).toContain('is-visible')
       wrapper.unmount()
@@ -322,7 +322,7 @@ describe('cat-tooltip', () => {
         slots: { default: '<span>plain text</span>' }
       })
       const tooltip = wrapper.find('.cat-tooltip')
-      await tooltip.trigger('mouseenter')
+      await tooltip.trigger('pointerenter')
       expect(tooltip.classes()).toContain('is-visible')
 
       outside.focus()
@@ -341,7 +341,7 @@ describe('cat-tooltip', () => {
         props: { text: 'Hint' },
         slots: { default: '<span>plain text</span>' }
       })
-      await wrapper.find('.cat-tooltip').trigger('mouseenter')
+      await wrapper.find('.cat-tooltip').trigger('pointerenter')
 
       const event = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true })
       document.dispatchEvent(event)
@@ -360,12 +360,12 @@ describe('cat-tooltip', () => {
       })
       const tooltip = wrapper.find('.cat-tooltip')
       await tooltip.trigger('pointerdown')
-      await tooltip.trigger('mouseenter')
+      await tooltip.trigger('pointerenter')
       ;(tooltip.element as HTMLElement).focus()
       await tooltip.trigger('focusin')
       expect(tooltip.classes()).toContain('is-visible')
 
-      await tooltip.trigger('mouseleave')
+      await tooltip.trigger('pointerleave')
       await new Promise(resolve => setTimeout(resolve, 250))
       expect(tooltip.classes()).not.toContain('is-visible')
       wrapper.unmount()
@@ -374,7 +374,7 @@ describe('cat-tooltip', () => {
     // The bubble is inside the wrapper and is a pointer target now, so a
     // pointerdown on it reached the wrapper's handler and re-labelled a
     // keyboard-driven focus as pointer-driven — the tooltip then dismissed on
-    // the next mouseleave despite the trigger still holding focus.
+    // the next pointerleave despite the trigger still holding focus.
     it('does not treat a press on the bubble as pointer-driven focus', async () => {
       const wrapper = mount(CatTooltip, {
         attachTo: document.body,
@@ -388,7 +388,7 @@ describe('cat-tooltip', () => {
 
       // Select text in the bubble, then move the pointer away.
       await wrapper.find('[role="tooltip"]').trigger('pointerdown')
-      await tooltip.trigger('mouseleave')
+      await tooltip.trigger('pointerleave')
       await new Promise(resolve => setTimeout(resolve, 250))
       expect(tooltip.classes()).toContain('is-visible')
       wrapper.unmount()
@@ -407,8 +407,8 @@ describe('cat-tooltip', () => {
       })
       const tooltip = wrapper.find('.cat-tooltip')
       await tooltip.trigger('pointerdown')
-      await tooltip.trigger('mouseenter')
-      await tooltip.trigger('mouseleave')
+      await tooltip.trigger('pointerenter')
+      await tooltip.trigger('pointerleave')
       await new Promise(resolve => setTimeout(resolve, 350))
       expect(tooltip.classes()).not.toContain('is-visible')
 
@@ -436,14 +436,14 @@ describe('cat-tooltip', () => {
       // A real press on the bubble blurs the button, so focus genuinely leaves
       // the wrapper — triggering focusout synthetically while activeElement
       // stayed on the button would not reproduce the bug.
-      await bubble.trigger('mouseenter')
+      await bubble.trigger('pointerenter')
       await bubble.trigger('pointerdown')
       ;(wrapper.find('button').element as HTMLElement).blur()
       await wrapper.vm.$nextTick()
       expect(tooltip.classes()).toContain('is-visible')
 
       // Leaving the bubble still dismisses.
-      await bubble.trigger('mouseleave', { relatedTarget: document.body })
+      await bubble.trigger('pointerleave', { relatedTarget: document.body })
       await new Promise(resolve => setTimeout(resolve, 250))
       expect(tooltip.classes()).not.toContain('is-visible')
       wrapper.unmount()
@@ -460,10 +460,47 @@ describe('cat-tooltip', () => {
       await tooltip.trigger('focusin')
       expect(tooltip.classes()).toContain('is-visible')
 
-      await tooltip.trigger('mouseleave')
+      await tooltip.trigger('pointerleave')
       await new Promise(resolve => setTimeout(resolve, 250))
       expect(tooltip.classes()).toContain('is-visible')
       wrapper.unmount()
+    })
+  })
+
+  // A tap has no hover to end, so a bubble opened by one stayed up until the
+  // next tap somewhere else.
+  describe('touch', () => {
+    it('shows nothing for a tap', async () => {
+      const wrapper = mount(CatTooltip, {
+        attachTo: document.body,
+        props: { text: 'Hint' },
+        slots: { default: '<button class="button">Trigger</button>' }
+      })
+      const tooltip = wrapper.find('.cat-tooltip')
+      // A tap in the order a browser sends it: pointer events marked touch,
+      // then the compatibility mouse events, as focus moves to the button.
+      await tooltip.trigger('pointerenter', { pointerType: 'touch' })
+      await tooltip.trigger('pointerdown', { pointerType: 'touch' })
+      await tooltip.trigger('pointerleave', { pointerType: 'touch' })
+      await tooltip.trigger('mouseenter')
+      ;(wrapper.find('button').element as HTMLElement).focus()
+      await tooltip.trigger('focusin')
+      expect(tooltip.classes()).not.toContain('is-visible')
+      wrapper.unmount()
+    })
+
+    it('shows on hover from a mouse or a pen', async () => {
+      for (const pointerType of ['mouse', 'pen']) {
+        const wrapper = mount(CatTooltip, {
+          attachTo: document.body,
+          props: { text: 'Hint' },
+          slots: { default: '<button class="button">Trigger</button>' }
+        })
+        const tooltip = wrapper.find('.cat-tooltip')
+        await tooltip.trigger('pointerenter', { pointerType })
+        expect(tooltip.classes()).toContain('is-visible')
+        wrapper.unmount()
+      }
     })
   })
 
