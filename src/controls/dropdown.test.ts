@@ -354,3 +354,33 @@ describe('cat-dropdown v-model:open', () => {
     wrapper.unmount()
   })
 })
+
+describe('cat-dropdown-item selection', () => {
+  const activeItems = (wrapper: ReturnType<typeof mount>) => wrapper.findAll('.dropdown-item')
+    .filter(i => i.classes().includes('is-active'))
+    .map(i => i.text())
+
+  it('selects the item matching the model', async () => {
+    const { wrapper, selected } = mountDropdown({ selectable: true })
+    selected.value = 'two'
+    await nextTick()
+    expect(activeItems(wrapper)).toEqual(['Two'])
+    wrapper.unmount()
+  })
+
+  // A menu of links, with neither a model nor item values.
+  it('leaves items without a value unselected unless marked active', () => {
+    const wrapper = mount(defineComponent({
+      setup () {
+        return () => h(CatDropdown, { label: 'Apps' }, {
+          default: () => [
+            h(CatDropdownItem, null, () => 'Admin'),
+            h(CatDropdownItem, { active: true }, () => 'Editor')
+          ]
+        })
+      }
+    }), { attachTo: document.body })
+    expect(activeItems(wrapper)).toEqual(['Editor'])
+    wrapper.unmount()
+  })
+})

@@ -73,12 +73,14 @@ interface DropdownContext<T> {
 const dropdown = inject<DropdownContext<T> | null>('dropdown', null)
 
 const isSelected = computed(() => {
-  if (!dropdown) return props.active
+  // An item without a value is selected only when marked active. Otherwise, in a
+  // menu without a model, its undefined value would match the undefined model.
+  if (!dropdown || props.value === undefined) return props.active
 
   const selectedValue = dropdown.selectedValue?.value
 
   if (dropdown.isMultiple) {
-    return Array.isArray(selectedValue) && props.value !== undefined && selectedValue.includes(props.value)
+    return Array.isArray(selectedValue) && selectedValue.includes(props.value)
   }
 
   return selectedValue === props.value
