@@ -2,7 +2,6 @@
   <!-- The wrapper IS the keyboard-accessible trigger when the slot has no
        focusable child; otherwise the slot's focusable element is the trigger
        and gets aria-describedby applied programmatically. -->
-  <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions -->
   <span
     ref="wrapperRef"
     class="cat-tooltip"
@@ -13,30 +12,23 @@
     :tabindex="needsTabindex ? 0 : undefined"
     :aria-describedby="needsTabindex ? tooltipId : undefined"
     @pointerdown="onPointerdown"
-    @mouseenter="onMouseenter"
-    @mouseleave="onMouseleave"
+    @pointerenter="onPointerenter"
+    @pointerleave="onPointerleave"
     @focusin="onFocusin"
     @focusout="onFocusout"
   >
     <slot />
     <!-- The bubble needs its own pointer handlers now that it is hoverable:
-         the wrapper's mouseleave already fired when the pointer crossed onto
+         the wrapper's pointerleave already fired when the pointer crossed onto
          the bubble, so without these the tooltip would stay up indefinitely
-         once the pointer left the bubble again.
-
-         Both rules are waived deliberately. The bubble is role="tooltip" and
-         carries no interaction of its own — these handlers only decide when it
-         stops being shown — and the keyboard equivalents the second rule asks
-         for are on the wrapper (focusin / focusout) plus Escape via the shared
-         dismiss stack, neither of which belongs on the bubble itself. -->
-    <!-- eslint-disable-next-line vuejs-accessibility/no-static-element-interactions, vuejs-accessibility/mouse-events-have-key-events -->
+         once the pointer left the bubble again. -->
     <span
       :id="tooltipId"
       ref="bubbleRef"
       class="cat-tooltip-bubble"
       role="tooltip"
-      @mouseenter="onBubbleMouseenter"
-      @mouseleave="onBubbleMouseleave"
+      @pointerenter="onBubblePointerenter"
+      @pointerleave="onBubblePointerleave"
     >
       {{ text }}
     </span>
@@ -52,8 +44,9 @@ import { pushDismissLayer, removeDismissLayer, type DismissLayer } from '../util
  * https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/
  *
  * Behavior:
- * - Shows on hover (mouseenter) AND keyboard focus (focusin) of the trigger.
- * - Dismissed by mouseleave, focusout, or Escape — but stays open while focus
+ * - Shows on hover from a mouse or pen (pointerenter) AND keyboard focus
+ *   (focusin) of the trigger. A tap shows nothing: it has no hover to end.
+ * - Dismissed by pointerleave, focusout, or Escape — but stays open while focus
  *   remains inside the wrapper, and while the mouse moves between wrapper
  *   children.
  * - Tooltip is associated with the trigger via `aria-describedby` and
@@ -197,7 +190,7 @@ function relatedTargetInside (event: FocusEvent | MouseEvent): boolean {
 }
 
 // Crossing the gap between trigger and bubble briefly puts the pointer over
-// neither, which would otherwise read as a mouseleave. A short close delay,
+// neither, which would otherwise read as a pointerleave. A short close delay,
 // cancelled by re-entry, bridges it — and is position-agnostic, unlike a
 // transparent CSS bridge which would need geometry per side.
 const CLOSE_DELAY_MS = 150
@@ -208,7 +201,16 @@ function cancelClose () {
   closeTimer = undefined
 }
 
-function onMouseenter () {
+// A tap shows nothing. It has no hover to end, so a bubble it opened stayed up
+// until the next tap somewhere else. These handlers take pointer events rather
+// than mouse events because a tap is followed by compatibility mouse events, and
+// only a pointer event says which input it came from.
+function isTouch (event: PointerEvent): boolean {
+  return event.pointerType === 'touch'
+}
+
+function onPointerenter (event: PointerEvent) {
+  if (isTouch(event)) return
   cancelClose()
   show()
 }
@@ -216,7 +218,7 @@ function onMouseenter () {
 // Showing on focus is right for a keyboard user and wrong for a pointer one.
 // When the slot has no focusable child the wrapper takes a tabindex of its
 // own, so a click focuses it; the bubble then stays up after the pointer has
-// left, because onMouseleave declines to hide while focus is inside. That
+// left, because onPointerleave declines to hide while focus is inside. That
 // reads as the tooltip getting stuck — which matters most on a trigger that
 // is itself clickable.
 //
@@ -245,15 +247,15 @@ function onPointerdown (event: PointerEvent) {
 
 function onFocusin () {
   focusIsPointerDerived = Date.now() - lastPointerDownAt < POINTER_FOCUS_WINDOW_MS
-  // A pointer press has already shown the bubble via mouseenter; showing it
-  // again here is what would make it outlast the pointer.
+  // A pointer press has already shown the bubble on pointerenter, or, for a
+  // tap, has deliberately not; showing it here would make it outlast the press.
   if (focusIsPointerDerived) return
   show()
 }
 
 function show () {
   cancelClose()
-  // Crossing onto the bubble fires the wrapper's mouseenter again, because the
+  // Crossing onto the bubble fires the wrapper's pointerenter again, because the
   // bubble is a descendant even in the top layer. Without this guard that
   // re-entered show() and re-ran adjustPosition(), which clears the flipped
   // side for a frame — the arrow jumps, and in the non-Popover fallback the
@@ -270,7 +272,8 @@ function show () {
   })
 }
 
-function onMouseleave (event: MouseEvent) {
+function onPointerleave (event: PointerEvent) {
+  if (isTouch(event)) return
   // The bubble is a DOM child of the wrapper even when rendered in the top
   // layer, so moving the pointer onto it counts as inside and keeps it open.
   if (relatedTargetInside(event)) return
@@ -286,22 +289,24 @@ function onFocusout (event: FocusEvent) {
   // Pressing the bubble to select its text blurs the focused trigger, and the
   // new focus target is outside the wrapper — so this fired mid-selection and
   // dismissed the very content the hoverable bubble exists to let people read.
-  // The bubble's own mouseleave takes over from here.
+  // The bubble's own pointerleave takes over from here.
   if (pointerInBubble) return
   hide()
 }
 
 // Leaving the bubble for anywhere outside the component dismisses; moving
-// back onto the trigger does not, and the wrapper's own mouseleave takes over
-// from there.
+// back onto the trigger does not, and the wrapper's own pointerleave takes
+// over from there.
 let pointerInBubble = false
 
-function onBubbleMouseenter () {
+function onBubblePointerenter (event: PointerEvent) {
+  if (isTouch(event)) return
   pointerInBubble = true
   cancelClose()
 }
 
-function onBubbleMouseleave (event: MouseEvent) {
+function onBubblePointerleave (event: PointerEvent) {
+  if (isTouch(event)) return
   pointerInBubble = false
   if (relatedTargetInside(event)) return
   if (isFocusInside() && !focusIsPointerDerived) return
@@ -425,7 +430,7 @@ function adjustPosition () {
 // the main axis in normal cases, but a bubble too large for either side
 // would otherwise still run off-screen. A clamped bubble can end up
 // overlapping its own trigger; the bubble is a pointer target now, so that
-// no longer passes hover through, but it keeps the wrapper's mouseenter
+// no longer passes hover through, but it keeps the wrapper's pointerenter
 // alive rather than flickering — the bubble is a descendant of it.
 // When clamping shifts the bubble off the trigger's center, a CSS variable
 // keeps the arrow pointing at the trigger.
@@ -532,7 +537,7 @@ $tooltip-offset: 8px;
     // hoverable: a user relying on magnification, or wanting to select a long
     // tooltip's text, must be able to move the pointer onto it. With
     // pointer-events: none the bubble was never a pointer target, so any move
-    // toward it fired mouseleave on the wrapper and dismissed it. Only while
+    // toward it fired pointerleave on the wrapper and dismissed it. Only while
     // visible — a hidden bubble must not intercept clicks on the page.
     pointer-events: auto;
   }
