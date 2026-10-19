@@ -118,7 +118,7 @@ A deliberately theme-independent color is fine when the surface it sits on is al
 
 ### Publishing
 
-Published to GitHub Packages on every push via `.github/workflows/publish.yml`. Version is computed from `package.json` version + git SHA. Main branch pushes get the `latest` dist-tag.
+Releases come from `.github/workflows/release.yml`: changesets opens a "Version Packages" PR, and merging it publishes the release under the `latest` dist-tag. `.github/workflows/publish.yml` also publishes a prerelease build of every push: `<version>-main.<sha>` under the `main` dist-tag for `main`, and `<version>-branch.<branch>.<sha>` under the branch name otherwise, where `<version>` is `package.json`'s. A consumer pins one by its exact version.
 
 ## Code Style
 

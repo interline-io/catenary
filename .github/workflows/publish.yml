@@ -1,11 +1,26 @@
-name: Publish branch preview to GitHub Packages
+name: Publish builds to GitHub Packages
 
+# Publish a build of every push, so any commit is installable:
+#
+#   main:   @interline-io/catenary@<version>-main.<sha>             (dist-tag: main)
+#   branch: @interline-io/catenary@<version>-branch.<branch>.<sha>  (dist-tag: <branch>)
+#
+# <version> is package.json's. Releases come from the Release workflow and keep
+# the `latest` dist-tag; these builds are prereleases, which no range such as
+# ^0.19.0 matches, so a consumer gets one only by pinning its exact string.
 on:
   push:
-    branches-ignore:
-      - main
+    branches:
+      - '**'
 
 permissions: {}
+
+# Cancel superseded branch-preview publishes (only the latest commit's preview
+# matters), but never cancel on main: every main commit is a distinct build a
+# consumer may pin, and queuing keeps the `main` dist-tag in commit order.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_name != 'main' }}
 
 jobs:
   publish:
@@ -31,14 +46,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Compute version and tags
+      - name: Compute version and tag
         id: meta
+        env:
+          REF_NAME: ${{ github.ref_name }}
         run: |
           SHORT_SHA=$(git rev-parse --short HEAD)
-          BRANCH=$(echo "${{ github.ref_name }}" | sed 's/[^a-zA-Z0-9._-]/-/g' | sed 's/^-//')
           BASE_VERSION=$(node -p "require('./package.json').version")
-          echo "version=${BASE_VERSION}-branch.${BRANCH}.${SHORT_SHA}" >> $GITHUB_OUTPUT
-          echo "tag=${BRANCH}" >> $GITHUB_OUTPUT
+          if [ "$REF_NAME" = "main" ]; then
+            echo "version=${BASE_VERSION}-main.${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+            echo "tag=main" >> "$GITHUB_OUTPUT"
+          else
+            BRANCH=$(echo "$REF_NAME" | sed 's/[^a-zA-Z0-9._-]/-/g' | sed 's/^-//')
+            echo "version=${BASE_VERSION}-branch.${BRANCH}.${SHORT_SHA}" >> "$GITHUB_OUTPUT"
+            echo "tag=${BRANCH}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set version
         run: npm version ${{ steps.meta.outputs.version }} --no-git-tag-version
