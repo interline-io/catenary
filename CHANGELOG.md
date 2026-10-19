@@ -1,5 +1,13 @@
 # @interline-io/catenary
 
+## 0.19.1
+
+### Patch Changes
+
+- [#127](https://github.com/interline-io/catenary/pull/127) [`9c00a5b`](https://github.com/interline-io/catenary/commit/9c00a5bd92e483f9046ca62d4065a4aeaadd9868) Thanks [@irees](https://github.com/irees)! - `cat-dropdown-item` no longer shows an item without a `value` as selected. In a menu without a model, such an item's undefined value matched the undefined model, so every item of a plain menu, such as a list of links, counted as selected; since items show their selected state again, each one drew in the selected fill. An item without a value is now selected only when marked `active`.
+
+- [#128](https://github.com/interline-io/catenary/pull/128) [`42bd6e1`](https://github.com/interline-io/catenary/commit/42bd6e156dc8cc5cf9c992f8cbed724757fd0dbe) Thanks [@irees](https://github.com/irees)! - `cat-tooltip` no longer opens on a tap. A tap has no hover to end, so a tooltip opened by one stayed up until the next tap somewhere else. The trigger and the bubble now show and hide on `pointerenter` and `pointerleave` from a mouse or pen and ignore touch, while keyboard focus shows the tooltip as before.
+
 ## 0.19.0
 
 ### Minor Changes
