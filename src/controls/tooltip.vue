@@ -38,6 +38,7 @@
 <script setup lang="ts">
 import { ref, computed, useId, nextTick, onMounted, onUpdated, onBeforeUnmount, watch } from 'vue'
 import { pushDismissLayer, removeDismissLayer, type DismissLayer } from '../util/dismiss-stack'
+import { computePopoverPosition } from '../util/anchored-popover'
 
 /**
  * Accessible tooltip following the WAI-ARIA Authoring Practices tooltip pattern.
@@ -65,6 +66,11 @@ import { pushDismissLayer, removeDismissLayer, type DismissLayer } from '../util
  * scoped styles are untouched. Browsers without the Popover API fall back to
  * the previous absolutely-positioned bubble.
  *
+ * Placement: the bubble keeps the side `position` names whenever it fits
+ * there, sliding along that side near a window edge with its arrow still on
+ * the trigger. It moves to the opposite side only when it doesn't fit and that
+ * side has more room.
+ *
  * Tooltips per the spec should not contain interactive content — for that,
  * build a non-modal dialog (popover) instead.
  *
@@ -78,7 +84,11 @@ import { pushDismissLayer, removeDismissLayer, type DismissLayer } from '../util
 interface Props {
   /** Tooltip text content. */
   text: string
-  /** Tooltip position relative to element. @default 'top' */
+  /**
+   * Which side of the trigger holds the bubble. The bubble keeps this side
+   * whenever it fits there, sliding along it near a window edge.
+   * @default 'top'
+   */
   position?: 'top' | 'bottom' | 'left' | 'right'
   /**
    * Force the wrapper to be focusable even when the slot already contains a
@@ -363,109 +373,56 @@ onBeforeUnmount(() => {
   applyDescribedBy(null)
 })
 
+const EDGE_MARGIN = 4 // how close the bubble may come to the window's edge
+const BUBBLE_OFFSET = 8 // matches $tooltip-offset
+const ARROW_INSET = 12 // keep the arrow off the bubble's rounded corners
+
+// Places the bubble with computePopoverPosition. The top layer takes viewport
+// coordinates; the fallback bubble, centered on its trigger by CSS, takes only
+// the slide along its side.
+//
+// A bubble too big for either side stays in the window over its own trigger,
+// and keeps the wrapper's pointerenter alive rather than flickering, since the
+// bubble is a descendant of the wrapper.
 function adjustPosition () {
   if (!wrapperRef.value) return
   adjustedPosition.value = null
 
   requestAnimationFrame(() => {
-    if (!wrapperRef.value) return
-
-    const rect = wrapperRef.value.getBoundingClientRect()
-    // In popover mode the bubble is rendered (top layer), so measure its real
-    // size; the fallback path keeps the previous estimates.
-    const bubbleRect = popoverSupported ? bubbleRef.value?.getBoundingClientRect() : undefined
-    const tooltipWidth = bubbleRect?.width || 300
-    const tooltipHeight = bubbleRect?.height || 100
-    const margin = 20
-
-    let newPosition: 'top' | 'bottom' | 'left' | 'right' = props.position
-
-    if (props.position === 'top' || props.position === 'bottom') {
-      const tooltipLeft = rect.left + rect.width / 2 - tooltipWidth / 2
-      const tooltipRight = rect.left + rect.width / 2 + tooltipWidth / 2
-
-      if (tooltipLeft < margin) {
-        if (rect.right + tooltipWidth + margin < window.innerWidth) {
-          newPosition = 'right'
-        } else if (props.position === 'top') {
-          newPosition = 'bottom'
-        } else {
-          newPosition = 'top'
-        }
-      } else if (tooltipRight > window.innerWidth - margin) {
-        if (rect.left - tooltipWidth - margin > 0) {
-          newPosition = 'left'
-        } else if (props.position === 'top') {
-          newPosition = 'bottom'
-        } else {
-          newPosition = 'top'
-        }
-      }
+    const bubble = bubbleRef.value
+    if (!wrapperRef.value || !bubble) return
+    const trigger = wrapperRef.value.getBoundingClientRect()
+    // A hidden bubble is still laid out, so a browser measures it; jsdom
+    // measures nothing, and these stand in.
+    const measured = bubble.getBoundingClientRect()
+    const width = measured.width || 300
+    const height = measured.height || 100
+    const placed = computePopoverPosition(
+      trigger,
+      { width, height },
+      props.position,
+      { width: window.innerWidth, height: window.innerHeight },
+      BUBBLE_OFFSET,
+      EDGE_MARGIN
+    )
+    const side = placed.placement as typeof props.position
+    if (side !== props.position) {
+      adjustedPosition.value = side
     }
 
-    if (props.position === 'top' && rect.top - tooltipHeight < margin) {
-      newPosition = 'bottom'
-    } else if (props.position === 'bottom' && rect.bottom + tooltipHeight > window.innerHeight - margin) {
-      newPosition = 'top'
-    }
-
-    if (props.position === 'left' && rect.left - tooltipWidth < margin) {
-      newPosition = 'right'
-    } else if (props.position === 'right' && rect.right + tooltipWidth > window.innerWidth - margin) {
-      newPosition = 'left'
-    }
-
-    if (newPosition !== props.position) {
-      adjustedPosition.value = newPosition
-    }
-
+    const vertical = side === 'top' || side === 'bottom'
+    const arrow = clamp(placed.arrow, ARROW_INSET, (vertical ? width : height) - ARROW_INSET)
+    bubble.style.setProperty('--cat-tooltip-arrow-pos', `${arrow}px`)
     if (popoverSupported) {
-      placeBubble(newPosition, rect, tooltipWidth, tooltipHeight)
+      bubble.style.left = `${placed.left}px`
+      bubble.style.top = `${placed.top}px`
+    } else {
+      const centered = vertical
+        ? trigger.left + trigger.width / 2 - width / 2
+        : trigger.top + trigger.height / 2 - height / 2
+      bubble.style.setProperty('--cat-tooltip-slide', `${(vertical ? placed.left : placed.top) - centered}px`)
     }
   })
-}
-
-// Top-layer bubbles are position: fixed, so compute viewport coordinates
-// directly. Both axes are clamped to the viewport: the flip logic handles
-// the main axis in normal cases, but a bubble too large for either side
-// would otherwise still run off-screen. A clamped bubble can end up
-// overlapping its own trigger; the bubble is a pointer target now, so that
-// no longer passes hover through, but it keeps the wrapper's pointerenter
-// alive rather than flickering — the bubble is a descendant of it.
-// When clamping shifts the bubble off the trigger's center, a CSS variable
-// keeps the arrow pointing at the trigger.
-const BUBBLE_OFFSET = 8 // matches $tooltip-offset
-const ARROW_INSET = 12 // keep the arrow off the bubble's rounded corners
-
-function placeBubble (
-  position: 'top' | 'bottom' | 'left' | 'right',
-  rect: DOMRect,
-  bubbleWidth: number,
-  bubbleHeight: number,
-) {
-  const bubble = bubbleRef.value
-  if (!bubble) return
-  const margin = 8
-  const maxLeft = window.innerWidth - bubbleWidth - margin
-  const maxTop = window.innerHeight - bubbleHeight - margin
-  const centerX = rect.left + rect.width / 2
-  const centerY = rect.top + rect.height / 2
-
-  let left: number
-  let top: number
-  if (position === 'top' || position === 'bottom') {
-    left = clamp(centerX - bubbleWidth / 2, margin, maxLeft)
-    top = position === 'top' ? rect.top - bubbleHeight - BUBBLE_OFFSET : rect.bottom + BUBBLE_OFFSET
-    const arrowX = clamp(centerX - left, ARROW_INSET, bubbleWidth - ARROW_INSET)
-    bubble.style.setProperty('--cat-tooltip-arrow-pos', `${arrowX}px`)
-  } else {
-    top = clamp(centerY - bubbleHeight / 2, margin, maxTop)
-    left = position === 'left' ? rect.left - bubbleWidth - BUBBLE_OFFSET : rect.right + BUBBLE_OFFSET
-    const arrowY = clamp(centerY - top, ARROW_INSET, bubbleHeight - ARROW_INSET)
-    bubble.style.setProperty('--cat-tooltip-arrow-pos', `${arrowY}px`)
-  }
-  bubble.style.left = `${clamp(left, margin, maxLeft)}px`
-  bubble.style.top = `${clamp(top, margin, maxTop)}px`
 }
 
 function clamp (value: number, min: number, max: number): number {
@@ -520,8 +477,8 @@ $tooltip-offset: 8px;
     font-style: normal;
 
     // Arrow rides on the bubble so it escapes clipping together with it.
-    // --cat-tooltip-arrow-pos keeps it pointing at the trigger when the
-    // top-layer bubble is clamped to the viewport edge.
+    // --cat-tooltip-arrow-pos keeps it pointing at the trigger when the bubble
+    // slides along a window edge.
     &::before {
       content: '';
       position: absolute;
@@ -588,11 +545,13 @@ $tooltip-offset: 8px;
     }
   }
 
+  // Without the Popover API the bubble is centered on its trigger here, and
+  // slides along its side by --cat-tooltip-slide near a window edge.
   &.is-tooltip-top {
     .cat-tooltip-bubble:not([popover]) {
       bottom: 100%;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(calc(-50% + var(--cat-tooltip-slide, 0px)));
       margin-bottom: $tooltip-offset;
     }
 
@@ -608,7 +567,7 @@ $tooltip-offset: 8px;
     .cat-tooltip-bubble:not([popover]) {
       top: 100%;
       left: 50%;
-      transform: translateX(-50%);
+      transform: translateX(calc(-50% + var(--cat-tooltip-slide, 0px)));
       margin-top: $tooltip-offset;
     }
 
@@ -624,7 +583,7 @@ $tooltip-offset: 8px;
     .cat-tooltip-bubble:not([popover]) {
       right: 100%;
       top: 50%;
-      transform: translateY(-50%);
+      transform: translateY(calc(-50% + var(--cat-tooltip-slide, 0px)));
       margin-right: $tooltip-offset;
     }
 
@@ -640,7 +599,7 @@ $tooltip-offset: 8px;
     .cat-tooltip-bubble:not([popover]) {
       left: 100%;
       top: 50%;
-      transform: translateY(-50%);
+      transform: translateY(calc(-50% + var(--cat-tooltip-slide, 0px)));
       margin-left: $tooltip-offset;
     }
 

@@ -21,7 +21,14 @@ import { watch, nextTick, onBeforeUnmount, type Ref } from 'vue'
 export const popoverSupported = typeof HTMLElement !== 'undefined'
   && typeof HTMLElement.prototype.showPopover === 'function'
 
-export type PopoverPlacement = 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right'
+// A side of the trigger, and for the top and bottom an edge: 'bottom-left'
+// opens below the trigger with the two left edges aligned. With no edge, the
+// popover centers on the trigger, as a tooltip does.
+export type PopoverPlacement = 'bottom-left' | 'bottom-right' | 'top-left' | 'top-right' | 'top' | 'bottom' | 'left' | 'right'
+
+type Side = 'top' | 'bottom' | 'left' | 'right'
+
+const OPPOSITE: Record<Side, Side> = { top: 'bottom', bottom: 'top', left: 'right', right: 'left' }
 
 interface RectLike {
   top: number
@@ -40,6 +47,9 @@ interface Size {
 // Computes fixed viewport coordinates for a popover anchored to a trigger, and
 // the room on its side of the trigger as `maxHeight`, so an oversized popover
 // scrolls rather than running off-screen. Pure, so it can be unit tested.
+//
+// Along its side the popover slides to stay on screen, and `arrow` is where the
+// trigger's center falls along that side, from the popover's own start.
 export function computePopoverPosition (
   trigger: RectLike,
   popover: Size,
@@ -47,32 +57,48 @@ export function computePopoverPosition (
   viewport: Size,
   gap = 4,
   margin = 8
-): { left: number, top: number, maxHeight: number, placement: PopoverPlacement } {
-  const preferTop = placement === 'top-left' || placement === 'top-right'
-  const alignRight = placement === 'bottom-right' || placement === 'top-right'
-
-  const roomBelow = viewport.height - trigger.bottom - gap - margin
-  const roomAbove = trigger.top - gap - margin
+): { left: number, top: number, maxHeight: number, placement: PopoverPlacement, arrow: number } {
+  const [preferred, edge] = placement.split('-') as [Side, 'left' | 'right' | undefined]
+  const vertical = preferred === 'top' || preferred === 'bottom'
+  const room: Record<Side, number> = {
+    top: trigger.top - gap - margin,
+    bottom: viewport.height - trigger.bottom - gap - margin,
+    left: trigger.left - gap - margin,
+    right: viewport.width - trigger.right - gap - margin
+  }
   // Flip when the preferred side cannot fit the popover and the other side
   // either can or, when neither can, has more room.
-  const preferredRoom = preferTop ? roomAbove : roomBelow
-  const otherRoom = preferTop ? roomBelow : roomAbove
-  let onTop = preferTop
-  if (preferredRoom < popover.height && (otherRoom >= popover.height || otherRoom > preferredRoom)) {
-    onTop = !preferTop
-  }
+  const size = vertical ? popover.height : popover.width
+  const other = OPPOSITE[preferred]
+  const side = room[preferred] < size && (room[other] >= size || room[other] > room[preferred]) ? other : preferred
 
-  const maxHeight = Math.max(0, onTop ? roomAbove : roomBelow)
+  // A popover beside the trigger has the window's height to fill.
+  const maxHeight = Math.max(0, vertical ? room[side] : viewport.height - 2 * margin)
   const height = Math.min(popover.height, maxHeight)
-  const rawTop = onTop ? trigger.top - gap - height : trigger.bottom + gap
-  const rawLeft = alignRight ? trigger.right - popover.width : trigger.left
+  const centerX = trigger.left + trigger.width / 2
+  const centerY = trigger.top + trigger.height / 2
+  let rawLeft: number
+  let rawTop: number
+  if (vertical) {
+    rawTop = side === 'top' ? trigger.top - gap - height : trigger.bottom + gap
+    rawLeft = edge === 'left' ? trigger.left : edge === 'right' ? trigger.right - popover.width : centerX - popover.width / 2
+  } else {
+    rawLeft = side === 'left' ? trigger.left - gap - popover.width : trigger.right + gap
+    rawTop = centerY - height / 2
+  }
 
   const maxLeft = Math.max(margin, viewport.width - popover.width - margin)
   const maxTop = Math.max(margin, viewport.height - height - margin)
   const left = clamp(rawLeft, margin, maxLeft)
   const top = clamp(rawTop, margin, maxTop)
 
-  return { left, top, maxHeight, placement: onTop ? (alignRight ? 'top-right' : 'top-left') : (alignRight ? 'bottom-right' : 'bottom-left') }
+  return {
+    left,
+    top,
+    maxHeight,
+    placement: (edge ? `${side}-${edge}` : side) as PopoverPlacement,
+    arrow: vertical ? centerX - left : centerY - top
+  }
 }
 
 function clamp (value: number, min: number, max: number): number {

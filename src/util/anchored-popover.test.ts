@@ -71,4 +71,59 @@ describe('computePopoverPosition', () => {
     expect(r.top).toBe(334) // trigger.bottom + gap
     expect(r.maxHeight).toBe(458)
   })
+
+  describe('centered and beside the trigger', () => {
+    const bubble = { width: 200, height: 40 }
+
+    it('centers a top popover on the trigger, with the arrow at its middle', () => {
+      const r = computePopoverPosition(rect(400, 300, 100, 30), bubble, 'top', viewport)
+      expect(r.placement).toBe('top')
+      expect(r.left).toBe(350) // trigger center (450) - width / 2
+      expect(r.top).toBe(256) // trigger.top - gap - height
+      expect(r.arrow).toBe(100)
+    })
+
+    // Running past an edge along the side is no reason to change sides.
+    it('slides a centered popover along the left edge, the arrow following the trigger', () => {
+      const r = computePopoverPosition(rect(10, 300, 40, 30), bubble, 'top', viewport)
+      expect(r.placement).toBe('top')
+      expect(r.left).toBe(8) // margin
+      expect(r.arrow).toBe(22) // trigger center (30) - left
+    })
+
+    it('slides a centered popover along the right edge', () => {
+      const r = computePopoverPosition(rect(960, 300, 30, 30), bubble, 'bottom', viewport)
+      expect(r.placement).toBe('bottom')
+      expect(r.left).toBe(792) // viewport.width - width - margin
+      expect(r.arrow).toBe(183) // trigger center (975) - left
+    })
+
+    it('keeps the preferred side with just enough room', () => {
+      // 52 - gap 8 - margin 4 leaves exactly the popover's 40px.
+      const r = computePopoverPosition(rect(400, 52, 40, 30), bubble, 'top', viewport, 8, 4)
+      expect(r.placement).toBe('top')
+      expect(r.top).toBe(4)
+    })
+
+    it('places a right popover beside the trigger, centered on it', () => {
+      const r = computePopoverPosition(rect(400, 300, 100, 30), bubble, 'right', viewport)
+      expect(r.placement).toBe('right')
+      expect(r.left).toBe(504) // trigger.right + gap
+      expect(r.top).toBe(295) // trigger center (315) - height / 2
+      expect(r.arrow).toBe(20)
+    })
+
+    it('flips a left popover to the right when it does not fit and the right has more room', () => {
+      const r = computePopoverPosition(rect(50, 300, 40, 30), bubble, 'left', viewport)
+      expect(r.placement).toBe('right')
+      expect(r.left).toBe(94) // trigger.right + gap
+    })
+
+    it('slides a popover beside the trigger along the top edge', () => {
+      const r = computePopoverPosition(rect(400, 0, 40, 20), bubble, 'right', viewport)
+      expect(r.placement).toBe('right')
+      expect(r.top).toBe(8) // margin
+      expect(r.arrow).toBe(2) // trigger center (10) - top
+    })
+  })
 })

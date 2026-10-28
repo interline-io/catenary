@@ -3,6 +3,29 @@ import { mount } from '@vue/test-utils'
 import CatTooltip from './tooltip.vue'
 import { expectNoAxeViolations } from '../testutil/component-helpers'
 
+function box (left: number, top: number, width: number, height: number): DOMRect {
+  return { left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) }
+}
+
+// Shows a tooltip whose trigger has the given box in jsdom's 1024 × 768 window
+// and whose bubble measures 200 × 40, as a browser would measure them, and
+// waits for the frame that places the bubble.
+async function showAt (position: 'top' | 'bottom' | 'left' | 'right', trigger: DOMRect) {
+  const wrapper = mount(CatTooltip, {
+    attachTo: document.body,
+    props: { text: 'Hint', position },
+    slots: { default: '<button class="button">Trigger</button>' }
+  })
+  const root = wrapper.find('.cat-tooltip')
+  const bubble = wrapper.find('[role="tooltip"]').element as HTMLElement
+  root.element.getBoundingClientRect = () => trigger
+  bubble.getBoundingClientRect = () => box(0, 0, 200, 40)
+  await root.trigger('pointerenter')
+  await wrapper.vm.$nextTick()
+  await new Promise(resolve => requestAnimationFrame(resolve))
+  return { wrapper, root, bubble }
+}
+
 // The template starts with an HTML comment (an eslint-disable directive), so
 // the component renders as a fragment and wrapper.element isn't the <span>.
 // Look up .cat-tooltip explicitly for attribute and class checks.
@@ -205,6 +228,53 @@ describe('cat-tooltip', () => {
       expect(tooltip.classes()).not.toContain('is-visible')
       wrapper.unmount()
     })
+
+    // The bubble moved to another side whenever it ran near an edge along its
+    // own side, so a top tooltip on a button at the window's left opened to
+    // the right, over the next button.
+    describe('placement', () => {
+      it('keeps a top bubble on top beside the left edge, sliding it and its arrow', async () => {
+        const { wrapper, root, bubble } = await showAt('top', box(10, 300, 40, 30))
+        expect(root.classes()).toContain('is-tooltip-top')
+        expect(bubble.style.left).toBe('4px')
+        expect(bubble.style.top).toBe('252px') // trigger.top - offset 8 - height 40
+        expect(bubble.style.getPropertyValue('--cat-tooltip-arrow-pos')).toBe('26px') // trigger center (30) - left
+        wrapper.unmount()
+      })
+
+      it('keeps a top bubble on top with just enough room above', async () => {
+        const { wrapper, root, bubble } = await showAt('top', box(500, 52, 40, 30))
+        expect(root.classes()).toContain('is-tooltip-top')
+        expect(bubble.style.top).toBe('4px')
+        wrapper.unmount()
+      })
+
+      it('moves a top bubble below when it does not fit above and there is more room below', async () => {
+        const { wrapper, root, bubble } = await showAt('top', box(500, 30, 40, 30))
+        expect(root.classes()).toContain('is-tooltip-bottom')
+        expect(bubble.style.top).toBe('68px') // trigger.bottom + offset 8
+        wrapper.unmount()
+      })
+
+      it('keeps a right bubble on the right beside the top edge, sliding it down', async () => {
+        const { wrapper, root, bubble } = await showAt('right', box(500, 0, 40, 20))
+        expect(root.classes()).toContain('is-tooltip-right')
+        expect(bubble.style.left).toBe('548px') // trigger.right + offset 8
+        expect(bubble.style.top).toBe('4px')
+        // The trigger's center is 6px down the bubble; the arrow stays off its corner.
+        expect(bubble.style.getPropertyValue('--cat-tooltip-arrow-pos')).toBe('12px')
+        wrapper.unmount()
+      })
+    })
+  })
+
+  it('slides a fallback bubble along its side when the Popover API is unsupported', async () => {
+    const { wrapper, root, bubble } = await showAt('top', box(10, 300, 40, 30))
+    expect(root.classes()).toContain('is-tooltip-top')
+    // Centered by CSS at 30 - 100 = -70; held 4px from the edge.
+    expect(bubble.style.getPropertyValue('--cat-tooltip-slide')).toBe('74px')
+    expect(bubble.style.left).toBe('')
+    wrapper.unmount()
   })
 
   describe('disabled triggers', () => {
