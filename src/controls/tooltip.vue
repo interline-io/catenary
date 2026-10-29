@@ -106,6 +106,10 @@ interface Props {
   // Fade the bubble in and out. Suppressed automatically under
   // `prefers-reduced-motion: reduce` regardless of this prop, matching
   // cat-collapse and cat-steps.
+  //
+  // The `--cat-tooltip-fade-duration` CSS custom property sets the fade's
+  // length, `0.2s` by default; `0s` on `:root` turns the fade off for every
+  // tooltip in an app.
   // @default true
   animated?: boolean
 }
@@ -377,6 +381,9 @@ onBeforeUnmount(() => {
 $tooltip-bg: rgba($black, 0.9);
 $tooltip-arrow-size: 6px;
 $tooltip-offset: 8px;
+// A custom property, so an app can set the fade once or turn it off with 0s.
+// Unset, the fade stays 0.2s.
+$tooltip-fade: var(--cat-tooltip-fade-duration, 0.2s);
 
 .cat-tooltip {
   position: relative;
@@ -405,7 +412,7 @@ $tooltip-offset: 8px;
     pointer-events: none;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.2s, visibility 0.2s;
+    transition: opacity $tooltip-fade, visibility $tooltip-fade;
     z-index: 1000;
     // Self-contained typography: a real element inherits from its context
     // (e.g. Bulma's uppercase .menu-label), so reset everything that would
@@ -462,7 +469,7 @@ $tooltip-offset: 8px;
     inset: auto;
     border: 0;
     overflow: visible;
-    transition: opacity 0.2s, visibility 0.2s, display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+    transition: opacity $tooltip-fade, visibility $tooltip-fade, display $tooltip-fade allow-discrete, overlay $tooltip-fade allow-discrete;
   }
 
   // Both of these have to name [popover] explicitly and sit after the rule

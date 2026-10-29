@@ -297,6 +297,24 @@
           The fade is also suppressed automatically under <code>prefers-reduced-motion: reduce</code>,
           matching <code>cat-collapse</code> and <code>cat-steps</code>.
         </p>
+        <p class="mt-3">
+          <code>--cat-tooltip-fade-duration</code> sets the fade's length, <code>0.2s</code> by default.
+          Set it to <code>0s</code> on <code>:root</code> to turn the fade off for every tooltip in an
+          app. Like any custom property, it also reaches the tooltips inside the element that sets it,
+          as on the two triggers below.
+        </p>
+        <div class="cat-demo-row">
+          <span style="--cat-tooltip-fade-duration: 1s">
+            <cat-tooltip text="A one-second fade, from the span around this trigger" affordance>
+              <span>1s fade</span>
+            </cat-tooltip>
+          </span>
+          <span style="--cat-tooltip-fade-duration: 0s">
+            <cat-tooltip text="No fade, from the span around this trigger" affordance>
+              <span>0s fade</span>
+            </cat-tooltip>
+          </span>
+        </div>
       </demo-box>
 
       <demo-a11y
