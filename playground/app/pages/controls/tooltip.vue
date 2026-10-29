@@ -47,6 +47,32 @@
         </div>
       </demo-box>
 
+      <demo-box label="Window Edges">
+        <p class="mb-3">
+          A bubble keeps the side its <code>position</code> names. Near a window edge it slides
+          along that side, with its arrow on the trigger, and it moves to the opposite side only
+          when it doesn't fit and that side has more room. Each pinned button's bubble says where
+          it should open.
+        </p>
+        <cat-checkbox v-model="showEdges">
+          Pin buttons to the window's edges
+        </cat-checkbox>
+        <template v-if="showEdges">
+          <div
+            v-for="edge in edgeDemos"
+            :key="edge.text"
+            class="cat-demo-edge"
+            :style="edge.style"
+          >
+            <cat-tooltip :text="edge.text" :position="edge.position">
+              <cat-button>
+                {{ edge.label }}
+              </cat-button>
+            </cat-tooltip>
+          </div>
+        </template>
+      </demo-box>
+
       <demo-box label="With Icons">
         <div class="buttons">
           <cat-tooltip text="Save changes">
@@ -333,15 +359,84 @@ import DemoA11y from '../../components/demo-a11y.vue'
 
 const username = ref('')
 const password = ref('')
+
+interface EdgeDemo {
+  label: string
+  position: 'top' | 'bottom' | 'left' | 'right'
+  text: string
+  style: Record<string, string>
+}
+
+// Buttons pinned to the window's edges. A side bubble slides only when it is
+// taller than its button, so the two sliding side bubbles run to three lines;
+// they sit in corners so their side has room for them even on a phone.
+const showEdges = ref(false)
+const edgeDemos: EdgeDemo[] = [
+  {
+    label: 'Top',
+    position: 'top',
+    text: 'Opens above, slid right to 4px from the window\'s left edge, with its arrow on this button.',
+    style: { left: '0', top: '40%' },
+  },
+  {
+    label: 'Left',
+    position: 'left',
+    text: 'Opens on the right: the left side has no room for this bubble.',
+    style: { left: '0', top: '55%' },
+  },
+  {
+    label: 'Top',
+    position: 'top',
+    text: 'Opens above, slid left to 4px from the window\'s right edge, with its arrow on this button.',
+    style: { right: '0', top: '40%' },
+  },
+  {
+    label: 'Right',
+    position: 'right',
+    text: 'Opens on the left: the right side has no room for this bubble.',
+    style: { right: '0', top: '55%' },
+  },
+  {
+    label: 'Top',
+    position: 'top',
+    text: 'Opens below: the space above has no room for this bubble.',
+    style: { left: '30%', top: '0' },
+  },
+  {
+    label: 'Right',
+    position: 'right',
+    text: 'Opens on the right, slid down to 4px from the window\'s top edge, with its arrow on this button. The bubble is taller than the button, so centering it would cross the edge.',
+    style: { left: '0', top: '0' },
+  },
+  {
+    label: 'Bottom',
+    position: 'bottom',
+    text: 'Opens above: the space below has no room for this bubble.',
+    style: { left: '30%', bottom: '0' },
+  },
+  {
+    label: 'Left',
+    position: 'left',
+    text: 'Opens on the left, slid up to 4px from the window\'s bottom edge, with its arrow on this button. The bubble is taller than the button, so centering it would cross the edge.',
+    style: { right: '0', bottom: '0' },
+  },
+]
 </script>
 
 <style lang="scss" scoped>
-/* Demo scaffolding: a wrapping row with room for the bubbles to sit above. */
+// Demo scaffolding: a wrapping row with room for the bubbles to sit above.
 .cat-demo-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 2rem;
   padding-top: 1rem;
+}
+
+// Pinned over the page, so the buttons sit at the window's edges wherever the
+// page scrolls.
+.cat-demo-edge {
+  position: fixed;
+  z-index: 10;
 }
 </style>
