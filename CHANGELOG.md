@@ -1,5 +1,15 @@
 # @interline-io/catenary
 
+## 0.20.0
+
+### Minor Changes
+
+- [#133](https://github.com/interline-io/catenary/pull/133) [`73631c4`](https://github.com/interline-io/catenary/commit/73631c46616eef71958ec4a2ced215042f8ca8c2) Thanks [@irees](https://github.com/irees)! - `cat-tooltip` takes its fade's length from a `--cat-tooltip-fade-duration` CSS custom property, `0.2s` by default. Set it to `0s` on `:root` to turn the fade off for every tooltip in an app, without passing `:animated="false"` to each one. A tooltip fades as before when nothing sets the property.
+
+### Patch Changes
+
+- [#132](https://github.com/interline-io/catenary/pull/132) [`d1ee4f0`](https://github.com/interline-io/catenary/commit/d1ee4f0dd2964eb60fed495683be6452af503cda) Thanks [@irees](https://github.com/irees)! - `cat-tooltip` keeps the side its `position` names. Near a window edge along that side, the bubble now slides to stay in the window, with its arrow still pointing at the trigger. It used to move to another side, often over the trigger's neighbor. It moves to the opposite side only when it doesn't fit and that side has more room, and it may come within 4px of the window's edge, where it used to keep 20px away. It now shows and places its bubble the way `cat-dropdown` and `cat-datepicker` place their popups, so in the top layer the bubble follows its trigger as the page scrolls, and a bubble too tall for either side stays in the window over its trigger. All three now measure the window without a classic scrollbar, so a popup near the window's right edge no longer slides under the scrollbar. A bubble that moved to the opposite side also stays there while it fades out; it used to jump back to its own side, pointing its arrow away from the trigger.
+
 ## 0.19.1
 
 ### Patch Changes
