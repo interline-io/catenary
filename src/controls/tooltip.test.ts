@@ -1,16 +1,26 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
-import { mount } from '@vue/test-utils'
+import { nextTick } from 'vue'
+import { mount, enableAutoUnmount } from '@vue/test-utils'
 import CatTooltip from './tooltip.vue'
 import { expectNoAxeViolations } from '../testutil/component-helpers'
+
+// Unmount even when a test fails before its own wrapper.unmount(), so an open
+// tooltip and its dismiss layer don't leak into later tests.
+enableAutoUnmount(afterEach)
+
+// jsdom lays nothing out, so its root element measures 0 × 0. Placement takes
+// the window's size from the root, so give the root jsdom's 1024 × 768 window.
+Object.defineProperty(document.documentElement, 'clientWidth', { configurable: true, value: 1024 })
+Object.defineProperty(document.documentElement, 'clientHeight', { configurable: true, value: 768 })
 
 function box (left: number, top: number, width: number, height: number): DOMRect {
   return { left, top, width, height, right: left + width, bottom: top + height, x: left, y: top, toJSON: () => ({}) }
 }
 
-// Shows a tooltip whose trigger has the given box in jsdom's 1024 × 768 window
-// and whose bubble measures 200 × 40, as a browser would measure them, and
-// waits for the frame that places the bubble.
-async function showAt (position: 'top' | 'bottom' | 'left' | 'right', trigger: DOMRect) {
+// Shows a tooltip whose trigger has the given box in a 1024 × 768 window and
+// whose bubble measures 200 × 40 unless given another size, as a browser would
+// measure them, and waits for the frame that places the bubble.
+async function showAt (position: 'top' | 'bottom' | 'left' | 'right', trigger: DOMRect, bubbleSize = { width: 200, height: 40 }) {
   const wrapper = mount(CatTooltip, {
     attachTo: document.body,
     props: { text: 'Hint', position },
@@ -19,7 +29,7 @@ async function showAt (position: 'top' | 'bottom' | 'left' | 'right', trigger: D
   const root = wrapper.find('.cat-tooltip')
   const bubble = wrapper.find('[role="tooltip"]').element as HTMLElement
   root.element.getBoundingClientRect = () => trigger
-  bubble.getBoundingClientRect = () => box(0, 0, 200, 40)
+  bubble.getBoundingClientRect = () => box(0, 0, bubbleSize.width, bubbleSize.height)
   await root.trigger('pointerenter')
   await wrapper.vm.$nextTick()
   await new Promise(resolve => requestAnimationFrame(resolve))
@@ -285,6 +295,52 @@ describe('cat-tooltip', () => {
         expect(bubble.style.top).toBe('4px')
         // The trigger's center is 6px down the bubble; the arrow stays off its corner.
         expect(bubble.style.getPropertyValue('--cat-tooltip-arrow-pos')).toBe('12px')
+        wrapper.unmount()
+      })
+
+      // The shared placement positioned a bubble for a height capped at its
+      // side's room, a cap the tooltip never applies, so a bubble too tall for
+      // either side ran off the window.
+      it('keeps a bubble too tall for either side in the window, over its trigger', async () => {
+        // 288px of room above the trigger and 426px below, for a 500px bubble.
+        const { wrapper, root, bubble } = await showAt('top', box(500, 300, 40, 30), { width: 300, height: 500 })
+        expect(root.classes()).toContain('is-tooltip-bottom')
+        expect(bubble.style.top).toBe('264px') // window height 768 - height 500 - margin 4
+        expect(bubble.style.maxHeight).toBe('')
+        wrapper.unmount()
+      })
+
+      it('follows its trigger as the page scrolls', async () => {
+        const { wrapper, root, bubble } = await showAt('top', box(500, 300, 40, 30))
+        expect(bubble.style.top).toBe('252px')
+        root.element.getBoundingClientRect = () => box(500, 200, 40, 30)
+        window.dispatchEvent(new Event('scroll'))
+        await new Promise(resolve => requestAnimationFrame(resolve))
+        expect(bubble.style.top).toBe('152px')
+        wrapper.unmount()
+      })
+
+      // A placement still pending when the bubble hid landed anyway, moving
+      // the side of a bubble already fading out.
+      it('drops a placement still pending when the bubble hides', async () => {
+        const wrapper = mount(CatTooltip, {
+          attachTo: document.body,
+          props: { text: 'Hint', position: 'top' },
+          slots: { default: '<button class="button">Trigger</button>' }
+        })
+        const root = wrapper.find('.cat-tooltip')
+        const bubble = wrapper.find('[role="tooltip"]').element as HTMLElement
+        root.element.getBoundingClientRect = () => box(500, 30, 40, 30)
+        bubble.getBoundingClientRect = () => box(0, 0, 200, 40)
+        // The placement is queued during the render that follows the show.
+        // Vue's nextTick resumes as that render ends, ahead of the placement;
+        // awaiting VTU's async trigger would resume too late.
+        root.trigger('focusin')
+        await nextTick()
+        await root.trigger('focusout')
+        await new Promise(resolve => requestAnimationFrame(resolve))
+        expect(root.classes()).toContain('is-tooltip-top')
+        expect(bubble.style.top).toBe('')
         wrapper.unmount()
       })
     })

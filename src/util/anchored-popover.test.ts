@@ -89,6 +89,7 @@ describe('computePopoverPosition', () => {
       expect(r.placement).toBe('top')
       expect(r.left).toBe(8) // margin
       expect(r.arrow).toBe(22) // trigger center (30) - left
+      expect(r.slide).toBe(78) // from the centered left, 30 - 100
     })
 
     it('slides a centered popover along the right edge', () => {
@@ -100,7 +101,7 @@ describe('computePopoverPosition', () => {
 
     it('keeps the preferred side with just enough room', () => {
       // 52 - gap 8 - margin 4 leaves exactly the popover's 40px.
-      const r = computePopoverPosition(rect(400, 52, 40, 30), bubble, 'top', viewport, 8, 4)
+      const r = computePopoverPosition(rect(400, 52, 40, 30), bubble, 'top', viewport, { gap: 8, margin: 4 })
       expect(r.placement).toBe('top')
       expect(r.top).toBe(4)
     })
@@ -124,6 +125,26 @@ describe('computePopoverPosition', () => {
       expect(r.placement).toBe('right')
       expect(r.top).toBe(8) // margin
       expect(r.arrow).toBe(2) // trigger center (10) - top
+    })
+
+    it('keeps the arrow off the popover\'s corners by the inset', () => {
+      const r = computePopoverPosition(rect(400, 0, 40, 20), bubble, 'right', viewport, { arrowInset: 12 })
+      expect(r.arrow).toBe(12)
+    })
+
+    // Positioned for a capped height that a tooltip never applies, a popover
+    // too tall for either side ran off the window.
+    it('holds an uncapped popover too tall for either side in the window, over its trigger', () => {
+      // 238px of room above the trigger and 308px below, for a 352px popover.
+      const r = computePopoverPosition(
+        rect(500, 250, 40, 30),
+        { width: 300, height: 352 },
+        'top',
+        { width: 1024, height: 600 },
+        { gap: 8, margin: 4, capHeight: false }
+      )
+      expect(r.side).toBe('bottom')
+      expect(r.top).toBe(244) // viewport height 600 - height 352 - margin 4
     })
   })
 })

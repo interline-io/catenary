@@ -26,6 +26,7 @@
       :id="tooltipId"
       ref="bubbleRef"
       class="cat-tooltip-bubble"
+      :style="bubbleStyle"
       role="tooltip"
       @pointerenter="onBubblePointerenter"
       @pointerleave="onBubblePointerleave"
@@ -36,84 +37,76 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, useId, nextTick, onMounted, onUpdated, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, useId, onMounted, onUpdated, onBeforeUnmount, watch } from 'vue'
 import { pushDismissLayer, removeDismissLayer, type DismissLayer } from '../util/dismiss-stack'
-import { computePopoverPosition } from '../util/anchored-popover'
+import { supportsPopover, useAnchoredPopover } from '../util/anchored-popover'
 
-/**
- * Accessible tooltip following the WAI-ARIA Authoring Practices tooltip pattern.
- * https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/
- *
- * Behavior:
- * - Shows on hover from a mouse or pen (pointerenter) AND keyboard focus
- *   (focusin) of the trigger. A tap shows nothing: it has no hover to end.
- * - Dismissed by pointerleave, focusout, or Escape — but stays open while focus
- *   remains inside the wrapper, and while the mouse moves between wrapper
- *   children.
- * - Tooltip is associated with the trigger via `aria-describedby` and
- *   `role="tooltip"`. When the slot contains a focusable element, the id is
- *   applied to that element (since aria-describedby is not inherited from the
- *   wrapper); otherwise it lives on the wrapper, which is also the tab stop.
- * - If the slot content isn't natively focusable, the wrapper exposes
- *   `tabindex="0"` so the tooltip's trigger is reachable by keyboard.
- *
- * Rendering: in browsers with the Popover API (Baseline 2025), the bubble is
- * shown as a `popover="manual"` element in the top layer, positioned with
- * fixed viewport coordinates. The top layer escapes ancestor `overflow`
- * clipping, z-index stacking, and transformed containing blocks — tooltips
- * inside scrollable side panels are no longer cut off — while the bubble
- * stays in the component subtree, so the aria-describedby relationship and
- * scoped styles are untouched. Browsers without the Popover API fall back to
- * the previous absolutely-positioned bubble.
- *
- * Placement: the bubble keeps the side `position` names whenever it fits
- * there, sliding along that side near a window edge with its arrow still on
- * the trigger. It moves to the opposite side only when it doesn't fit and that
- * side has more room.
- *
- * Tooltips per the spec should not contain interactive content — for that,
- * build a non-modal dialog (popover) instead.
- *
- * @component cat-tooltip
- * @example
- * <cat-tooltip text="Click to save">
- *   <button class="button">Save</button>
- * </cat-tooltip>
- */
+// Accessible tooltip following the WAI-ARIA Authoring Practices tooltip pattern.
+// https://www.w3.org/WAI/ARIA/apg/patterns/tooltip/
+//
+// Behavior:
+// - Shows on hover from a mouse or pen (pointerenter) AND keyboard focus
+//   (focusin) of the trigger. A tap shows nothing: it has no hover to end.
+// - Dismissed by pointerleave, focusout, or Escape — but stays open while focus
+//   remains inside the wrapper, and while the mouse moves between wrapper
+//   children.
+// - Tooltip is associated with the trigger via `aria-describedby` and
+//   `role="tooltip"`. When the slot contains a focusable element, the id is
+//   applied to that element (since aria-describedby is not inherited from the
+//   wrapper); otherwise it lives on the wrapper, which is also the tab stop.
+// - If the slot content isn't natively focusable, the wrapper exposes
+//   `tabindex="0"` so the tooltip's trigger is reachable by keyboard.
+//
+// Rendering: in browsers with the Popover API (Baseline 2025), the bubble is
+// shown as a `popover="manual"` element in the top layer, positioned with
+// fixed viewport coordinates. The top layer escapes ancestor `overflow`
+// clipping, z-index stacking, and transformed containing blocks — tooltips
+// inside scrollable side panels are no longer cut off — while the bubble
+// stays in the component subtree, so the aria-describedby relationship and
+// scoped styles are untouched. Browsers without the Popover API fall back to
+// an absolutely positioned bubble.
+//
+// Placement: the bubble keeps the side `position` names whenever it fits
+// there, sliding along that side near a window edge with its arrow still on
+// the trigger. It moves to the opposite side only when it doesn't fit and that
+// side has more room. In the top layer, the bubble follows its trigger as the
+// page scrolls, and a bubble too big for either side stays in the window over
+// its trigger; the fallback bubble only slides along its side.
+//
+// Tooltips per the spec should not contain interactive content — for that,
+// build a non-modal dialog (popover) instead.
+//
+// @component cat-tooltip
+// @example
+// <cat-tooltip text="Click to save">
+//   <button class="button">Save</button>
+// </cat-tooltip>
 
 interface Props {
-  /** Tooltip text content. */
+  // Tooltip text content.
   text: string
-  /**
-   * Which side of the trigger holds the bubble. The bubble keeps this side
-   * whenever it fits there, sliding along it near a window edge.
-   * @default 'top'
-   */
+  // Which side of the trigger holds the bubble. The bubble keeps this side
+  // whenever it fits there, sliding along it near a window edge.
+  // @default 'top'
   position?: 'top' | 'bottom' | 'left' | 'right'
-  /**
-   * Force the wrapper to be focusable even when the slot already contains a
-   * focusable element. Defaults to auto-detect on mount.
-   */
+  // Force the wrapper to be focusable even when the slot already contains a
+  // focusable element. Defaults to auto-detect on mount.
   alwaysFocusable?: boolean
 
-  /**
-   * Mark the trigger as having a tooltip: `cursor: help` and a dotted
-   * underline. Opt-in, because it changes the appearance of the slot content
-   * at every existing call site.
-   *
-   * Worth setting whenever the trigger is not otherwise obviously
-   * interactive — without it there is nothing on screen telling a pointer
-   * user a tooltip exists, and they have to happen to hover the right pixels.
-   * @default false
-   */
+  // Mark the trigger as having a tooltip: `cursor: help` and a dotted
+  // underline. Opt-in, because it changes the appearance of the slot content
+  // at every existing call site.
+  //
+  // Worth setting whenever the trigger is not otherwise obviously
+  // interactive — without it there is nothing on screen telling a pointer
+  // user a tooltip exists, and they have to happen to hover the right pixels.
+  // @default false
   affordance?: boolean
 
-  /**
-   * Fade the bubble in and out. Suppressed automatically under
-   * `prefers-reduced-motion: reduce` regardless of this prop, matching
-   * cat-collapse and cat-steps.
-   * @default true
-   */
+  // Fade the bubble in and out. Suppressed automatically under
+  // `prefers-reduced-motion: reduce` regardless of this prop, matching
+  // cat-collapse and cat-steps.
+  // @default true
   animated?: boolean
 }
 
@@ -128,19 +121,40 @@ const wrapperRef = ref<HTMLElement | null>(null)
 const bubbleRef = ref<HTMLElement | null>(null)
 const isVisible = ref(false)
 const slotIsFocusable = ref(false)
-const adjustedPosition = ref<string | null>(null)
 const tooltipId = useId()
 
-// Popover API support (Baseline 2025). Checked once; jsdom and older
-// browsers take the absolutely-positioned fallback path.
-const popoverSupported = typeof HTMLElement !== 'undefined'
-  && typeof HTMLElement.prototype.showPopover === 'function'
+const EDGE_MARGIN = 4 // how close the bubble may come to the window's edge
+const BUBBLE_OFFSET = 8 // matches $tooltip-offset
+const ARROW_INSET = 12 // keep the arrow off the bubble's rounded corners
+
+// Uncapped, so a bubble too big for either side keeps its height and covers
+// its own trigger. That keeps the wrapper's pointerenter alive rather than
+// flickering, since the bubble is a descendant of the wrapper.
+const { placed } = useAnchoredPopover({
+  triggerRef: wrapperRef,
+  popoverRef: bubbleRef,
+  isOpen: () => isVisible.value,
+  placement: () => props.position,
+  gap: BUBBLE_OFFSET,
+  margin: EDGE_MARGIN,
+  capHeight: false,
+  arrowInset: ARROW_INSET
+})
+
+// The side the bubble was last placed on. It stays after a hide, so a bubble
+// that moved to the other side keeps its arrow on the trigger while fading.
+const effectivePosition = computed(() => placed.value?.side ?? props.position)
+
+// Both bubbles take the arrow's position. The fallback bubble, centered on its
+// trigger by CSS, also takes the slide along its side.
+const bubbleStyle = computed(() => placed.value
+  ? { '--cat-tooltip-arrow-pos': `${placed.value.arrow}px`, '--cat-tooltip-slide': `${placed.value.slide}px` }
+  : {})
 
 // Slot element we've applied aria-describedby to, so we can clean it up when
 // the slot changes or the component unmounts.
 let describedSlotEl: HTMLElement | null = null
 
-const effectivePosition = computed(() => adjustedPosition.value || props.position)
 const needsTabindex = computed(() => props.alwaysFocusable || !slotIsFocusable.value)
 
 function detectFocusableSlot () {
@@ -265,19 +279,7 @@ function onFocusin () {
 
 function show () {
   cancelClose()
-  // Crossing onto the bubble fires the wrapper's pointerenter again, because the
-  // bubble is a descendant even in the top layer. An open bubble is already
-  // placed, so there is nothing to redo.
-  if (isVisible.value) return
   isVisible.value = true
-  nextTick(() => {
-    if (popoverSupported && bubbleRef.value) {
-      // Throws if the element is disconnected or already open; both are
-      // harmless races here.
-      try { bubbleRef.value.showPopover() } catch { /* noop */ }
-    }
-    adjustPosition()
-  })
 }
 
 function onPointerleave (event: PointerEvent) {
@@ -329,18 +331,13 @@ function scheduleHide () {
 function hide () {
   cancelClose()
   isVisible.value = false
-  // The side stays as placed, so a bubble that moved to the other side keeps
-  // its arrow on the trigger while it fades out. The next show places it again.
-  if (popoverSupported && bubbleRef.value) {
-    try { bubbleRef.value.hidePopover() } catch { /* noop */ }
-  }
 }
 
 onMounted(() => {
   detectFocusableSlot()
   // Applied post-mount (not a template binding) so SSR markup matches the
   // client on browsers without Popover API support.
-  if (popoverSupported && bubbleRef.value) {
+  if (supportsPopover() && bubbleRef.value) {
     bubbleRef.value.setAttribute('popover', 'manual')
   }
 })
@@ -371,59 +368,6 @@ onBeforeUnmount(() => {
   removeDismissLayer(dismissLayer)
   applyDescribedBy(null)
 })
-
-const EDGE_MARGIN = 4 // how close the bubble may come to the window's edge
-const BUBBLE_OFFSET = 8 // matches $tooltip-offset
-const ARROW_INSET = 12 // keep the arrow off the bubble's rounded corners
-
-// Places the bubble with computePopoverPosition. The top layer takes viewport
-// coordinates; the fallback bubble, centered on its trigger by CSS, takes only
-// the slide along its side.
-//
-// A bubble too big for either side stays in the window over its own trigger,
-// and keeps the wrapper's pointerenter alive rather than flickering, since the
-// bubble is a descendant of the wrapper.
-function adjustPosition () {
-  if (!wrapperRef.value) return
-
-  requestAnimationFrame(() => {
-    const bubble = bubbleRef.value
-    if (!wrapperRef.value || !bubble) return
-    const trigger = wrapperRef.value.getBoundingClientRect()
-    // A hidden bubble is still laid out, so a browser measures it; jsdom
-    // measures nothing, and these stand in.
-    const measured = bubble.getBoundingClientRect()
-    const width = measured.width || 300
-    const height = measured.height || 100
-    const placed = computePopoverPosition(
-      trigger,
-      { width, height },
-      props.position,
-      { width: window.innerWidth, height: window.innerHeight },
-      BUBBLE_OFFSET,
-      EDGE_MARGIN
-    )
-    const side = placed.placement as typeof props.position
-    adjustedPosition.value = side === props.position ? null : side
-
-    const vertical = side === 'top' || side === 'bottom'
-    const arrow = clamp(placed.arrow, ARROW_INSET, (vertical ? width : height) - ARROW_INSET)
-    bubble.style.setProperty('--cat-tooltip-arrow-pos', `${arrow}px`)
-    if (popoverSupported) {
-      bubble.style.left = `${placed.left}px`
-      bubble.style.top = `${placed.top}px`
-    } else {
-      const centered = vertical
-        ? trigger.left + trigger.width / 2 - width / 2
-        : trigger.top + trigger.height / 2 - height / 2
-      bubble.style.setProperty('--cat-tooltip-slide', `${(vertical ? placed.left : placed.top) - centered}px`)
-    }
-  })
-}
-
-function clamp (value: number, min: number, max: number): number {
-  return Math.min(Math.max(value, min), Math.max(min, max))
-}
 </script>
 
 <style lang="scss" scoped>
