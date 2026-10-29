@@ -266,10 +266,8 @@ function onFocusin () {
 function show () {
   cancelClose()
   // Crossing onto the bubble fires the wrapper's pointerenter again, because the
-  // bubble is a descendant even in the top layer. Without this guard that
-  // re-entered show() and re-ran adjustPosition(), which clears the flipped
-  // side for a frame — the arrow jumps, and in the non-Popover fallback the
-  // bubble moves out from under the pointer and dismisses itself.
+  // bubble is a descendant even in the top layer. An open bubble is already
+  // placed, so there is nothing to redo.
   if (isVisible.value) return
   isVisible.value = true
   nextTick(() => {
@@ -331,7 +329,8 @@ function scheduleHide () {
 function hide () {
   cancelClose()
   isVisible.value = false
-  adjustedPosition.value = null
+  // The side stays as placed, so a bubble that moved to the other side keeps
+  // its arrow on the trigger while it fades out. The next show places it again.
   if (popoverSupported && bubbleRef.value) {
     try { bubbleRef.value.hidePopover() } catch { /* noop */ }
   }
@@ -386,7 +385,6 @@ const ARROW_INSET = 12 // keep the arrow off the bubble's rounded corners
 // bubble is a descendant of the wrapper.
 function adjustPosition () {
   if (!wrapperRef.value) return
-  adjustedPosition.value = null
 
   requestAnimationFrame(() => {
     const bubble = bubbleRef.value
@@ -406,9 +404,7 @@ function adjustPosition () {
       EDGE_MARGIN
     )
     const side = placed.placement as typeof props.position
-    if (side !== props.position) {
-      adjustedPosition.value = side
-    }
+    adjustedPosition.value = side === props.position ? null : side
 
     const vertical = side === 'top' || side === 'bottom'
     const arrow = clamp(placed.arrow, ARROW_INSET, (vertical ? width : height) - ARROW_INSET)

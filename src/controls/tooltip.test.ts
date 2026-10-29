@@ -256,6 +256,28 @@ describe('cat-tooltip', () => {
         wrapper.unmount()
       })
 
+      // The arrow's side comes from the class, so a bubble that went back to
+      // its own side on hide pointed its arrow away from the trigger while it
+      // faded out.
+      it('keeps a moved bubble on its side while it hides', async () => {
+        const { wrapper, root } = await showAt('top', box(500, 30, 40, 30))
+        await root.trigger('keydown', { key: 'Escape' })
+        expect(root.classes()).not.toContain('is-visible')
+        expect(root.classes()).toContain('is-tooltip-bottom')
+        wrapper.unmount()
+      })
+
+      it('returns a moved bubble to its own side once it fits there again', async () => {
+        const { wrapper, root } = await showAt('top', box(500, 30, 40, 30))
+        await root.trigger('keydown', { key: 'Escape' })
+        root.element.getBoundingClientRect = () => box(500, 300, 40, 30)
+        await root.trigger('pointerenter')
+        await wrapper.vm.$nextTick()
+        await new Promise(resolve => requestAnimationFrame(resolve))
+        expect(root.classes()).toContain('is-tooltip-top')
+        wrapper.unmount()
+      })
+
       it('keeps a right bubble on the right beside the top edge, sliding it down', async () => {
         const { wrapper, root, bubble } = await showAt('right', box(500, 0, 40, 20))
         expect(root.classes()).toContain('is-tooltip-right')
