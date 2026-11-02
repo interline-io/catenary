@@ -1,5 +1,6 @@
 <template>
   <div
+    ref="rootRef"
     class="buttons has-addons cat-split-button"
     :class="[rootClasses, $attrs.class]"
     :style="rootStyle"
@@ -32,9 +33,11 @@
       @open="emit('open')"
       @close="emit('close')"
     >
-      <template #trigger="{ triggerAttrs }">
+      <template #trigger="{ triggerAttrs, isActive }">
         <cat-button
+          :id="toggleId"
           class="cat-split-button-toggle"
+          :class="{ 'is-active': isActive, 'cat-dropdown-caret': isCaretIcon(toggleIcon) }"
           :variant="variant"
           :size="size"
           :disabled="disabled || toggleDisabled"
@@ -53,9 +56,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, useAttrs, useSlots, useTemplateRef } from 'vue'
+import { computed, provide, useAttrs, useId, useSlots, useTemplateRef } from 'vue'
 import type { StyleValue } from 'vue'
 import { filterAttrs } from '../util/attrs'
+import { DropdownAnchorKey, isCaretIcon } from '../util/dropdown'
 import type { ButtonVariant, ButtonSize } from './types'
 import CatButton from './button.vue'
 import CatDropdown from './dropdown.vue'
@@ -224,6 +228,16 @@ const emit = defineEmits<{
 }>()
 
 const dropdownRef = useTemplateRef<InstanceType<typeof CatDropdown>>('dropdownRef')
+
+// Place and size the menu against the whole control, not the caret half the
+// dropdown wraps: the menu then lines up with, and is at least as wide as,
+// the button the user sees.
+const rootRef = useTemplateRef<HTMLElement>('rootRef')
+
+// Names the menu, which cat-dropdown labels by its trigger's id (the WAI-ARIA
+// menu-button pattern's aria-labelledby).
+const toggleId = useId()
+provide(DropdownAnchorKey, rootRef)
 const attrs = useAttrs()
 const slots = useSlots()
 
@@ -292,12 +306,23 @@ defineExpose({
   vertical-align: top;
   flex-wrap: nowrap;
 
+  // Without the Popover API the menu is positioned absolutely against its
+  // nearest positioned ancestor, which Bulma makes the `.dropdown` around the
+  // caret. Hand that role to the whole group, matching the anchor the Popover
+  // API path is given (DropdownAnchorKey).
+  position: relative;
+
   // `.buttons` also inherits Bulma's %block spacing, which would leave a
   // split button sitting 1.5rem proud of anything beside it. A bare
   // `margin-bottom: 0` ties Bulma's `.buttons:not(:last-child)` on
   // specificity and loses on stylesheet order, so mirror that selector.
   &:not(:last-child) {
     margin-bottom: 0;
+  }
+
+  // See `position: relative` above.
+  > :deep(.cat-dropdown) {
+    position: static;
   }
 
   // Collapse the doubled border between the halves, as Bulma does for adjacent

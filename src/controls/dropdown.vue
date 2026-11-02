@@ -23,9 +23,14 @@
         :trigger-attrs="triggerAttrs"
       >
         <button
+          :id="triggerId"
           ref="triggerButtonRef"
           class="button"
-          :class="{ [`is-${props.buttonVariant}`]: props.buttonVariant }"
+          :class="{
+            [`is-${props.buttonVariant}`]: props.buttonVariant,
+            'is-active': isActive,
+            'cat-dropdown-caret': isCaretIcon(icon),
+          }"
           type="button"
           v-bind="triggerAttrs"
         >
@@ -49,6 +54,9 @@
       class="dropdown-menu"
       :role="menuRole"
       :aria-multiselectable="isMultiSelectListbox || undefined"
+      :aria-labelledby="menuLabelledBy()"
+      :aria-label="menuLabel()"
+      :data-side="menuSide"
       :style="menuStyle"
       @keydown="onMenuKeydown"
     >
@@ -60,10 +68,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, provide, useId, nextTick } from 'vue'
+import { ref, computed, provide, inject, useId, useSlots, nextTick, onMounted, watch } from 'vue'
 import { createTypeAhead } from '../util/type-ahead'
 import { useDismissablePopup } from '../util/dismissable-popup'
-import { useAnchoredPopover } from '../util/anchored-popover'
+import { useAnchoredPopover, supportsPopover } from '../util/anchored-popover'
+import { DropdownAnchorKey, isCaretIcon } from '../util/dropdown'
 import IconGlyph from './icon-glyph.vue'
 
 /**
@@ -89,6 +98,14 @@ import IconGlyph from './icon-glyph.vue'
  * Custom triggers: the #trigger slot exposes `triggerAttrs` (aria-haspopup,
  * aria-controls, aria-expanded), which must be spread onto the focusable
  * trigger element so assistive technology can discover and track the popup.
+ * It also exposes `isActive`: bind it to Bulma's `is-active` on a `.button`
+ * trigger so the trigger shows it is open, as the default trigger does. Give
+ * a custom button trigger an `id` too: the menu takes its accessible name
+ * from it through aria-labelledby, which a `selectable` listbox requires. A
+ * form-field trigger names the menu by its label instead.
+ *
+ * The menu is at least as wide as its trigger, and Bulma's
+ * `--bulma-dropdown-content-offset` sets the gap between them.
  *
  * @component cat-dropdown
  * @example
@@ -204,6 +221,51 @@ const menuRef = ref<HTMLElement | null>(null)
 // exposed open()/close()/toggle() remain for backward compatibility.
 const isActive = defineModel<boolean>('open', { default: false })
 const menuId = useId()
+const triggerId = `${menuId}-trigger`
+
+// The menu's accessible name, from its trigger. The APG listbox-button
+// pattern requires it (an unnamed role="listbox" is an axe
+// aria-input-field-name violation), and the menu-button pattern recommends
+// it.
+//
+// The default trigger carries `triggerId`, known at setup, so the name is in
+// a server render too. A custom #trigger can only be read from the DOM once
+// mounted, refreshed as the menu opens (the only time assistive technology
+// can reach the menu):
+//   - a button or link is referenced by the id it already has, never
+//     overwritten (cat-field may have assigned one);
+//   - a form field is not referenced at all: aria-labelledby pointing at an
+//     input names the menu after the input's current value, not its label
+//     (accname's embedded-control rule), so a combobox-style listbox would be
+//     announced as whatever was typed. Its own aria-labelledby is passed on,
+//     else its <label>'s text (cat-field's label has no id to point at).
+const slots = useSlots()
+const customMenuName = ref<{ labelledby?: string, label?: string }>({})
+function resolveMenuName () {
+  if (!slots.trigger) return
+  const el = focusableTrigger()
+  if (!el) {
+    customMenuName.value = {}
+  } else if (el.matches('input, textarea, select')) {
+    const labelledby = el.getAttribute('aria-labelledby') || undefined
+    const labelText = (el as HTMLInputElement).labels?.[0]?.textContent?.trim()
+    customMenuName.value = labelledby
+      ? { labelledby }
+      : { label: labelText || el.getAttribute('aria-label') || undefined }
+  } else {
+    customMenuName.value = { labelledby: el.id || undefined }
+  }
+}
+onMounted(resolveMenuName)
+watch(isActive, (open) => {
+  if (open) resolveMenuName()
+})
+function menuLabelledBy (): string | undefined {
+  return slots.trigger ? customMenuName.value.labelledby : triggerId
+}
+function menuLabel (): string | undefined {
+  return slots.trigger ? customMenuName.value.label : undefined
+}
 
 function focusableTrigger (): HTMLElement | null {
   // Prefer the default <button> we render; fall back to the first focusable
@@ -467,14 +529,43 @@ useDismissablePopup({
   onEscape: () => close()
 })
 
+// What the menu is placed against and sized to: the dropdown's own root,
+// unless a parent supplies the control the user actually sees (see
+// DropdownAnchorKey). Re-provided as null so a dropdown nested in this menu
+// does not inherit it.
+const injectedAnchor = inject(DropdownAnchorKey, null)
+provide(DropdownAnchorKey, null)
+const anchorRef = computed(() => injectedAnchor?.value ?? dropdownRef.value)
+
 // Render the menu in the top layer so it is not clipped by a scrollable
 // ancestor (e.g. a modal body). No-op without the Popover API; the absolute
 // positioning below is the fallback.
-useAnchoredPopover({
-  triggerRef: dropdownRef,
+//
+// `gap: 0` because the gap is the menu's own transparent padding, Bulma's
+// --bulma-dropdown-content-offset, put on the trigger's side by `data-side`
+// in the style block. Adding the composable's gap on top doubled it to 8px.
+const { placed } = useAnchoredPopover({
+  triggerRef: anchorRef,
   popoverRef: menuRef,
   isOpen: () => isActive.value,
-  placement: () => props.position
+  placement: () => props.position,
+  gap: 0,
+  exposeTriggerWidth: true
+})
+
+// Which side of the trigger the menu is on: where it was last placed, which
+// can differ from `position` when there was no room there, else `position`.
+// Drives the gap's side and the direction the menu enters from.
+//
+// Only the Popover API path moves the menu to the placed side. Without it,
+// the composable still computes a placement, but Bulma's CSS keeps the menu
+// on the side `position` names, so a computed flip would point the entrance
+// away from the trigger.
+const popoverSupported = supportsPopover()
+const menuSide = computed((): 'top' | 'bottom' => {
+  const side = popoverSupported ? placed.value?.side : undefined
+  if (side === 'top' || side === 'bottom') return side
+  return props.position.startsWith('top') ? 'top' : 'bottom'
 })
 
 // Provide context to child dropdown items
@@ -490,9 +581,162 @@ defineExpose({ open, close, toggle })
 </script>
 
 <style scoped lang="scss">
-/* Custom overrides using cat-dropdown class */
+@use "bulma/sass/utilities/initial-variables" as *;
+
+/* The menu's surface. Bulma's own is white on what is usually a white page,
+   edged only by a 2%-alpha ring, and in the dark scheme it is the page color
+   exactly (rgb(20,22,26) for menu, card and body alike), so an open menu read
+   as loose text rather than a panel opened from its trigger.
+
+   These are Bulma's dropdown tokens, but set on `.cat-dropdown` at higher
+   specificity than Bulma registers them on `.dropdown`, so they replace
+   whatever an app configured there, through Sass or CSS. An app restyles the
+   menu through three hooks instead, read with a fallback at the point of use
+   so they can be set anywhere, `:root` included:
+     --cat-dropdown-lift          surface lift above the page (default 4%;
+                                  0% turns it off)
+     --cat-dropdown-border-color  the panel's edge (default --bulma-border)
+     --cat-dropdown-shadow        a `filter` value (default two drop-shadows;
+                                  `none` for a flat menu) */
+.cat-dropdown {
+  /* Lift the surface off the page. Bulma's dark scheme raises its
+     `scheme-main-ter` 4% above `scheme-main`, the light scheme has nowhere to
+     go above white: one expression covers both, white in light and 13% in
+     dark, with no theme selector. It is a lightness rather than a color
+     because Bulma paints each `button.dropdown-item` from
+     --bulma-dropdown-item-background-l, not from the panel: setting only the
+     panel color left a dark tile behind every item. Both read the one value,
+     so they match, and Bulma's hover delta still applies on top. */
+  --bulma-dropdown-item-background-l: min(100%, calc(var(--bulma-scheme-main-l) + var(--cat-dropdown-lift, 4%)));
+  --bulma-dropdown-content-background-color: hsl(
+    var(--bulma-scheme-h),
+    var(--bulma-scheme-s),
+    var(--bulma-dropdown-item-background-l)
+  );
+
+  /* Inset items, as the menu's highlight is drawn inside its edge. */
+  --bulma-dropdown-content-padding-top: 0.25rem;
+  --bulma-dropdown-content-padding-bottom: 0.25rem;
+
+  /* Where the menu grows from: the trigger's edge it is aligned to. */
+  --cat-dropdown-origin-x: left;
+
+  &.is-right {
+    --cat-dropdown-origin-x: right;
+  }
+}
+
+/* At least as wide as the control that opened it, so the two read as one:
+   a split button's menu spans the whole button group, a listbox's its
+   trigger. useAnchoredPopover measures the anchor. The `width` prop, set
+   inline, still overrides this. */
 .cat-dropdown .dropdown-menu {
-  min-width: 12rem;
+  min-width: max(var(--bulma-dropdown-menu-min-width), var(--cat-popover-anchor-width, 0px));
+
+  /* The shadow is a filter on the menu, not a box-shadow on the panel, in
+     both paths. In the Popover API path the menu's `overflow: auto` (for the
+     height cap) clipped the panel's box-shadow to the menu's own box, hiding
+     it below and beside the panel and squaring its corners. A filter paints
+     outside the element's overflow clip, and follows the rounded panel
+     rather than the transparent gap. The fallback has no clip, but using the
+     same mechanism there keeps one hook for both.
+
+     Deliberately dark in both schemes: a shadow darkens what is under it.
+     Bulma's dark scheme makes --bulma-shadow white, which draws a glow rather
+     than elevation. Taken from the scheme's own hue, at Bulma's black. */
+  filter: var(
+    --cat-dropdown-shadow,
+    drop-shadow(0 0.125rem 0.25rem hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), 4%, 0.08))
+    drop-shadow(0 0.5rem 1rem hsla(var(--bulma-scheme-h), var(--bulma-scheme-s), 4%, 0.2))
+  );
+
+  /* The menu slides in from its trigger's side, so it reads as coming out of
+     it. Flipped with the side the menu actually landed on. */
+  --cat-dropdown-origin-y: top;
+  --cat-dropdown-enter-y: -0.25rem;
+
+  &[data-side="top"] {
+    --cat-dropdown-origin-y: bottom;
+    --cat-dropdown-enter-y: 0.25rem;
+  }
+}
+
+/* An edge. Not required by WCAG 1.4.11, since the menu's items are identified
+   by their text rather than by the panel's boundary, but it is what makes the
+   panel distinct from a white card behind it in light, and from the page in
+   dark, where a shadow barely shows. */
+.cat-dropdown .dropdown-content {
+  /* Keep weak text legible on the lifted surface. Bulma's dark text-weak is
+     4.63:1 on its page and fell to 4.20:1 on the 13% surface, under the
+     4.5:1 WCAG 1.4.3 asks of the hint lines a menu item often carries.
+
+     Raised by twice the lift, to 61%: 5.55:1 on the surface and 4.74:1 on a
+     hovered item, while still reading as weaker than body text. The clamp
+     confines that to a dark scheme: its upper bound is zero wherever the
+     surface did not move (Bulma's white light scheme), and its lower bound is
+     zero for any light scheme, where lightening dark text would cost
+     contrast rather than restore it. A custom off-white light scheme lifts
+     the surface but keeps its text.
+
+     Redefined whole, not by its `-l` part: Bulma resolves --bulma-text-weak
+     once on :root, so a lightness set here would never reach it. */
+  --bulma-text-weak: hsl(
+    var(--bulma-text-h),
+    var(--bulma-text-s),
+    calc(var(--bulma-text-weak-l) + clamp(
+      0%,
+      (50% - var(--bulma-scheme-main-l)) * 100,
+      2 * (var(--bulma-dropdown-item-background-l) - var(--bulma-scheme-main-l))
+    ))
+  );
+
+  border: 1px solid var(--cat-dropdown-border-color, var(--bulma-border));
+  box-shadow: none;
+  padding-inline: 0.25rem;
+  transform-origin: var(--cat-dropdown-origin-x) var(--cat-dropdown-origin-y);
+  /* Restarts each time the menu goes from display: none to shown, in the
+     Popover API path and the fallback alike, so no @starting-style. There is
+     no exit animation: the menu hides at once. */
+  animation: cat-dropdown-enter 120ms ease-out;
+}
+
+@keyframes cat-dropdown-enter {
+  from {
+    opacity: 0;
+    transform: translateY(var(--cat-dropdown-enter-y)) scale(0.97);
+  }
+}
+
+/* Rounded highlights, held off the panel's edge by its padding above. */
+.cat-dropdown .dropdown-content :deep(.dropdown-item) {
+  border-radius: $radius-small;
+}
+
+/* The divider spans the whole panel, through the padding the items sit in. */
+.cat-dropdown .dropdown-content :deep(.dropdown-divider) {
+  margin-inline: -0.25rem;
+}
+
+/* A disclosure caret turns over while its menu is open (WAI-ARIA state is
+   on aria-expanded; this is its visible counterpart, alongside the trigger's
+   Bulma `is-active`). Only a caret icon is flipped, by isCaretIcon(). */
+.cat-dropdown .dropdown-trigger :deep(.cat-dropdown-caret > .icon:last-child) {
+  transition: transform 150ms ease-out;
+}
+
+.cat-dropdown .dropdown-trigger :deep(.cat-dropdown-caret[aria-expanded="true"] > .icon:last-child) {
+  transform: rotate(180deg);
+}
+
+/* Matches cat-collapse, cat-steps, cat-msg and cat-tooltip. */
+@media (prefers-reduced-motion: reduce) {
+  .cat-dropdown .dropdown-content {
+    animation: none;
+  }
+
+  .cat-dropdown .dropdown-trigger :deep(.cat-dropdown-caret > .icon:last-child) {
+    transition: none;
+  }
 }
 
 /* Top-layer rendering (Popover API): the menu is shown via showPopover() with
@@ -504,7 +748,10 @@ defineExpose({ open, close, toggle })
      - `border: solid` — a medium currentColor border, i.e. a black box around
        the whole menu.
      - `padding: 0.25em` — Bulma sets only padding-top (the offset between
-       trigger and content), so the other three sides survive.
+       trigger and content), so the other three sides survive. Cleared on all
+       four, then the offset is put back on whichever side faces the trigger,
+       per `data-side`: Bulma's rule only knows the side `position` asked for,
+       not the one the menu flipped to.
      - `background-color: Canvas` — .dropdown-menu has no background of its own
        in Bulma; .dropdown-content inside it does. An opaque Canvas backdrop
        therefore shows through the padding-top gap and behind the content's
@@ -516,6 +763,7 @@ defineExpose({ open, close, toggle })
        .dropdown-content. Measured: page color rgb(171,177,191), menu color
        rgb(0,0,0).
    `overflow: auto` is deliberately left alone: a long menu needs to scroll.
+   (It is why the shadow is a filter; see `.cat-dropdown .dropdown-menu`.)
 
    Scoped to `.cat-dropdown` purely for specificity. Bulma's placement rules
    (`.dropdown.is-right .dropdown-menu { right: 0 }`, `.dropdown.is-up
@@ -528,11 +776,17 @@ defineExpose({ open, close, toggle })
   margin: 0;
   inset: auto;
   border: 0;
-  padding-right: 0;
-  padding-bottom: 0;
-  padding-left: 0;
+  padding: 0;
   background: transparent;
   color: inherit;
+
+  &[data-side="bottom"] {
+    padding-top: var(--bulma-dropdown-content-offset);
+  }
+
+  &[data-side="top"] {
+    padding-bottom: var(--bulma-dropdown-content-offset);
+  }
 
   &:not(:popover-open) {
     display: none;

@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { renderToString } from 'vue/server-renderer'
 import { defineComponent, h, ref, nextTick } from 'vue'
 import CatDropdown from './dropdown.vue'
 import CatDropdownItem from './dropdown-item.vue'
-import { expectNoAxeViolations } from '../testutil/component-helpers'
+import { expectNoAxeViolations, stubRect } from '../testutil/component-helpers'
 
 function mountDropdown (props: Record<string, any> = {}) {
   const selected = ref<string | undefined>(undefined)
@@ -92,6 +93,149 @@ describe('cat-dropdown menu placement', () => {
     }
     // The old interpolated names must not come back.
     expect(classes.some(c => c.startsWith('is-bottom-') || c.startsWith('is-top-'))).toBe(false)
+    wrapper.unmount()
+  })
+})
+
+describe('cat-dropdown menu anchoring and open state', () => {
+  // jsdom has no layout, so give an element the box the composable measures.
+  // The menu's gap goes on whichever side faces the trigger, so the side is
+  // marked even before the first placement, from `position`.
+  it.each([
+    ['bottom-left', 'bottom'],
+    ['bottom-right', 'bottom'],
+    ['top-left', 'top'],
+    ['top-right', 'top']
+  ] as const)('marks the menu for position=%s as on the %s side', (position, side) => {
+    const { wrapper } = mountDropdown({ position })
+    expect(wrapper.find('.dropdown-menu').attributes('data-side')).toBe(side)
+    wrapper.unmount()
+  })
+
+  // Without the Popover API (as in jsdom) Bulma keeps the menu on the side
+  // `position` names, so a flip the composable computes must not move the
+  // gap or the entrance to the other side.
+  it('keeps the requested side without the Popover API, even where a flip would fit', async () => {
+    const { wrapper } = mountDropdown({ position: 'bottom-left' })
+    stubRect(wrapper.find('.cat-dropdown').element, 0, 700, 120, 36)
+    await wrapper.find('.dropdown-trigger button').trigger('click')
+    await nextTick()
+    await nextTick()
+    expect(wrapper.find('.dropdown-menu').attributes('data-side')).toBe('bottom')
+    wrapper.unmount()
+  })
+
+  it('gives the menu its trigger\'s width, for a menu at least that wide', async () => {
+    const { wrapper } = mountDropdown()
+    stubRect(wrapper.find('.cat-dropdown').element, 0, 0, 240, 36)
+    await wrapper.find('.dropdown-trigger button').trigger('click')
+    await nextTick()
+    const menu = wrapper.find('.dropdown-menu').element as HTMLElement
+    expect(menu.style.getPropertyValue('--cat-popover-anchor-width')).toBe('240px')
+    wrapper.unmount()
+  })
+
+  it('shows the default trigger pressed (Bulma is-active) only while open', async () => {
+    const { wrapper } = mountDropdown()
+    const trigger = wrapper.find('.dropdown-trigger button')
+    expect(trigger.classes()).not.toContain('is-active')
+    await trigger.trigger('click')
+    expect(trigger.classes()).toContain('is-active')
+    await trigger.trigger('click')
+    expect(trigger.classes()).not.toContain('is-active')
+    wrapper.unmount()
+  })
+
+  // Only a caret turns over: a `cog` upside down would read as a glitch.
+  it.each([
+    ['menu-down', true],
+    ['chevron-down', true],
+    ['menu-up', true],
+    ['cog', false],
+    ['thumb-down', false]
+  ] as const)('marks icon=%s as a caret: %s', (icon, caret) => {
+    const { wrapper } = mountDropdown({ icon })
+    expect(wrapper.find('.dropdown-trigger button').classes().includes('cat-dropdown-caret')).toBe(caret)
+    wrapper.unmount()
+  })
+})
+
+describe('cat-dropdown menu name', () => {
+  // An unnamed role="listbox" fails axe aria-input-field-name; APG's
+  // listbox-button pattern names it by its trigger.
+  it('labels the menu by the default trigger', async () => {
+    const { wrapper } = mountDropdown({ selectable: true })
+    await nextTick()
+    const trigger = wrapper.find('.dropdown-trigger button')
+    const menu = wrapper.find('.dropdown-menu')
+    expect(trigger.attributes('id')).toBeTruthy()
+    expect(menu.attributes('aria-labelledby')).toBe(trigger.attributes('id'))
+    await trigger.trigger('click')
+    await expectNoAxeViolations(wrapper)
+    wrapper.unmount()
+  })
+
+  it('labels the menu by a custom trigger\'s own id, without replacing it', async () => {
+    const wrapper = mount(defineComponent({
+      components: { CatDropdown, CatDropdownItem },
+      template: `
+        <CatDropdown selectable>
+          <template #trigger="{ triggerAttrs }">
+            <button id="my-trigger" class="button" type="button" v-bind="triggerAttrs">Pick</button>
+          </template>
+          <CatDropdownItem value="one">One</CatDropdownItem>
+        </CatDropdown>`
+    }), { attachTo: document.body })
+    await nextTick()
+    expect(wrapper.find('#my-trigger').exists()).toBe(true)
+    expect(wrapper.find('.dropdown-menu').attributes('aria-labelledby')).toBe('my-trigger')
+    wrapper.unmount()
+  })
+
+  // accname names an element referenced by aria-labelledby after an
+  // embedded input's value, so the menu must not point at the input itself.
+  it('names the menu by a form-field trigger\'s label, not its value', async () => {
+    const wrapper = mount(defineComponent({
+      components: { CatDropdown, CatDropdownItem },
+      template: `
+        <div>
+          <label for="city">City</label>
+          <CatDropdown selectable>
+            <template #trigger="{ triggerAttrs }">
+              <input id="city" value="Bos" v-bind="triggerAttrs">
+            </template>
+            <CatDropdownItem value="boston">Boston</CatDropdownItem>
+          </CatDropdown>
+        </div>`
+    }), { attachTo: document.body })
+    await nextTick()
+    const menu = wrapper.find('.dropdown-menu')
+    expect(menu.attributes('aria-labelledby')).toBeUndefined()
+    expect(menu.attributes('aria-label')).toBe('City')
+    wrapper.unmount()
+  })
+
+  it('names the menu in a server render, before any DOM exists', async () => {
+    const html = await renderToString(h(CatDropdown, { label: 'Pick', selectable: true }, {
+      default: () => [h(CatDropdownItem, { value: 'one' }, () => 'One')]
+    }))
+    const id = html.match(/<button id="([^"]+)"/)?.[1]
+    expect(id).toBeTruthy()
+    expect(html).toContain(`aria-labelledby="${id}"`)
+  })
+
+  it('leaves the menu unlabeled rather than pointing at nothing', () => {
+    const wrapper = mount(defineComponent({
+      components: { CatDropdown, CatDropdownItem },
+      template: `
+        <CatDropdown>
+          <template #trigger="{ triggerAttrs }">
+            <button class="button" type="button" v-bind="triggerAttrs">Pick</button>
+          </template>
+          <CatDropdownItem value="one">One</CatDropdownItem>
+        </CatDropdown>`
+    }), { attachTo: document.body })
+    expect(wrapper.find('.dropdown-menu').attributes('aria-labelledby')).toBeUndefined()
     wrapper.unmount()
   })
 })
