@@ -1,9 +1,10 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { renderToString } from 'vue/server-renderer'
 import { defineComponent, h, ref, nextTick } from 'vue'
 import CatDropdown from './dropdown.vue'
 import CatDropdownItem from './dropdown-item.vue'
-import { expectNoAxeViolations } from '../testutil/component-helpers'
+import { expectNoAxeViolations, stubRect } from '../testutil/component-helpers'
 
 function mountDropdown (props: Record<string, any> = {}) {
   const selected = ref<string | undefined>(undefined)
@@ -98,13 +99,6 @@ describe('cat-dropdown menu placement', () => {
 
 describe('cat-dropdown menu anchoring and open state', () => {
   // jsdom has no layout, so give an element the box the composable measures.
-  function stubWidth (el: Element, width: number) {
-    Object.defineProperty(el, 'getBoundingClientRect', {
-      configurable: true,
-      value: () => ({ left: 0, top: 0, right: width, bottom: 36, width, height: 36, x: 0, y: 0, toJSON: () => ({}) })
-    })
-  }
-
   // The menu's gap goes on whichever side faces the trigger, so the side is
   // marked even before the first placement, from `position`.
   it.each([
@@ -118,9 +112,22 @@ describe('cat-dropdown menu anchoring and open state', () => {
     wrapper.unmount()
   })
 
+  // Without the Popover API (as in jsdom) Bulma keeps the menu on the side
+  // `position` names, so a flip the composable computes must not move the
+  // gap or the entrance to the other side.
+  it('keeps the requested side without the Popover API, even where a flip would fit', async () => {
+    const { wrapper } = mountDropdown({ position: 'bottom-left' })
+    stubRect(wrapper.find('.cat-dropdown').element, 0, 700, 120, 36)
+    await wrapper.find('.dropdown-trigger button').trigger('click')
+    await nextTick()
+    await nextTick()
+    expect(wrapper.find('.dropdown-menu').attributes('data-side')).toBe('bottom')
+    wrapper.unmount()
+  })
+
   it('gives the menu its trigger\'s width, for a menu at least that wide', async () => {
     const { wrapper } = mountDropdown()
-    stubWidth(wrapper.find('.cat-dropdown').element, 240)
+    stubRect(wrapper.find('.cat-dropdown').element, 0, 0, 240, 36)
     await wrapper.find('.dropdown-trigger button').trigger('click')
     await nextTick()
     const menu = wrapper.find('.dropdown-menu').element as HTMLElement
@@ -143,6 +150,7 @@ describe('cat-dropdown menu anchoring and open state', () => {
   it.each([
     ['menu-down', true],
     ['chevron-down', true],
+    ['menu-up', true],
     ['cog', false],
     ['thumb-down', false]
   ] as const)('marks icon=%s as a caret: %s', (icon, caret) => {
@@ -184,7 +192,39 @@ describe('cat-dropdown menu name', () => {
     wrapper.unmount()
   })
 
-  it('leaves the menu unlabelled rather than pointing at nothing', () => {
+  // accname names an element referenced by aria-labelledby after an
+  // embedded input's value, so the menu must not point at the input itself.
+  it('names the menu by a form-field trigger\'s label, not its value', async () => {
+    const wrapper = mount(defineComponent({
+      components: { CatDropdown, CatDropdownItem },
+      template: `
+        <div>
+          <label for="city">City</label>
+          <CatDropdown selectable>
+            <template #trigger="{ triggerAttrs }">
+              <input id="city" value="Bos" v-bind="triggerAttrs">
+            </template>
+            <CatDropdownItem value="boston">Boston</CatDropdownItem>
+          </CatDropdown>
+        </div>`
+    }), { attachTo: document.body })
+    await nextTick()
+    const menu = wrapper.find('.dropdown-menu')
+    expect(menu.attributes('aria-labelledby')).toBeUndefined()
+    expect(menu.attributes('aria-label')).toBe('City')
+    wrapper.unmount()
+  })
+
+  it('names the menu in a server render, before any DOM exists', async () => {
+    const html = await renderToString(h(CatDropdown, { label: 'Pick', selectable: true }, {
+      default: () => [h(CatDropdownItem, { value: 'one' }, () => 'One')]
+    }))
+    const id = html.match(/<button id="([^"]+)"/)?.[1]
+    expect(id).toBeTruthy()
+    expect(html).toContain(`aria-labelledby="${id}"`)
+  })
+
+  it('leaves the menu unlabeled rather than pointing at nothing', () => {
     const wrapper = mount(defineComponent({
       components: { CatDropdown, CatDropdownItem },
       template: `

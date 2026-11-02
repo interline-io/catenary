@@ -149,6 +149,10 @@ interface UseAnchoredPopoverOptions extends PopoverLayout {
   isOpen: () => boolean
   // Preferred placement.
   placement: () => PopoverPlacement
+  // Publish the trigger's width on the popover as --cat-popover-anchor-width,
+  // for a popover that should be at least as wide as the control that opened
+  // it (cat-dropdown's menu). Default false.
+  exposeTriggerWidth?: boolean
 }
 
 // Shows a popover in the top layer while it is open, placed against its
@@ -159,6 +163,7 @@ export function useAnchoredPopover (opts: UseAnchoredPopoverOptions): { placed: 
   const capHeight = opts.capHeight ?? true
   const placed = shallowRef<PopoverPosition | null>(null)
   let raf = 0
+  let lastTriggerWidth = ''
 
   function position (): void {
     const trigger = opts.triggerRef.value
@@ -166,12 +171,18 @@ export function useAnchoredPopover (opts: UseAnchoredPopoverOptions): { placed: 
     // A placement still pending when the popover closed has nothing to place.
     if (!trigger || !pop || !opts.isOpen()) return
     const t = trigger.getBoundingClientRect()
-    // The trigger's width, for a popover that should be at least as wide as
-    // the control that opened it (cat-dropdown's menu). Set before measuring
-    // the popover so a width that depends on it is already in effect, and set
-    // without the Popover API too, where the absolutely positioned fallback
-    // can use it just the same.
-    pop.style.setProperty('--cat-popover-anchor-width', `${t.width}px`)
+    // Set before measuring the popover so a width that depends on it is
+    // already in effect, and without the Popover API too, where the absolutely
+    // positioned fallback can use it just the same. Written only when it
+    // changes: a style write between the two measurements otherwise forces a
+    // second layout on every scroll frame.
+    if (opts.exposeTriggerWidth) {
+      const width = `${t.width}px`
+      if (width !== lastTriggerWidth) {
+        pop.style.setProperty('--cat-popover-anchor-width', width)
+        lastTriggerWidth = width
+      }
+    }
     const p = pop.getBoundingClientRect()
     // A capped popover's natural height, which the cap from the last position
     // hides: the scroll height plus the border the box adds. Clearing the cap

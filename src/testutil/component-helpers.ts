@@ -240,3 +240,11 @@ export async function expectNoAxeViolations (
     expect.fail(`Axe found ${results.violations.length} accessibility violation(s):\n${summary}`)
   }
 }
+
+/**
+ * Give an element the box `getBoundingClientRect()` reports. jsdom has no
+ * layout, so every rect is zero; this is how a test places a trigger.
+ */
+export function stubRect (el: Element, left: number, top: number, width: number, height: number): void {
+  el.getBoundingClientRect = () => new DOMRect(left, top, width, height)
+}

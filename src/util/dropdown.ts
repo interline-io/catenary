@@ -15,7 +15,8 @@ export const DropdownAnchorKey: InjectionKey<Ref<HTMLElement | null> | null> = S
 // open, as in Material's exposed dropdown menu. Matched by name rather than
 // flipping any trailing icon, because a trigger's icon can be anything: a
 // `cog` or `account` turned upside down would read as a glitch, not a state.
-const CARET_ICON = /^(?:menu|chevron|triangle|triangle-small|pan)-down$/
+// Up carets count too, for a menu placed above its trigger.
+const CARET_ICON = /^(?:menu|chevron|triangle|triangle-small|pan)-(?:down|up)$/
 
 export function isCaretIcon (name: string | undefined): boolean {
   return !!name && CARET_ICON.test(name)
