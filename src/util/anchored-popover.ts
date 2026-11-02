@@ -142,7 +142,7 @@ function clamp (value: number, min: number, max: number): number {
 
 interface UseAnchoredPopoverOptions extends PopoverLayout {
   // The element the popover anchors to; its bounding box drives placement.
-  triggerRef: Ref<HTMLElement | null>
+  triggerRef: Readonly<Ref<HTMLElement | null>>
   // The popover element, which gets popover="manual" and fixed coordinates.
   popoverRef: Ref<HTMLElement | null>
   // Whether the popover is open.
@@ -166,6 +166,12 @@ export function useAnchoredPopover (opts: UseAnchoredPopoverOptions): { placed: 
     // A placement still pending when the popover closed has nothing to place.
     if (!trigger || !pop || !opts.isOpen()) return
     const t = trigger.getBoundingClientRect()
+    // The trigger's width, for a popover that should be at least as wide as
+    // the control that opened it (cat-dropdown's menu). Set before measuring
+    // the popover so a width that depends on it is already in effect, and set
+    // without the Popover API too, where the absolutely positioned fallback
+    // can use it just the same.
+    pop.style.setProperty('--cat-popover-anchor-width', `${t.width}px`)
     const p = pop.getBoundingClientRect()
     // A capped popover's natural height, which the cap from the last position
     // hides: the scroll height plus the border the box adds. Clearing the cap

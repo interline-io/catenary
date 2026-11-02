@@ -96,6 +96,110 @@ describe('cat-dropdown menu placement', () => {
   })
 })
 
+describe('cat-dropdown menu anchoring and open state', () => {
+  // jsdom has no layout, so give an element the box the composable measures.
+  function stubWidth (el: Element, width: number) {
+    Object.defineProperty(el, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ left: 0, top: 0, right: width, bottom: 36, width, height: 36, x: 0, y: 0, toJSON: () => ({}) })
+    })
+  }
+
+  // The menu's gap goes on whichever side faces the trigger, so the side is
+  // marked even before the first placement, from `position`.
+  it.each([
+    ['bottom-left', 'bottom'],
+    ['bottom-right', 'bottom'],
+    ['top-left', 'top'],
+    ['top-right', 'top']
+  ] as const)('marks the menu for position=%s as on the %s side', (position, side) => {
+    const { wrapper } = mountDropdown({ position })
+    expect(wrapper.find('.dropdown-menu').attributes('data-side')).toBe(side)
+    wrapper.unmount()
+  })
+
+  it('gives the menu its trigger\'s width, for a menu at least that wide', async () => {
+    const { wrapper } = mountDropdown()
+    stubWidth(wrapper.find('.cat-dropdown').element, 240)
+    await wrapper.find('.dropdown-trigger button').trigger('click')
+    await nextTick()
+    const menu = wrapper.find('.dropdown-menu').element as HTMLElement
+    expect(menu.style.getPropertyValue('--cat-popover-anchor-width')).toBe('240px')
+    wrapper.unmount()
+  })
+
+  it('shows the default trigger pressed (Bulma is-active) only while open', async () => {
+    const { wrapper } = mountDropdown()
+    const trigger = wrapper.find('.dropdown-trigger button')
+    expect(trigger.classes()).not.toContain('is-active')
+    await trigger.trigger('click')
+    expect(trigger.classes()).toContain('is-active')
+    await trigger.trigger('click')
+    expect(trigger.classes()).not.toContain('is-active')
+    wrapper.unmount()
+  })
+
+  // Only a caret turns over: a `cog` upside down would read as a glitch.
+  it.each([
+    ['menu-down', true],
+    ['chevron-down', true],
+    ['cog', false],
+    ['thumb-down', false]
+  ] as const)('marks icon=%s as a caret: %s', (icon, caret) => {
+    const { wrapper } = mountDropdown({ icon })
+    expect(wrapper.find('.dropdown-trigger button').classes().includes('cat-dropdown-caret')).toBe(caret)
+    wrapper.unmount()
+  })
+})
+
+describe('cat-dropdown menu name', () => {
+  // An unnamed role="listbox" fails axe aria-input-field-name; APG's
+  // listbox-button pattern names it by its trigger.
+  it('labels the menu by the default trigger', async () => {
+    const { wrapper } = mountDropdown({ selectable: true })
+    await nextTick()
+    const trigger = wrapper.find('.dropdown-trigger button')
+    const menu = wrapper.find('.dropdown-menu')
+    expect(trigger.attributes('id')).toBeTruthy()
+    expect(menu.attributes('aria-labelledby')).toBe(trigger.attributes('id'))
+    await trigger.trigger('click')
+    await expectNoAxeViolations(wrapper)
+    wrapper.unmount()
+  })
+
+  it('labels the menu by a custom trigger\'s own id, without replacing it', async () => {
+    const wrapper = mount(defineComponent({
+      components: { CatDropdown, CatDropdownItem },
+      template: `
+        <CatDropdown selectable>
+          <template #trigger="{ triggerAttrs }">
+            <button id="my-trigger" class="button" type="button" v-bind="triggerAttrs">Pick</button>
+          </template>
+          <CatDropdownItem value="one">One</CatDropdownItem>
+        </CatDropdown>`
+    }), { attachTo: document.body })
+    await nextTick()
+    expect(wrapper.find('#my-trigger').exists()).toBe(true)
+    expect(wrapper.find('.dropdown-menu').attributes('aria-labelledby')).toBe('my-trigger')
+    wrapper.unmount()
+  })
+
+  it('leaves the menu unlabelled rather than pointing at nothing', () => {
+    const wrapper = mount(defineComponent({
+      components: { CatDropdown, CatDropdownItem },
+      template: `
+        <CatDropdown>
+          <template #trigger="{ triggerAttrs }">
+            <button class="button" type="button" v-bind="triggerAttrs">Pick</button>
+          </template>
+          <CatDropdownItem value="one">One</CatDropdownItem>
+        </CatDropdown>`
+    }), { attachTo: document.body })
+    expect(wrapper.find('.dropdown-menu').attributes('aria-labelledby')).toBeUndefined()
+    wrapper.unmount()
+  })
+})
+
 describe('cat-dropdown WAI-ARIA + keyboard', () => {
   it('renders aria-haspopup, aria-controls, and aria-expanded on the trigger', () => {
     const { wrapper } = mountDropdown()

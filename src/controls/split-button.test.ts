@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { defineComponent, h, nextTick, ref } from 'vue'
 import CatSplitButton from './split-button.vue'
+import CatDropdown from './dropdown.vue'
 import CatDropdownItem from './dropdown-item.vue'
 import { expectNoAxeViolations } from '../testutil/component-helpers'
 
@@ -250,6 +251,70 @@ describe('cat-split-button behavior', () => {
     expect(toggle.attributes('disabled')).toBeUndefined()
     await toggle.trigger('click')
     expect(toggle.attributes('aria-expanded')).toBe('true')
+    wrapper.unmount()
+  })
+})
+
+describe('cat-split-button menu anchoring', () => {
+  function stubWidth (el: Element, width: number) {
+    Object.defineProperty(el, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ left: 0, top: 0, right: width, bottom: 36, width, height: 36, x: 0, y: 0, toJSON: () => ({}) })
+    })
+  }
+
+  // The dropdown wraps only the caret half; anchored there, the menu was
+  // sized and aligned to the caret rather than to the control on screen.
+  it('sizes the menu to the whole button group, not the caret half', async () => {
+    const wrapper = mountSplitButton()
+    stubWidth(wrapper.find('.cat-split-button').element, 180)
+    stubWidth(wrapper.find('.cat-dropdown').element, 40)
+    await halves(wrapper).toggle.trigger('click')
+    await nextTick()
+    const menu = wrapper.find('.dropdown-menu').element as HTMLElement
+    expect(menu.style.getPropertyValue('--cat-popover-anchor-width')).toBe('180px')
+    wrapper.unmount()
+  })
+
+  it('does not hand the group anchor to a dropdown nested in its menu', async () => {
+    const wrapper = mountSplitButton({}, {
+      default: () => [h(CatDropdown, { label: 'More' }, {
+        default: () => [h(CatDropdownItem, { value: 'x' }, () => 'X')]
+      })]
+    })
+    stubWidth(wrapper.find('.cat-split-button').element, 180)
+    await halves(wrapper).toggle.trigger('click')
+    const inner = wrapper.findAll('.cat-dropdown')[1]!
+    stubWidth(inner.element, 90)
+    await inner.find('.dropdown-trigger button').trigger('click')
+    await nextTick()
+    const menu = inner.find('.dropdown-menu').element as HTMLElement
+    expect(menu.style.getPropertyValue('--cat-popover-anchor-width')).toBe('90px')
+    wrapper.unmount()
+  })
+
+  it('shows the caret half pressed and flippable while the menu is open', async () => {
+    const wrapper = mountSplitButton()
+    const { toggle } = halves(wrapper)
+    expect(toggle.classes()).toContain('cat-dropdown-caret')
+    expect(toggle.classes()).not.toContain('is-active')
+    await toggle.trigger('click')
+    expect(toggle.classes()).toContain('is-active')
+    wrapper.unmount()
+  })
+
+  it('names the menu by the caret half', async () => {
+    const wrapper = mountSplitButton()
+    await nextTick()
+    const { toggle } = halves(wrapper)
+    expect(toggle.attributes('id')).toBeTruthy()
+    expect(wrapper.find('.dropdown-menu').attributes('aria-labelledby')).toBe(toggle.attributes('id'))
+    wrapper.unmount()
+  })
+
+  it('does not mark a non-caret toggle icon as a caret', () => {
+    const wrapper = mountSplitButton({ toggleIcon: 'dots-vertical' })
+    expect(halves(wrapper).toggle.classes()).not.toContain('cat-dropdown-caret')
     wrapper.unmount()
   })
 })
