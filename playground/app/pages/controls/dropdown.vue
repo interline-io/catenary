@@ -228,7 +228,7 @@
               <p class="has-text-weight-bold">
                 New message from John
               </p>
-              <p class="is-size-7 has-text-grey">
+              <p class="is-size-7" style="color: var(--bulma-text-weak);">
                 2 minutes ago
               </p>
             </div>
@@ -239,7 +239,7 @@
               <p class="has-text-weight-bold">
                 Update completed
               </p>
-              <p class="is-size-7 has-text-grey">
+              <p class="is-size-7" style="color: var(--bulma-text-weak);">
                 1 hour ago
               </p>
             </div>
@@ -250,14 +250,14 @@
               <p class="has-text-weight-bold">
                 System maintenance scheduled
               </p>
-              <p class="is-size-7 has-text-grey">
+              <p class="is-size-7" style="color: var(--bulma-text-weak);">
                 Yesterday
               </p>
             </div>
           </cat-dropdown-item>
           <cat-dropdown-item separator />
           <cat-dropdown-item value="view-all">
-            <p class="has-text-centered has-text-link">
+            <p class="has-text-centered has-text-link-on-scheme">
               View all notifications
             </p>
           </cat-dropdown-item>
